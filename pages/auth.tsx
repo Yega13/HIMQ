@@ -1,7 +1,7 @@
 import { GetStaticProps } from 'next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { useTranslation } from 'next-i18next';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { motion } from 'framer-motion';
@@ -13,6 +13,13 @@ export default function Auth() {
   const { t } = useTranslation('common');
   const router = useRouter();
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
+
+  // Redirect to dashboard if already signed in
+  useEffect(() => {
+    getBrowserClient().auth.getUser().then(({ data: { user } }) => {
+      if (user) router.replace('/dashboard');
+    });
+  }, [router]);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
@@ -94,7 +101,7 @@ export default function Auth() {
                     onChange={(e) => setFullName(e.target.value)}
                     required
                     className="w-full px-4 py-3 rounded-xl border border-[var(--border)] bg-[var(--bg-secondary)] text-[var(--text-primary)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-brand)] transition"
-                    placeholder="Suren Yeganyan"
+                    placeholder="Mayis Gevorgyan"
                   />
                 </div>
               )}
