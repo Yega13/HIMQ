@@ -3,13 +3,15 @@ import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { useTranslation } from 'next-i18next';
 import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 import { motion } from 'framer-motion';
-import { supabase } from '@/lib/supabase';
+import { getBrowserClient } from '@/lib/supabase';
 import ThemeToggle from '@/components/ThemeToggle';
 import LanguageToggle from '@/components/LanguageToggle';
 
 export default function Auth() {
   const { t } = useTranslation('common');
+  const router = useRouter();
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -22,6 +24,7 @@ export default function Auth() {
     e.preventDefault();
     setLoading(true);
     setMessage('');
+    const supabase = getBrowserClient();
 
     if (mode === 'signup') {
       const { error } = await supabase.auth.signUp({
@@ -42,7 +45,7 @@ export default function Auth() {
         setMessage(error.message);
         setIsError(true);
       } else {
-        window.location.href = '/dashboard';
+        await router.replace('/dashboard');
       }
     }
 
@@ -72,7 +75,7 @@ export default function Auth() {
             <p className="text-sm text-[var(--text-secondary)] mb-6">
               {mode === 'signin' ? t('auth.no_account') : t('auth.already_have_account')}{' '}
               <button
-                onClick={() => { setMode(mode === 'signin' ? 'signup' : 'signin'); setMessage(''); }}
+                onClick={() => { setMode(mode === 'signin' ? 'signup' : 'signin'); setMessage(''); setFullName(''); }}
                 className="text-[var(--color-brand)] hover:underline font-medium"
               >
                 {mode === 'signin' ? t('auth.sign_up') : t('auth.sign_in')}

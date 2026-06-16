@@ -6,7 +6,7 @@ export default function LanguageToggle() {
   const isAm = locale === 'am';
 
   const toggle = () => {
-    router.push({ pathname, query }, asPath, { locale: isAm ? 'en' : 'am' });
+    router.replace({ pathname, query }, asPath, { locale: isAm ? 'en' : 'am' });
   };
 
   return (
