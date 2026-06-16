@@ -1,18 +1,20 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { Home, Search, LayoutDashboard, MessageSquare, User } from 'lucide-react';
+import { useTranslation } from 'next-i18next';
 import { cn } from '@/lib/utils';
 
-const items = [
-  { href: '/', label: 'Home', icon: Home },
-  { href: '/opportunities', label: 'Opportunities', icon: Search },
-  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/chat', label: 'Learn', icon: MessageSquare },
-  { href: '/profile', label: 'Profile', icon: User },
-];
-
 export default function BottomNav() {
+  const { t } = useTranslation('common');
   const { pathname } = useRouter();
+
+  const items = [
+    { href: '/',              label: t('nav.home'),          icon: Home },
+    { href: '/opportunities', label: t('nav.opportunities'), icon: Search },
+    { href: '/dashboard',     label: t('nav.dashboard'),     icon: LayoutDashboard },
+    { href: '/chat',          label: t('nav.learn'),         icon: MessageSquare },
+    { href: '/profile',       label: t('nav.profile'),       icon: User },
+  ];
 
   return (
     <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[var(--bg-secondary)] border-t border-[var(--border)] pb-2">

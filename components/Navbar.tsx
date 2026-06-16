@@ -2,20 +2,28 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useState, useRef, useEffect } from 'react';
 import { Trophy, ChevronDown } from 'lucide-react';
+import { useTranslation } from 'next-i18next';
 import ThemeToggle from './ThemeToggle';
 import LanguageToggle from './LanguageToggle';
 import { cn } from '@/lib/utils';
-
-const NAV_LINKS = [
-  { href: '/dashboard', label: 'Dashboard' },
-  { href: '/chat', label: 'Learn' },
-  { href: '/opportunities', label: 'Opportunities' },
-];
+import { getBrowserClient } from '@/lib/supabase';
 
 export default function Navbar() {
+  const { t } = useTranslation('common');
   const { pathname } = useRouter();
   const [leaderboardOpen, setLeaderboardOpen] = useState(false);
+  const [userInitial, setUserInitial] = useState('?');
   const leaderboardRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const supabase = getBrowserClient();
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) {
+        const name = user.user_metadata?.full_name as string | undefined;
+        setUserInitial(name ? name[0].toUpperCase() : user.email?.[0].toUpperCase() ?? '?');
+      }
+    });
+  }, []);
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -26,6 +34,12 @@ export default function Navbar() {
     document.addEventListener('mousedown', handleClick);
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
+
+  const NAV_LINKS = [
+    { href: '/dashboard', label: t('nav.dashboard') },
+    { href: '/chat',      label: t('nav.learn') },
+    { href: '/opportunities', label: t('nav.opportunities') },
+  ];
 
   return (
     <header className="hidden md:block sticky top-0 z-50 bg-[var(--bg-secondary)] border-b border-[var(--border)]">
@@ -58,11 +72,8 @@ export default function Navbar() {
               className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--border)] transition-colors"
             >
               <Trophy size={16} />
-              Leaderboard
-              <ChevronDown
-                size={14}
-                className={cn('transition-transform', leaderboardOpen && 'rotate-180')}
-              />
+              {t('nav.leaderboard')}
+              <ChevronDown size={14} className={cn('transition-transform', leaderboardOpen && 'rotate-180')} />
             </button>
 
             {leaderboardOpen && (
@@ -71,9 +82,7 @@ export default function Navbar() {
                   <p className="text-sm font-semibold text-[var(--text-primary)]">Top Learners</p>
                 </div>
                 <div className="p-2 max-h-80 overflow-y-auto">
-                  <p className="text-xs text-[var(--text-muted)] text-center py-4">
-                    Leaderboard coming soon
-                  </p>
+                  <p className="text-xs text-[var(--text-muted)] text-center py-4">Coming soon</p>
                 </div>
                 <div className="p-2 border-t border-[var(--border)]">
                   <Link
@@ -95,7 +104,7 @@ export default function Navbar() {
             href="/profile"
             className="w-8 h-8 rounded-full bg-[var(--color-brand)] flex items-center justify-center text-white text-sm font-semibold"
           >
-            S
+            {userInitial}
           </Link>
         </div>
       </div>

@@ -9,9 +9,15 @@
   },
   "home": {
     "hero_title": "Սովորիր. Աճիր. Հաղթիր.",
-    "hero_subtitle": "EduPath AI-ն կստեղծի անձնական ուսումնական ուղի հատուկ քեզ համար",
+    "hero_subtitle": "EduPath AI-ն կստեղծի անձնական ուսումնական ուղի հատուկ քեզ համար — դաս առ դաս:",
     "cta_start": "Սկսել անվճար",
-    "cta_explore": "Հնարավորություններ"
+    "cta_explore": "Տեսնել Հնարավորությունները",
+    "feature_ai_title": "AI Անձնական Ուսուցիչ",
+    "feature_ai_desc": "Ասա՛ ինչ ուզում ես սովորել: AI-ն կստեղծի 5 դասի ծրագիր և կսովորեցնի ինտերակտիվ կերպով:",
+    "feature_xp_title": "Վաստակիր XP",
+    "feature_xp_desc": "Մասնակցիր Հայաստանի իրական միջոցառումներին ու մրցույթներին XP վաստակելու համար:",
+    "feature_opp_title": "Իրական Հնարավորություններ",
+    "feature_opp_desc": "Կրթաթոշակներ, մրցույթներ, ստաժավայրեր, դրամաշնորհներ — ամեն ինչ մեկ տեղում:"
   },
   "auth": {
     "sign_in": "Մուտք",
@@ -25,30 +31,71 @@
   },
   "dashboard": {
     "title": "Իմ Վահանակ",
-    "active_chats": "Ակտիվ Զրույցներ",
+    "active_chats": "Ակտիվ Դասընթացներ",
     "xp_total": "Ընդհանուր XP",
     "streak": "Անընդմեջ Օրեր",
-    "no_chats": "Դեռ զրույցներ չկան",
-    "start_learning": "Սկսել Ուսուցում"
+    "no_chats": "Դեռ դասընթացներ չկան: Սկսիր ստորև:",
+    "start_learning": "Սկսել Ուսուցում",
+    "continue": "Շարունակել",
+    "lesson_of": "Դաս {{current}} / {{total}}"
   },
   "chat": {
-    "new_chat": "Նոր Զրույց",
-    "placeholder": "Հաղորդագրություն...",
-    "send": "Ուղարկել"
+    "new_chat": "Նոր Դասընթաց",
+    "placeholder": "Գրի՛ր հաղորդագրություն...",
+    "send": "Ուղարկել",
+    "goal_label": "Ի՞նչ ես ուզում սովորել:",
+    "goal_placeholder": "օր.՝ Python-ի հիմունքներ, Վեբ-մշակում, Machine learning...",
+    "skill_label": "Քո մակարդակը",
+    "skill_beginner": "Սկսնակ",
+    "skill_intermediate": "Միջին",
+    "skill_advanced": "Առաջադեմ",
+    "build_plan": "Ստեղծել Ծրագիր",
+    "building_plan": "AI-ն ստեղծում է ծրագիրը...",
+    "lesson_plan": "Դասի Ծրագիր",
+    "lesson_number": "Դաս {{n}} / {{total}}",
+    "complete_lesson": "Ավարտել Դասը",
+    "back_to_chats": "Բոլոր դասընթացները",
+    "you": "Դու",
+    "ai": "EduPath AI"
   },
   "opportunities": {
     "title": "Հնարավորություններ",
     "filter_all": "Բոլորը",
+    "filter_competition": "Մրցույթ",
+    "filter_scholarship": "Կրթաթոշակ",
+    "filter_internship": "Ստաժ",
+    "filter_grant": "Դրամաշնորհ",
     "deadline": "Վերջնաժամկետ",
     "prepare_me": "Պատրաստվել",
-    "no_events": "Հնարավորություններ չեն գտնվել"
+    "apply": "Դիմել",
+    "no_events": "Հնարավորություններ չեն գտնվել",
+    "days_left": "օր մնացել",
+    "online": "Օնլայն",
+    "free": "Անվճար"
+  },
+  "profile": {
+    "title": "Իմ Պրոֆիլ",
+    "edit": "Խմբագրել",
+    "save": "Պահել",
+    "cancel": "Չեղարկել",
+    "goal_label": "Ուսման նպատակ",
+    "goal_placeholder": "Ի՞նչ ես ուզում հասնել:",
+    "skill_label": "Մակարդակ",
+    "language_label": "Նախընտրելի լեզու",
+    "xp": "XP",
+    "streak": "Անընդմեջ օրեր",
+    "member_since": "Անդամ է",
+    "no_goal": "Նպատակ դեռ չկա"
   },
   "common": {
     "loading": "Բեռնվում է...",
-    "error": "Սխալ",
+    "error": "Սխալ է տեղի ունեցել",
     "save": "Պահել",
     "cancel": "Չեղարկել",
     "back": "Հետ",
-    "days_left": "օր մնացել"
+    "days_left": "օր մնացել",
+    "beginner": "Սկսնակ",
+    "intermediate": "Միջին",
+    "advanced": "Առաջադեմ"
   }
 }

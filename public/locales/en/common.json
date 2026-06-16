@@ -9,9 +9,15 @@
   },
   "home": {
     "hero_title": "Learn. Grow. Win.",
-    "hero_subtitle": "EduPath AI builds a personal learning path designed exactly for you",
+    "hero_subtitle": "EduPath AI builds a personal learning path designed exactly for you — then teaches it, lesson by lesson.",
     "cta_start": "Start for free",
-    "cta_explore": "Browse Opportunities"
+    "cta_explore": "Browse Opportunities",
+    "feature_ai_title": "AI Personal Teacher",
+    "feature_ai_desc": "Tell us what you want to learn. Our AI builds a 5-lesson plan and teaches you interactively.",
+    "feature_xp_title": "Earn XP",
+    "feature_xp_desc": "Attend real events and competitions in Armenia to earn XP and climb the leaderboard.",
+    "feature_opp_title": "Real Opportunities",
+    "feature_opp_desc": "Discover scholarships, competitions, internships, and grants — all in one place."
   },
   "auth": {
     "sign_in": "Sign In",
@@ -28,27 +34,68 @@
     "active_chats": "Active Chats",
     "xp_total": "Total XP",
     "streak": "Day Streak",
-    "no_chats": "No chats yet",
-    "start_learning": "Start Learning"
+    "no_chats": "No learning sessions yet. Start one below.",
+    "start_learning": "Start Learning",
+    "continue": "Continue",
+    "lesson_of": "Lesson {{current}} of {{total}}"
   },
   "chat": {
     "new_chat": "New Chat",
-    "placeholder": "Message...",
-    "send": "Send"
+    "placeholder": "Type a message...",
+    "send": "Send",
+    "goal_label": "What do you want to learn?",
+    "goal_placeholder": "e.g. Python basics, Machine learning, Web development...",
+    "skill_label": "Your level",
+    "skill_beginner": "Beginner",
+    "skill_intermediate": "Intermediate",
+    "skill_advanced": "Advanced",
+    "build_plan": "Build My Plan",
+    "building_plan": "AI is building your plan...",
+    "lesson_plan": "Lesson Plan",
+    "lesson_number": "Lesson {{n}} / {{total}}",
+    "complete_lesson": "Mark Complete",
+    "back_to_chats": "All chats",
+    "you": "You",
+    "ai": "EduPath AI"
   },
   "opportunities": {
     "title": "Opportunities",
     "filter_all": "All",
+    "filter_competition": "Competition",
+    "filter_scholarship": "Scholarship",
+    "filter_internship": "Internship",
+    "filter_grant": "Grant",
     "deadline": "Deadline",
     "prepare_me": "Prepare Me",
-    "no_events": "No opportunities found"
+    "apply": "Apply",
+    "no_events": "No opportunities found",
+    "days_left": "days left",
+    "online": "Online",
+    "free": "Free"
+  },
+  "profile": {
+    "title": "My Profile",
+    "edit": "Edit",
+    "save": "Save changes",
+    "cancel": "Cancel",
+    "goal_label": "Learning goal",
+    "goal_placeholder": "What do you want to achieve?",
+    "skill_label": "Skill level",
+    "language_label": "Preferred language",
+    "xp": "XP",
+    "streak": "Day Streak",
+    "member_since": "Member since",
+    "no_goal": "No goal set yet"
   },
   "common": {
     "loading": "Loading...",
-    "error": "Error",
+    "error": "Something went wrong",
     "save": "Save",
     "cancel": "Cancel",
     "back": "Back",
-    "days_left": "days left"
+    "days_left": "days left",
+    "beginner": "Beginner",
+    "intermediate": "Intermediate",
+    "advanced": "Advanced"
   }
 }
