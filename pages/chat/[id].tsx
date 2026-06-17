@@ -4,7 +4,8 @@ import { useTranslation } from 'next-i18next';
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
-import { Send, CheckCircle, Circle, Lock, ChevronLeft, BookOpen } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Send, CheckCircle, Circle, Lock, ChevronLeft, BookOpen, Zap, Flame } from 'lucide-react';
 import Layout from '@/components/Layout';
 import { useUser } from '@/lib/useUser';
 import { getBrowserClient } from '@/lib/supabase';
@@ -45,6 +46,15 @@ export default function ChatDetail({ id }: { id: string }) {
   const [sending, setSending]   = useState(false);
   const [pageLoading, setPageLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  interface CelebrationData {
+    lessonTitle: string;
+    xpGained: number;
+    newStreak: number;
+    nextLesson: string | null;
+    isFinal: boolean;
+  }
+  const [celebration, setCelebration] = useState<CelebrationData | null>(null);
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef  = useRef<HTMLTextAreaElement>(null);
@@ -137,6 +147,9 @@ export default function ChatDetail({ id }: { id: string }) {
     if (!chat || !user) return;
     const supabase = getBrowserClient();
     const nextIndex = chat.current_lesson_index + 1;
+    const isFinal = nextIndex >= chat.total_lessons;
+    const completedLesson = lessons.find((l) => l.lesson_index === chat.current_lesson_index);
+    const nextLesson = lessons.find((l) => l.lesson_index === nextIndex) ?? null;
 
     // Fetch profile for XP + streak calculation
     const { data: profileData } = await supabase
@@ -158,11 +171,11 @@ export default function ChatDetail({ id }: { id: string }) {
         .update({ status: 'completed', completed_at: new Date().toISOString() })
         .eq('chat_id', id)
         .eq('lesson_index', chat.current_lesson_index),
-      nextIndex < chat.total_lessons
+      !isFinal
         ? supabase.from('lessons').update({ status: 'active' }).eq('chat_id', id).eq('lesson_index', nextIndex)
         : Promise.resolve(),
       supabase.from('chats')
-        .update({ current_lesson_index: nextIndex, status: nextIndex >= chat.total_lessons ? 'completed' : 'active' })
+        .update({ current_lesson_index: nextIndex, status: isFinal ? 'completed' : 'active' })
         .eq('id', id),
       supabase.from('profiles')
         .update({ xp: (profileData?.xp ?? 0) + 50, streak_days: newStreak, last_active_date: today })
@@ -175,6 +188,14 @@ export default function ChatDetail({ id }: { id: string }) {
       if (l.lesson_index === nextIndex) return { ...l, status: 'active' };
       return l;
     }));
+
+    setCelebration({
+      lessonTitle: completedLesson?.title ?? 'Lesson',
+      xpGained: 50,
+      newStreak,
+      nextLesson: nextLesson?.title ?? null,
+      isFinal,
+    });
   };
 
   if (userLoading || pageLoading) {
@@ -191,6 +212,72 @@ export default function ChatDetail({ id }: { id: string }) {
 
   return (
     <Layout fullscreen>
+      {/* Celebration overlay */}
+      <AnimatePresence>
+        {celebration && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4"
+            onClick={() => setCelebration(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: -10 }}
+              transition={{ type: 'spring', damping: 20, stiffness: 300 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-[var(--bg-card)] border border-[var(--border)] rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl"
+            >
+              {celebration.isFinal ? (
+                <>
+                  <div className="text-5xl mb-4">🏆</div>
+                  <h2 className="text-2xl font-extrabold text-[var(--text-primary)] mb-1">Course Complete!</h2>
+                  <p className="text-sm text-[var(--text-secondary)] mb-6">You finished every lesson in this course. That&apos;s huge.</p>
+                </>
+              ) : (
+                <>
+                  <div className="text-5xl mb-4">🎉</div>
+                  <h2 className="text-xl font-extrabold text-[var(--text-primary)] mb-1">Lesson complete!</h2>
+                  <p className="text-sm text-[var(--text-muted)] mb-6 line-clamp-2">{celebration.lessonTitle}</p>
+                </>
+              )}
+
+              {/* XP + Streak badges */}
+              <div className="flex justify-center gap-3 mb-6">
+                <div className="flex items-center gap-1.5 bg-green-50 dark:bg-green-900/20 text-[var(--color-green)] px-4 py-2 rounded-xl font-bold text-sm">
+                  <Zap size={15} />
+                  +{celebration.xpGained} XP
+                </div>
+                {celebration.newStreak > 1 && (
+                  <div className="flex items-center gap-1.5 bg-orange-50 dark:bg-orange-900/20 text-orange-500 px-4 py-2 rounded-xl font-bold text-sm">
+                    <Flame size={15} />
+                    {celebration.newStreak} day streak
+                  </div>
+                )}
+              </div>
+
+              {!celebration.isFinal && celebration.nextLesson && (
+                <p className="text-xs text-[var(--text-muted)] mb-5">
+                  Next up: <span className="font-semibold text-[var(--text-primary)]">{celebration.nextLesson}</span>
+                </p>
+              )}
+
+              <button
+                onClick={() => {
+                  setCelebration(null);
+                  if (celebration.isFinal) router.push('/dashboard');
+                }}
+                className="w-full py-3 rounded-xl bg-[var(--color-brand)] text-white font-bold text-sm hover:opacity-90 transition-opacity"
+              >
+                {celebration.isFinal ? 'Back to Dashboard' : 'Continue learning →'}
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <div className="flex h-screen overflow-hidden">
 
         {/* Lesson Sidebar */}
