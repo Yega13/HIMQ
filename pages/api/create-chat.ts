@@ -70,10 +70,14 @@ Return this exact JSON structure:
   }
 
   // Step 2: Generate opening message for lesson 1
-  const openingSystemPrompt = `You are EduPath, an enthusiastic and friendly AI teacher. Be warm, concise, and engaging. 3-4 sentences max.`;
-  const openingUserMessage = `You are about to teach a ${level}-level student who wants to learn: "${goal}".
-Start with Lesson 1: "${plan.lessons[0].title}" — ${plan.lessons[0].description}
-Write a warm welcome that introduces yourself, explains what this first lesson covers, and ends with one engaging question to get the student started.`;
+  const openingSystemPrompt = `You are EduPath AI — a sharp, warm, and direct personal teacher. Be concise: 3 sentences max.`;
+  const openingUserMessage = `A student wants to learn: "${goal}". You will teach them across ${plan.lessons.length} lessons.
+
+Write your opening message following these rules exactly:
+1. One short sentence: introduce yourself as EduPath AI.
+2. Do NOT explain any topic or start teaching yet.
+3. Ask ONE diagnostic question: what have they actually worked on or built related to "${goal}" before? Ask for specifics (tools, projects, concepts) — not just "what's your level".
+Total: 2-3 sentences.`;
 
   let openingMessage: string;
   try {
@@ -83,7 +87,7 @@ Write a warm welcome that introduces yourself, explains what this first lesson c
       openingSystemPrompt
     );
   } catch {
-    openingMessage = `Welcome! I'm EduPath AI, and I'll be your personal teacher for "${plan.lessons[0].title}". ${plan.lessons[0].description} Let's get started — what do you already know about this topic?`;
+    openingMessage = `Hey, I'm EduPath AI — your personal teacher for this journey into "${goal}". Before we get started, I want to understand where you're coming from: what have you actually worked on or tried related to this topic before? Tell me specifics — any tools, projects, or concepts you've encountered.`;
   }
 
   // Step 3: Save to DB using admin client (bypasses RLS for the insert)

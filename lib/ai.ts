@@ -1,102 +1,68 @@
-// Server-side only — holds secret API keys
+// Server-side only
 if (typeof window !== 'undefined') {
   throw new Error('lib/ai.ts must not be imported client-side');
 }
 
-import { GoogleGenerativeAI } from '@google/generative-ai';
 import Anthropic from '@anthropic-ai/sdk';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
-if (!process.env.GEMINI_API_KEY) throw new Error('Missing GEMINI_API_KEY');
-
-const gemini = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-
-// Claude is optional — only used as fallback when ANTHROPIC_API_KEY is present
+// Claude is PRIMARY. Gemini is fallback.
+// Both are optional individually but at least one must be present.
 const anthropic: Anthropic | null = process.env.ANTHROPIC_API_KEY
   ? new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
   : null;
 
-export type AIRole = 'plan' | 'chat';
+const gemini: GoogleGenerativeAI | null = process.env.GEMINI_API_KEY
+  ? new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
+  : null;
 
-export interface AIMessage {
-  role: 'user' | 'assistant';
-  content: string;
+if (!anthropic && !gemini) {
+  throw new Error('Configure at least one of ANTHROPIC_API_KEY or GEMINI_API_KEY');
 }
 
-const GEMINI_PLAN = 'gemini-1.5-pro';
-const GEMINI_CHAT = 'gemini-1.5-flash';
+export type AIRole = 'plan' | 'chat';
+export interface AIMessage { role: 'user' | 'assistant'; content: string; }
 
-export async function generateWithGemini(
-  messages: AIMessage[],
-  role: AIRole,
-  systemPrompt: string
-): Promise<string> {
-  if (messages.length === 0) throw new Error('messages must not be empty');
-
-  const model = gemini.getGenerativeModel({
-    model: role === 'plan' ? GEMINI_PLAN : GEMINI_CHAT,
-    systemInstruction: systemPrompt,
+async function withClaude(messages: AIMessage[], role: AIRole, system: string): Promise<string> {
+  if (!anthropic) throw new Error('ANTHROPIC_API_KEY not set');
+  const model = role === 'plan' ? 'claude-sonnet-4-6' : 'claude-haiku-4-5-20251001';
+  const res = await anthropic.messages.create({
+    model, max_tokens: role === 'plan' ? 2000 : 800, system, messages,
   });
+  const block = res.content[0];
+  if (block.type !== 'text') throw new Error('Unexpected Claude response type');
+  return block.text;
+}
 
+async function withGemini(messages: AIMessage[], role: AIRole, system: string): Promise<string> {
+  if (!gemini) throw new Error('GEMINI_API_KEY not set');
+  const modelName = role === 'plan' ? 'gemini-1.5-pro' : 'gemini-1.5-flash';
+  const model = gemini.getGenerativeModel({ model: modelName, systemInstruction: system });
   const history = messages.slice(0, -1).map((m) => ({
     role: m.role === 'assistant' ? 'model' : 'user',
     parts: [{ text: m.content }],
   }));
-
-  const chat = model.startChat({
-    history,
-    generationConfig: { maxOutputTokens: role === 'plan' ? 2000 : 800 },
-  });
-
+  const chat = model.startChat({ history, generationConfig: { maxOutputTokens: role === 'plan' ? 2000 : 800 } });
   const result = await chat.sendMessage(messages[messages.length - 1].content);
   return result.response.text();
 }
 
-async function generateWithClaude(
-  messages: AIMessage[],
-  role: AIRole,
-  systemPrompt: string
-): Promise<string> {
-  if (!anthropic) throw new Error('ANTHROPIC_API_KEY not configured');
-
-  const model = role === 'plan' ? 'claude-sonnet-4-6' : 'claude-haiku-4-5-20251001';
-
-  const response = await anthropic.messages.create({
-    model,
-    max_tokens: role === 'plan' ? 2000 : 800,
-    system: systemPrompt,
-    messages,
-  });
-
-  const block = response.content[0];
-  if (block.type !== 'text') throw new Error('Unexpected response type from Claude');
-  return block.text;
-}
-
-const FALLBACK_MESSAGE =
-  'AI is temporarily unavailable. Please try again in a moment.';
-
 export async function generateAIResponse(
-  messages: AIMessage[],
-  role: AIRole,
-  systemPrompt: string
+  messages: AIMessage[], role: AIRole, system: string
 ): Promise<string> {
-  if (messages.length === 0) return FALLBACK_MESSAGE;
+  if (messages.length === 0) return 'AI is temporarily unavailable. Please try again.';
 
-  // Primary: Gemini
-  try {
-    return await generateWithGemini(messages, role, systemPrompt);
-  } catch (err) {
-    console.error('[AI] Gemini failed:', err);
-  }
-
-  // Fallback: Claude (only if ANTHROPIC_API_KEY is set)
+  // 1. Claude (primary)
   if (anthropic) {
-    try {
-      return await generateWithClaude(messages, role, systemPrompt);
-    } catch (err) {
-      console.error('[AI] Claude also failed:', err);
-    }
+    try { return await withClaude(messages, role, system); }
+    catch (e) { console.error('[AI] Claude failed, trying Gemini:', e); }
   }
 
-  return FALLBACK_MESSAGE;
+  // 2. Gemini (fallback)
+  if (gemini) {
+    try { return await withGemini(messages, role, system); }
+    catch (e) { console.error('[AI] Gemini also failed:', e); }
+  }
+
+  return 'AI is temporarily unavailable. Please try again in a moment.';
 }
