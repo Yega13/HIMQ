@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { Sparkles, ArrowRight, BookOpen, Map } from 'lucide-react';
+import { Sparkles, ArrowRight, BookOpen, Map, ChevronDown } from 'lucide-react';
 import Layout from '@/components/Layout';
 import { useUser } from '@/lib/useUser';
 import { getBrowserClient } from '@/lib/supabase';
@@ -155,18 +155,26 @@ export default function ChatIndex() {
           </motion.div>
         )}
 
-        {/* Divider / toggle for new path */}
+        {/* New path CTA card */}
         {activeChats.length > 0 && (
-          <div className="flex items-center gap-3 mb-8">
-            <div className="flex-1 h-px bg-[var(--border)]" />
+          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="mb-6">
             <button
               onClick={() => setShowNewPath((v) => !v)}
-              className="text-xs font-medium text-[var(--text-muted)] hover:text-[var(--color-brand)] transition-colors whitespace-nowrap"
+              className="w-full flex items-center gap-4 p-4 rounded-2xl border-2 border-dashed border-[var(--color-brand)] hover:bg-blue-50 dark:hover:bg-blue-900/10 transition-colors group"
             >
-              {showNewPath ? '↑ Hide new path' : '+ Start a new learning path'}
+              <div className="w-11 h-11 rounded-xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0">
+                <Sparkles size={20} className="text-[var(--color-brand)]" />
+              </div>
+              <div className="text-left flex-1">
+                <p className="font-bold text-[var(--color-brand)] text-sm">Start a new learning path</p>
+                <p className="text-xs text-[var(--text-secondary)] mt-0.5">AI builds a 5-lesson course on any topic in seconds</p>
+              </div>
+              <ChevronDown
+                size={18}
+                className={cn('text-[var(--color-brand)] transition-transform flex-shrink-0', showNewPath && 'rotate-180')}
+              />
             </button>
-            <div className="flex-1 h-px bg-[var(--border)]" />
-          </div>
+          </motion.div>
         )}
 
         {/* New path form */}

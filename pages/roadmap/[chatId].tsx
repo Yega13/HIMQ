@@ -56,12 +56,12 @@ export default function RoadmapPage({ chatId }: { chatId: string }) {
   if (userLoading || loading) {
     return (
       <Layout>
-        <div className="max-w-sm mx-auto px-4 py-12">
+        <div className="max-w-xl mx-auto px-4 py-12">
           {[0, 1, 2, 3, 4].map((i) => (
             <div key={i} className={cn('flex mb-2', i % 2 === 0 ? 'justify-start' : 'justify-end')}>
               <div className="flex flex-col items-center" style={{ width: 90 }}>
-                <div className="w-16 h-16 rounded-full bg-[var(--border)] animate-pulse" />
-                <div className="h-2.5 w-14 rounded bg-[var(--border)] animate-pulse mt-2" />
+                <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-[var(--border)] animate-pulse" />
+                <div className="h-2.5 w-14 md:w-20 rounded bg-[var(--border)] animate-pulse mt-2" />
               </div>
             </div>
           ))}
@@ -77,7 +77,7 @@ export default function RoadmapPage({ chatId }: { chatId: string }) {
   return (
     <Layout>
       <Head><title>{chat?.title ?? 'Roadmap'} — EduPath</title></Head>
-      <div className="max-w-sm mx-auto px-4 py-8">
+      <div className="max-w-xl mx-auto px-4 py-8">
 
         {/* Back */}
         <Link
@@ -123,33 +123,32 @@ export default function RoadmapPage({ chatId }: { chatId: string }) {
                     initial={{ scale: 0.7, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     transition={{ delay: i * 0.09, type: 'spring', stiffness: 200 }}
-                    className="flex flex-col items-center"
-                    style={{ width: 90 }}
+                    className="flex flex-col items-center w-[90px] md:w-[120px]"
                   >
                     {/* Circle */}
                     {isCompleted || isActive ? (
                       <Link href={`/chat/${chatId}`} className="group block">
                         <div className={cn(
-                          'w-16 h-16 rounded-full flex items-center justify-center shadow-lg transition-transform group-hover:scale-110',
+                          'w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center shadow-lg transition-transform group-hover:scale-110',
                           isCompleted
                             ? 'bg-green-500 text-white'
                             : 'bg-[var(--color-brand)] text-white ring-[5px] ring-blue-200 dark:ring-blue-900/50'
                         )}>
                           {isCompleted
-                            ? <CheckCircle size={28} />
-                            : <span className="text-xl font-bold">{i + 1}</span>
+                            ? <CheckCircle size={28} className="md:w-8 md:h-8" />
+                            : <span className="text-xl md:text-2xl font-bold">{i + 1}</span>
                           }
                         </div>
                       </Link>
                     ) : (
-                      <div className="w-16 h-16 rounded-full flex items-center justify-center bg-[var(--bg-card)] border-2 border-dashed border-[var(--border)] opacity-60">
+                      <div className="w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center bg-[var(--bg-card)] border-2 border-dashed border-[var(--border)] opacity-60">
                         <Lock size={18} className="text-[var(--text-muted)]" />
                       </div>
                     )}
 
                     {/* Label */}
                     <p className={cn(
-                      'text-[10px] font-semibold text-center mt-1.5 leading-tight w-[80px]',
+                      'text-[10px] md:text-[11px] font-semibold text-center mt-1.5 leading-tight w-[80px] md:w-[100px]',
                       isCompleted ? 'text-green-600 dark:text-green-400' :
                       isActive    ? 'text-[var(--color-brand)]' :
                                     'text-[var(--text-muted)]'
@@ -175,10 +174,10 @@ export default function RoadmapPage({ chatId }: { chatId: string }) {
                     animate={{ opacity: 1 }}
                     transition={{ delay: i * 0.09 + 0.15 }}
                     className={cn(
-                      'h-10 my-1',
+                      'h-10 md:h-14 my-1',
                       isLeft
-                        ? 'border-l-[3px] border-b-[3px] rounded-bl-[36px]'
-                        : 'border-r-[3px] border-b-[3px] rounded-br-[36px]',
+                        ? 'border-l-[3px] border-b-[3px] rounded-bl-[36px] md:rounded-bl-[48px]'
+                        : 'border-r-[3px] border-b-[3px] rounded-br-[36px] md:rounded-br-[48px]',
                       isCompleted
                         ? 'border-green-400 dark:border-green-500'
                         : 'border-[var(--border)]'
