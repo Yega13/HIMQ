@@ -314,12 +314,11 @@ export default function ChatDetail({ id }: { id: string }) {
             {messages.map((msg) => (
               <div key={msg.id} className={cn('flex', msg.role === 'user' ? 'justify-end' : 'justify-start')}>
                 <div className={cn('max-w-[76%]', msg.role === 'user' ? 'items-end' : 'items-start')}>
-                  <p className={cn(
-                    'text-[11px] font-medium mb-1',
-                    msg.role === 'user' ? 'text-right text-[var(--text-muted)]' : 'text-[var(--color-brand)]'
-                  )}>
-                    {msg.role === 'user' ? t('chat.you') : t('chat.ai')}
-                  </p>
+                  {msg.role === 'assistant' && (
+                    <p className="text-[11px] font-medium mb-1 text-[var(--color-brand)]">
+                      {t('chat.ai')}
+                    </p>
+                  )}
                   <div className={cn(
                     'px-4 py-3 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap',
                     msg.role === 'user'
