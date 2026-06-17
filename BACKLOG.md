@@ -1,10 +1,8 @@
 # EduPath Backlog
 
-Items not done in Day 3. Pick these up in future sessions.
-
 ## UX Polish
-- [ ] Profile page: after saving, sync `full_name` to Supabase `user_metadata` so it shows instantly in Navbar
-- [ ] Auth page: after sign-in, if there's a `?next=` param in URL, redirect there instead of dashboard (for "Prepare me" flow when not logged in)
+- [x] Profile page: after saving, sync `full_name` to Supabase `user_metadata` — DONE Day 4
+- [x] Auth page: after sign-in, if there's a `?next=` param in URL, redirect there — DONE Day 4
 - [ ] Add skeleton loaders to: profile page, opportunities list, leaderboard
 - [ ] Mobile: bottom nav active state highlight (currently no active indicator)
 
@@ -15,12 +13,21 @@ Items not done in Day 3. Pick these up in future sessions.
 - [ ] Armenian translations for leaderboard page (currently hardcoded English strings)
 
 ## Features
-- [ ] Streak system: increment `streak_days` when user completes a lesson on a new calendar day
-- [ ] Owner dashboard: let event organizers submit and manage their own events (`/owner/*` pages — stubs exist)
-- [ ] Admin panel: approve/reject submitted events (`/admin` page — stub exists)
-- [ ] Roadmap page (`/roadmap/[chatId]`): visual timeline of lessons — stub exists
+- [x] Streak system: increment `streak_days` when user completes a lesson on a new calendar day — DONE Day 4
+- [x] Owner: let event organizers submit events (`/owner/submit-event`) — DONE Day 4
+- [x] Admin panel: approve/reject submitted events (`/admin`) — DONE Day 4
+- [x] Roadmap page (`/roadmap/[chatId]`): visual timeline of lessons — DONE Day 4
+- [x] Rate limiting on `/api/chat` — 50 msg/day — DONE Day 4
+- [ ] Rate limiting on `/api/create-chat` (plan generation)
+- [ ] Error monitoring (Sentry or similar)
+- [ ] Email confirmation flow for sign-up (UX guidance after account creation)
 
 ## Infrastructure
-- [ ] Rate limiting on `/api/chat` and `/api/create-chat` (currently anyone can burn Claude credits)
-- [ ] Error monitoring (Sentry or similar)
-- [ ] Email confirmation flow for sign-up (currently Supabase sends email but UX doesn't guide user)
+- [ ] Run migration for rate limiting + streaks:
+  ```sql
+  ALTER TABLE profiles ADD COLUMN IF NOT EXISTS last_active_date date;
+  ALTER TABLE profiles ADD COLUMN IF NOT EXISTS daily_messages_used integer DEFAULT 0;
+  ALTER TABLE profiles ADD COLUMN IF NOT EXISTS last_message_date date;
+  ```
+- [ ] Add INSERT RLS policy on `events` table for authenticated users (needed for owner submit-event)
+- [ ] Add `ADMIN_PASSWORD` to Vercel env vars (defaults to `edupath2026` — change it!)
