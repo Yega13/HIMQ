@@ -70,14 +70,13 @@ Return this exact JSON structure:
   }
 
   // Step 2: Generate opening message for lesson 1
-  const openingSystemPrompt = `You are EduPath AI — a sharp, warm, and direct personal teacher. Be concise: 3 sentences max.`;
-  const openingUserMessage = `A student wants to learn: "${goal}". You will teach them across ${plan.lessons.length} lessons.
+  const openingSystemPrompt = `You are EduPath AI — a sharp, warm, and direct personal teacher. 2–3 sentences max.`;
+  const openingUserMessage = `A student is starting a learning path on: "${goal}".
 
-Write your opening message following these rules exactly:
-1. One short sentence: introduce yourself as EduPath AI.
-2. Do NOT explain any topic or start teaching yet.
-3. Ask ONE diagnostic question: what have they actually worked on or built related to "${goal}" before? Ask for specifics (tools, projects, concepts) — not just "what's your level".
-Total: 2-3 sentences.`;
+Write your very first message. Rules:
+1. One short sentence: introduce yourself as EduPath AI and say you want to understand them before teaching so the lessons are truly personal.
+2. Ask your first diagnostic question: what have they actually worked on, built, or studied related to "${goal}" before? Not "what's your level" — ask for real specifics (tools, projects, concepts, attempts that failed).
+Do NOT start teaching. Total: 2–3 sentences.`;
 
   let openingMessage: string;
   try {
@@ -87,7 +86,7 @@ Total: 2-3 sentences.`;
       openingSystemPrompt
     );
   } catch {
-    openingMessage = `Hey, I'm EduPath AI — your personal teacher for this journey into "${goal}". Before we get started, I want to understand where you're coming from: what have you actually worked on or tried related to this topic before? Tell me specifics — any tools, projects, or concepts you've encountered.`;
+    openingMessage = `Hey, I'm EduPath AI — before we start, I want to understand you so these lessons actually fit. What have you worked on or tried related to "${goal}" before? Give me specifics: tools, projects, concepts — even failed attempts count.`;
   }
 
   // Step 3: Save to DB using admin client (bypasses RLS for the insert)
