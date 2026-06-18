@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Head from 'next/head';
 import { Zap, Flame, Trophy } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'next-i18next';
 import Layout from '@/components/Layout';
 import { supabase, getBrowserClient } from '@/lib/supabase';
 import { cn } from '@/lib/utils';
@@ -16,6 +17,7 @@ interface Entry {
 }
 
 export default function Leaderboard({ profiles }: { profiles: Entry[] }) {
+  const { t } = useTranslation('common');
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -28,13 +30,13 @@ export default function Leaderboard({ profiles }: { profiles: Entry[] }) {
 
   return (
     <Layout>
-      <Head><title>Leaderboard — EduPath</title></Head>
+      <Head><title>{t('leaderboard.title')} — EduPath</title></Head>
       <div className="max-w-2xl mx-auto px-4 py-8">
         <div className="flex items-center gap-3 mb-2">
           <Trophy size={24} className="text-yellow-500" />
-          <h1 className="text-2xl font-bold text-[var(--text-primary)]">Leaderboard</h1>
+          <h1 className="text-2xl font-bold text-[var(--text-primary)]">{t('leaderboard.title')}</h1>
         </div>
-        <p className="text-sm text-[var(--text-secondary)] mb-8">Top learners ranked by XP earned.</p>
+        <p className="text-sm text-[var(--text-secondary)] mb-8">{t('leaderboard.subtitle')}</p>
 
         {/* Podium */}
         {top3.length >= 1 && (
@@ -49,7 +51,7 @@ export default function Leaderboard({ profiles }: { profiles: Entry[] }) {
               >
                 <div className="text-2xl mb-1">🥈</div>
                 <p className="text-xs font-bold text-[var(--text-primary)] truncate">
-                  {top3[1].full_name ?? 'Anonymous'}
+                  {top3[1].full_name ?? t('leaderboard.anonymous')}
                 </p>
                 <p className="text-lg font-extrabold text-slate-500">{top3[1].xp} XP</p>
               </motion.div>
@@ -62,7 +64,7 @@ export default function Leaderboard({ profiles }: { profiles: Entry[] }) {
             >
               <div className="text-3xl mb-1">🥇</div>
               <p className="text-xs font-bold text-[var(--text-primary)] truncate">
-                {top3[0].full_name ?? 'Anonymous'}
+                {top3[0].full_name ?? t('leaderboard.anonymous')}
               </p>
               <p className="text-xl font-extrabold text-yellow-600">{top3[0].xp} XP</p>
             </motion.div>
@@ -76,7 +78,7 @@ export default function Leaderboard({ profiles }: { profiles: Entry[] }) {
               >
                 <div className="text-2xl mb-1">🥉</div>
                 <p className="text-xs font-bold text-[var(--text-primary)] truncate">
-                  {top3[2].full_name ?? 'Anonymous'}
+                  {top3[2].full_name ?? t('leaderboard.anonymous')}
                 </p>
                 <p className="text-lg font-extrabold text-amber-600">{top3[2].xp} XP</p>
               </motion.div>
@@ -89,7 +91,7 @@ export default function Leaderboard({ profiles }: { profiles: Entry[] }) {
           {profiles.length === 0 ? (
             <div className="px-5 py-12 text-center">
               <Trophy size={32} className="text-[var(--text-muted)] mx-auto mb-3" />
-              <p className="text-sm text-[var(--text-muted)]">No rankings yet. Be the first!</p>
+              <p className="text-sm text-[var(--text-muted)]">{t('leaderboard.empty')}</p>
             </div>
           ) : (
             <ul className="divide-y divide-[var(--border)]">
@@ -122,17 +124,17 @@ export default function Leaderboard({ profiles }: { profiles: Entry[] }) {
 
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-[var(--text-primary)] truncate">
-                        {entry.full_name ?? 'Anonymous'}
+                        {entry.full_name ?? t('leaderboard.anonymous')}
                         {isMe && (
                           <span className="ml-2 text-[10px] bg-blue-100 dark:bg-blue-900/30 text-[var(--color-brand)] font-semibold px-1.5 py-0.5 rounded-full">
-                            YOU
+                            {t('leaderboard.you')}
                           </span>
                         )}
                       </p>
                       {entry.streak_days > 0 && (
                         <p className="text-[11px] text-orange-500 flex items-center gap-0.5 mt-0.5">
                           <Flame size={10} />
-                          {entry.streak_days} day streak
+                          {entry.streak_days} {t('leaderboard.day_streak')}
                         </p>
                       )}
                     </div>

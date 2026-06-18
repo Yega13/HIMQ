@@ -87,6 +87,14 @@
     "member_since": "Member since",
     "no_goal": "No goal set yet"
   },
+  "leaderboard": {
+    "title": "Leaderboard",
+    "subtitle": "Top learners ranked by XP earned.",
+    "anonymous": "Anonymous",
+    "empty": "No rankings yet. Be the first!",
+    "you": "YOU",
+    "day_streak": "day streak"
+  },
   "common": {
     "loading": "Loading...",
     "error": "Something went wrong",

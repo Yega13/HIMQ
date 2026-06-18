@@ -4,13 +4,13 @@
 - [x] Profile page: after saving, sync `full_name` to Supabase `user_metadata` — DONE Day 4
 - [x] Auth page: after sign-in, if there's a `?next=` param in URL, redirect there — DONE Day 4
 - [ ] Add skeleton loaders to: profile page, opportunities list, leaderboard
-- [ ] Mobile: bottom nav active state highlight (currently no active indicator)
+- [x] Mobile: bottom nav active state highlight — DONE Day 5
 
 ## Content
 - [ ] Replace picsum.photos placeholder image in hero with a real photo of Armenian students
 - [ ] Add a proper About / Pitch page (linked from "Beta — Free during SSS Demo" badge)
 - [ ] Add more events to the `events` table (currently only 8 seed rows)
-- [ ] Armenian translations for leaderboard page (currently hardcoded English strings)
+- [x] Armenian translations for leaderboard page — DONE Day 6
 
 ## Features
 - [x] Streak system: increment `streak_days` when user completes a lesson on a new calendar day — DONE Day 4
