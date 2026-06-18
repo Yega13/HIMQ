@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { supabase, getAdminClient } from '@/lib/supabase';
 import { generateAIResponse } from '@/lib/ai';
+import { type ModelId, DEFAULT_MODEL } from '@/lib/models';
 
 const DAILY_LIMIT = 50;
 
@@ -13,10 +14,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const { data: { user }, error: authErr } = await supabase.auth.getUser(token);
   if (authErr || !user) return res.status(401).json({ error: 'Unauthorized' });
 
-  const { chatId, message } = req.body as { chatId?: string; message?: string };
+  const { chatId, message, model } = req.body as { chatId?: string; message?: string; model?: ModelId };
   if (!chatId || !message?.trim()) {
     return res.status(400).json({ error: 'chatId and message are required' });
   }
+  const modelId: ModelId = model ?? DEFAULT_MODEL;
 
   const admin = getAdminClient();
 
@@ -130,7 +132,7 @@ You know this student well from your discovery conversation — make every respo
     lesson_index: chat.current_lesson_index,
   });
 
-  const reply = await generateAIResponse(aiMessages, 'chat', systemPrompt);
+  const reply = await generateAIResponse(aiMessages, 'chat', systemPrompt, modelId);
 
   await admin.from('messages').insert({
     chat_id: chatId,

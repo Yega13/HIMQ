@@ -5,9 +5,8 @@ if (typeof window !== 'undefined') {
 
 import Anthropic from '@anthropic-ai/sdk';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { type ModelId } from './models';
 
-// Claude is PRIMARY. Gemini is fallback.
-// Both are optional individually but at least one must be present.
 const anthropic: Anthropic | null = process.env.ANTHROPIC_API_KEY
   ? new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
   : null;
@@ -48,20 +47,33 @@ async function withGemini(messages: AIMessage[], role: AIRole, system: string): 
 }
 
 export async function generateAIResponse(
-  messages: AIMessage[], role: AIRole, system: string
+  messages: AIMessage[],
+  role: AIRole,
+  system: string,
+  modelId: ModelId = 'may1'
 ): Promise<string> {
   if (messages.length === 0) return 'AI is temporarily unavailable. Please try again.';
 
-  // 1. Claude (primary)
-  if (anthropic) {
-    try { return await withClaude(messages, role, system); }
-    catch (e) { console.error('[AI] Claude failed, trying Gemini:', e); }
-  }
-
-  // 2. Gemini (fallback)
-  if (gemini) {
-    try { return await withGemini(messages, role, system); }
-    catch (e) { console.error('[AI] Gemini also failed:', e); }
+  if (modelId === 'may1') {
+    // May-1: Claude primary, Gemini fallback
+    if (anthropic) {
+      try { return await withClaude(messages, role, system); }
+      catch (e) { console.error('[May-1] Claude failed, falling back to Gemini:', e); }
+    }
+    if (gemini) {
+      try { return await withGemini(messages, role, system); }
+      catch (e) { console.error('[May-1 fallback] Gemini also failed:', e); }
+    }
+  } else {
+    // Gemini: Gemini primary, May-1 fallback
+    if (gemini) {
+      try { return await withGemini(messages, role, system); }
+      catch (e) { console.error('[Gemini] failed, falling back to May-1:', e); }
+    }
+    if (anthropic) {
+      try { return await withClaude(messages, role, system); }
+      catch (e) { console.error('[Gemini fallback] May-1 also failed:', e); }
+    }
   }
 
   return 'AI is temporarily unavailable. Please try again in a moment.';

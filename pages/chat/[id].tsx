@@ -5,7 +5,8 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, CheckCircle, Circle, Lock, ChevronLeft, BookOpen, Zap, Flame } from 'lucide-react';
+import { Send, CheckCircle, Circle, Lock, ChevronLeft, BookOpen, Zap, Flame, ChevronDown } from 'lucide-react';
+import { MODELS, DEFAULT_MODEL, type ModelId } from '@/lib/models';
 import Layout from '@/components/Layout';
 import { useUser } from '@/lib/useUser';
 import { getBrowserClient } from '@/lib/supabase';
@@ -47,6 +48,8 @@ export default function ChatDetail({ id }: { id: string }) {
   const [pageLoading, setPageLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [generatingPlan, setGeneratingPlan] = useState(false);
+  const [selectedModel, setSelectedModel] = useState<ModelId>(DEFAULT_MODEL);
+  const [modelMenuOpen, setModelMenuOpen] = useState(false);
 
   interface CelebrationData {
     lessonTitle: string;
@@ -116,7 +119,7 @@ export default function ChatDetail({ id }: { id: string }) {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${session?.access_token ?? ''}`,
         },
-        body: JSON.stringify({ chatId: id, message: userMsg }),
+        body: JSON.stringify({ chatId: id, message: userMsg, model: selectedModel }),
       });
 
       if (!res.ok) throw new Error('Failed to get response');
@@ -450,8 +453,12 @@ export default function ChatDetail({ id }: { id: string }) {
               <div key={msg.id} className={cn('flex', msg.role === 'user' ? 'justify-end' : 'justify-start')}>
                 <div className={cn('max-w-[76%]', msg.role === 'user' ? 'items-end' : 'items-start')}>
                   {msg.role === 'assistant' && (
-                    <p className="text-[11px] font-medium mb-1 text-[var(--color-brand)]">
+                    <p className="text-[11px] font-medium mb-1 text-[var(--color-brand)] flex items-center gap-1.5">
                       {t('chat.ai')}
+                      <span className="text-[var(--text-muted)] font-normal">·</span>
+                      <span className="text-[var(--text-muted)] font-normal">
+                        {MODELS.find((m) => m.id === selectedModel)?.name}
+                      </span>
                     </p>
                   )}
                   <div className={cn(
@@ -482,7 +489,61 @@ export default function ChatDetail({ id }: { id: string }) {
 
           {/* Input */}
           {!allDone && (
-            <div className="px-4 py-3 border-t border-[var(--border)] bg-[var(--bg-secondary)]">
+            <div className="px-4 pt-2 pb-3 border-t border-[var(--border)] bg-[var(--bg-secondary)]">
+              {/* Model selector */}
+              <div className="max-w-3xl mx-auto mb-2 relative">
+                {(() => {
+                  const active = MODELS.find((m) => m.id === selectedModel)!;
+                  return (
+                    <>
+                      <button
+                        onClick={() => setModelMenuOpen((v) => !v)}
+                        className={cn(
+                          'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-colors',
+                          active.bg, active.color
+                        )}
+                      >
+                        <span className={cn('w-1.5 h-1.5 rounded-full', active.dot)} />
+                        {active.name}
+                        <ChevronDown size={11} className={cn('transition-transform', modelMenuOpen && 'rotate-180')} />
+                      </button>
+
+                      <AnimatePresence>
+                        {modelMenuOpen && (
+                          <motion.div
+                            initial={{ opacity: 0, y: -6, scale: 0.96 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: -6, scale: 0.96 }}
+                            transition={{ duration: 0.12 }}
+                            className="absolute bottom-full left-0 mb-1 bg-[var(--bg-card)] border border-[var(--border)] rounded-xl shadow-lg overflow-hidden z-10 min-w-[160px]"
+                          >
+                            {MODELS.map((m) => (
+                              <button
+                                key={m.id}
+                                onClick={() => { setSelectedModel(m.id); setModelMenuOpen(false); }}
+                                className={cn(
+                                  'w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-[var(--border)] transition-colors',
+                                  selectedModel === m.id && 'bg-[var(--border)]'
+                                )}
+                              >
+                                <span className={cn('w-2 h-2 rounded-full flex-shrink-0', m.dot)} />
+                                <div>
+                                  <p className={cn('text-xs font-bold', m.color)}>{m.name}</p>
+                                  <p className="text-[10px] text-[var(--text-muted)]">{m.subtitle}</p>
+                                </div>
+                                {selectedModel === m.id && (
+                                  <CheckCircle size={13} className={cn('ml-auto flex-shrink-0', m.color)} />
+                                )}
+                              </button>
+                            ))}
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </>
+                  );
+                })()}
+              </div>
+
               <div className="flex items-end gap-2 max-w-3xl mx-auto">
                 <textarea
                   ref={inputRef}
