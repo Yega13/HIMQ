@@ -67,7 +67,11 @@ export default function ChatIndex() {
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token ?? ''}` },
         body: JSON.stringify({ chatId }),
       });
-      setActiveChats((prev) => prev.filter((c) => c.id !== chatId));
+      setActiveChats((prev) => {
+        const next = prev.filter((c) => c.id !== chatId);
+        if (next.length === 0) setShowNewPath(true);
+        return next;
+      });
     } finally {
       setDeleting(false);
       setConfirmDeleteId(null);

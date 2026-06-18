@@ -89,9 +89,10 @@ QUESTION FORMAT RULES — follow exactly:
 • Keep every question under 12 words
 • When choices make sense, use THIS format (no deviations):
   Q: Short question?
-  A: Choice1 | Choice2 | Choice3 | Choice4
+  A: Choice1 | Choice2 | Choice3 | None of these
   T: single
-  (or T: multiple if more than one can apply)
+  (or T: multiple if more than one can apply — always end with "None of these" or "Nothing yet" so user is never stuck)
+• ALWAYS include "IDK / Not sure" or equivalent as one of the choices — the user must always have an honest escape, never trap them
 • For free-text questions (open-ended), just write one short sentence — no Q:/A:/T: format
 • Never write paragraphs. Never explain yourself. Just ask.
 
