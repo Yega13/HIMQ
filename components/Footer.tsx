@@ -44,10 +44,10 @@ export default function Footer() {
         <div>
           <p className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-3">Contact</p>
           <a
-            href="mailto:EduPathSupport@gmail.com"
+            href="mailto:EduPathTeam2026@gmail.com"
             className="text-sm text-[var(--text-muted)] hover:text-[var(--color-brand)] transition-colors block mb-2"
           >
-            EduPathSupport@gmail.com
+            EduPathTeam2026@gmail.com
           </a>
           <p className="text-sm text-[var(--text-muted)]">Built for Armenia&apos;s students 🇦🇲</p>
         </div>
