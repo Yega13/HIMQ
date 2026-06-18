@@ -46,6 +46,7 @@ export default function ChatDetail({ id }: { id: string }) {
   const [sending, setSending]   = useState(false);
   const [pageLoading, setPageLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [generatingPlan, setGeneratingPlan] = useState(false);
 
   interface CelebrationData {
     lessonTitle: string;
@@ -127,6 +128,28 @@ export default function ChatDetail({ id }: { id: string }) {
         content: reply,
         created_at: new Date().toISOString(),
       }]);
+
+      // If AI signals it has enough info, generate the personalized plan
+      if (chat?.status === 'discovering' && reply.includes('I have everything I need')) {
+        setGeneratingPlan(true);
+        try {
+          const planRes = await fetch('/api/generate-plan', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${session?.access_token ?? ''}`,
+            },
+            body: JSON.stringify({ chatId: id }),
+          });
+          if (planRes.ok) {
+            const { chat: updatedChat, lessons: newLessons } = await planRes.json();
+            setChat(updatedChat);
+            setLessons(newLessons);
+          }
+        } finally {
+          setGeneratingPlan(false);
+        }
+      }
     } catch {
       setMessages((prev) => prev.filter((m) => m.id !== tempId));
       setInput(userMsg);
@@ -208,7 +231,8 @@ export default function ChatDetail({ id }: { id: string }) {
     );
   }
 
-  const allDone = chat ? chat.current_lesson_index >= chat.total_lessons : false;
+  const isDiscovering = chat?.status === 'discovering' || lessons.length === 0;
+  const allDone = !isDiscovering && chat ? chat.current_lesson_index >= chat.total_lessons && chat.total_lessons > 0 : false;
 
   return (
     <Layout fullscreen>
@@ -295,21 +319,45 @@ export default function ChatDetail({ id }: { id: string }) {
               {t('chat.back_to_chats')}
             </Link>
             <h2 className="text-sm font-semibold text-[var(--text-primary)] line-clamp-2">{chat?.title}</h2>
-            <p className="text-xs text-[var(--text-muted)] mt-0.5">
-              {t('chat.lesson_number', {
-                n: Math.min((chat?.current_lesson_index ?? 0) + 1, chat?.total_lessons ?? 5),
-                total: chat?.total_lessons ?? 5,
-              })}
-            </p>
-            <div className="mt-2 h-1.5 rounded-full bg-[var(--border)]">
-              <div
-                className="h-full rounded-full bg-[var(--color-brand)] transition-all"
-                style={{ width: `${Math.round(((chat?.current_lesson_index ?? 0) / (chat?.total_lessons ?? 5)) * 100)}%` }}
-              />
-            </div>
+            {lessons.length > 0 && (
+              <>
+                <p className="text-xs text-[var(--text-muted)] mt-0.5">
+                  {t('chat.lesson_number', {
+                    n: Math.min((chat?.current_lesson_index ?? 0) + 1, chat?.total_lessons ?? 5),
+                    total: chat?.total_lessons ?? 5,
+                  })}
+                </p>
+                <div className="mt-2 h-1.5 rounded-full bg-[var(--border)]">
+                  <div
+                    className="h-full rounded-full bg-[var(--color-brand)] transition-all"
+                    style={{ width: `${Math.round(((chat?.current_lesson_index ?? 0) / (chat?.total_lessons ?? 5)) * 100)}%` }}
+                  />
+                </div>
+              </>
+            )}
           </div>
 
           <div className="flex-1 overflow-y-auto p-3 space-y-1.5">
+            {/* Discovery / plan-generating state */}
+            {lessons.length === 0 && (
+              <div className="p-4 text-center">
+                {generatingPlan ? (
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                    <div className="w-8 h-8 border-2 border-[var(--color-brand)] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+                    <p className="text-xs font-semibold text-[var(--color-brand)] mb-1">Building your plan…</p>
+                    <p className="text-[10px] text-[var(--text-muted)]">Personalizing based on your answers</p>
+                  </motion.div>
+                ) : (
+                  <div>
+                    <div className="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center mx-auto mb-3">
+                      <BookOpen size={16} className="text-[var(--color-brand)]" />
+                    </div>
+                    <p className="text-xs font-semibold text-[var(--text-secondary)] mb-1">Your plan is coming</p>
+                    <p className="text-[10px] text-[var(--text-muted)] leading-relaxed">Answer the questions and your personalized lesson plan will appear here.</p>
+                  </div>
+                )}
+              </div>
+            )}
             {lessons.map((lesson) => (
               <div
                 key={lesson.id}
@@ -346,7 +394,7 @@ export default function ChatDetail({ id }: { id: string }) {
             ))}
           </div>
 
-          {!allDone && (
+          {!allDone && !isDiscovering && (
             <div className="p-3 border-t border-[var(--border)]">
               <button
                 onClick={completeLesson}

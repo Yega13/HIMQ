@@ -7,13 +7,13 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import Head from 'next/head';
 import { Sparkles, ArrowRight, BookOpen, Map, ChevronDown } from 'lucide-react';
+
+
 import Layout from '@/components/Layout';
 import { useUser } from '@/lib/useUser';
 import { getBrowserClient } from '@/lib/supabase';
 import { cn } from '@/lib/utils';
 
-const SKILL_LEVELS = ['beginner', 'intermediate', 'advanced'] as const;
-type SkillLevel = typeof SKILL_LEVELS[number];
 
 interface ActiveChat {
   id: string;
@@ -28,9 +28,8 @@ export default function ChatIndex() {
   const router = useRouter();
   const { user, loading } = useUser();
 
-  const [goal, setGoal]             = useState('');
-  const [skillLevel, setSkillLevel] = useState<SkillLevel>('beginner');
-  const [building, setBuilding]     = useState(false);
+  const [goal, setGoal]         = useState('');
+  const [building, setBuilding] = useState(false);
   const [error, setError]           = useState('');
   const [activeChats, setActiveChats] = useState<ActiveChat[]>([]);
   const [chatsLoaded, setChatsLoaded] = useState(false);
@@ -72,7 +71,7 @@ export default function ChatIndex() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${session?.access_token ?? ''}`,
         },
-        body: JSON.stringify({ goal: goal.trim(), skillLevel }),
+        body: JSON.stringify({ goal: goal.trim() }),
       });
 
       if (!res.ok) {
@@ -207,29 +206,6 @@ export default function ChatIndex() {
                 rows={3}
                 className="w-full px-4 py-3 rounded-xl border border-[var(--border)] bg-[var(--bg-card)] text-[var(--text-primary)] text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[var(--color-brand)] transition placeholder-[var(--text-muted)]"
               />
-
-              <div>
-                <p className="text-sm font-medium text-[var(--text-secondary)] mb-2">
-                  {t('chat.skill_label')}
-                </p>
-                <div className="grid grid-cols-3 gap-2">
-                  {SKILL_LEVELS.map((level) => (
-                    <button
-                      key={level}
-                      type="button"
-                      onClick={() => setSkillLevel(level)}
-                      className={cn(
-                        'py-2.5 rounded-xl text-sm font-medium border transition-all',
-                        skillLevel === level
-                          ? 'bg-[var(--color-brand)] text-white border-[var(--color-brand)]'
-                          : 'bg-[var(--bg-card)] text-[var(--text-secondary)] border-[var(--border)] hover:border-[var(--color-brand)]'
-                      )}
-                    >
-                      {t(`chat.skill_${level}`)}
-                    </button>
-                  ))}
-                </div>
-              </div>
 
               {error && <p className="text-sm text-red-500 dark:text-red-400">{error}</p>}
 
