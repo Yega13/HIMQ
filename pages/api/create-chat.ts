@@ -37,17 +37,18 @@ Total: 2–3 sentences. Do NOT start teaching.`;
 
   const admin = getAdminClient();
 
-  // Create chat in 'discovering' status — no lessons yet
+  // Create chat — no lessons yet (discovery phase tracked by total_lessons: 0)
+  // status stays 'active' to avoid schema constraints; discovery state = total_lessons === 0
   const { data: chat, error: chatErr } = await admin
     .from('chats')
     .insert({
       user_id: user.id,
       title: goal.trim(),
       chat_type: 'learning',
-      plan: null,
+      plan: { discovering: true },
       total_lessons: 0,
       current_lesson_index: 0,
-      status: 'discovering',
+      status: 'active',
     })
     .select()
     .single();

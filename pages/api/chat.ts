@@ -69,7 +69,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     .order('created_at', { ascending: true })
     .limit(20);
 
-  const isDiscovering = chat.status === 'discovering';
+  const isDiscovering = (chat.total_lessons ?? 0) === 0;
   const currentLesson = isDiscovering
     ? null
     : (chat.lessons as { lesson_index: number; title: string; description: string }[])

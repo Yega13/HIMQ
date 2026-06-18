@@ -130,7 +130,7 @@ export default function ChatDetail({ id }: { id: string }) {
       }]);
 
       // If AI signals it has enough info, generate the personalized plan
-      if (chat?.status === 'discovering' && reply.includes('I have everything I need')) {
+      if (lessons.length === 0 && reply.includes('I have everything I need')) {
         setGeneratingPlan(true);
         try {
           const planRes = await fetch('/api/generate-plan', {
@@ -231,7 +231,7 @@ export default function ChatDetail({ id }: { id: string }) {
     );
   }
 
-  const isDiscovering = chat?.status === 'discovering' || lessons.length === 0;
+  const isDiscovering = lessons.length === 0;
   const allDone = !isDiscovering && chat ? chat.current_lesson_index >= chat.total_lessons && chat.total_lessons > 0 : false;
 
   return (

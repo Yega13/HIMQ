@@ -36,7 +36,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     .single();
 
   if (chatErr || !chat) return res.status(404).json({ error: 'Chat not found' });
-  if (chat.status !== 'discovering') return res.status(400).json({ error: 'Plan already generated' });
+  if ((chat.total_lessons ?? 0) > 0) return res.status(400).json({ error: 'Plan already generated' });
 
   // Load full conversation
   const { data: messages } = await admin
