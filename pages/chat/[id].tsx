@@ -708,7 +708,7 @@ export default function ChatDetail({ id }: { id: string }) {
                   style={{ minHeight: '44px' }}
                 />
                 <button
-                  onClick={sendMessage}
+                  onClick={() => sendMessage()}
                   disabled={!input.trim() || sending}
                   className="flex-shrink-0 w-11 h-11 rounded-xl bg-[var(--color-brand)] text-white flex items-center justify-center hover:bg-[var(--color-brand-hover)] transition-colors disabled:opacity-50"
                 >
