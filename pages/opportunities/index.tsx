@@ -5,10 +5,12 @@ import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import Head from 'next/head';
-import { Calendar, Globe, ExternalLink, Search, Bookmark, BookmarkCheck, ArrowUp, ChevronDown } from 'lucide-react';
+import { Calendar, Globe, ExternalLink, Search, Bookmark, BookmarkCheck, ArrowUp, ChevronDown, Sparkles } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
-import { supabase } from '@/lib/supabase';
+import { supabase, getBrowserClient, IS_MOCK } from '@/lib/supabase';
+import { buildLessonPlan } from '@/lib/mockClient';
+import { useUser } from '@/lib/useUser';
 import { cn } from '@/lib/utils';
 import { getSavedEvents, toggleSavedEvent, type SavedEvent } from '@/lib/savedEvents';
 
@@ -74,7 +76,9 @@ function EventCardSkeleton() {
 export default function Opportunities({ events }: Props) {
   const { t } = useTranslation('common');
   const router = useRouter();
+  const { user } = useUser();
 
+  const [preparingId, setPreparingId] = useState<string | null>(null);
   const [activeType, setActiveType] = useState('all');
   const [onlineOnly, setOnlineOnly] = useState(false);
   const [closingSoon, setClosingSoon] = useState(false);
@@ -105,6 +109,48 @@ export default function Opportunities({ events }: Props) {
   const handleSave = (e: Event) => {
     const nowSaved = toggleSavedEvent(toSaved(e));
     setSavedIds((prev) => (nowSaved ? [...prev, e.id] : prev.filter((id) => id !== e.id)));
+  };
+
+  const handlePrepare = async (e: Event) => {
+    if (!user) {
+      router.push('/auth?next=/opportunities');
+      return;
+    }
+    setPreparingId(e.id);
+    try {
+      const client = getBrowserClient();
+      const goal = `Prepare me for: ${e.title}. Help me understand what's required, how to apply, and what to prepare.`;
+
+      if (IS_MOCK) {
+        const chatId = typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `${Date.now()}`;
+        const lessons = buildLessonPlan(chatId, `Prep: ${e.title}`);
+        await client.from('chats').insert({
+          id: chatId, user_id: user.id, title: `Prep: ${e.title}`, chat_type: 'learning',
+          plan: { discovering: false }, total_lessons: lessons.length, current_lesson_index: 0,
+          status: 'active', updated_at: new Date().toISOString(),
+        });
+        await client.from('lessons').insert(lessons);
+        await client.from('messages').insert({
+          chat_id: chatId, role: 'assistant',
+          content: `Hi! I'm May. Let's get you ready for "${e.title}". I've outlined a plan — open the first step when you're ready.`,
+          lesson_index: 0,
+        });
+        router.push(`/chat/${chatId}`);
+        return;
+      }
+
+      const { data: { session } } = await client.auth.getSession();
+      const res = await fetch('/api/create-chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token ?? ''}` },
+        body: JSON.stringify({ goal, skill_level: 'beginner' }),
+      });
+      if (!res.ok) throw new Error('Failed to create chat');
+      const { chatId } = await res.json();
+      router.push(`/chat/${chatId}`);
+    } catch {
+      setPreparingId(null);
+    }
   };
 
   const visible = useMemo(() => {
@@ -246,30 +292,49 @@ export default function Opportunities({ events }: Props) {
                   </Link>
 
                   {/* actions */}
-                  <div className="flex items-center gap-2 border-t border-[var(--border)] px-5 py-3">
+                  <div className="border-t border-[var(--border)] px-5 py-3 space-y-2">
                     <button
-                      onClick={() => handleSave(event)}
-                      className={cn(
-                        'inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold border transition-colors',
-                        saved
-                          ? 'border-[var(--color-brand)] text-[var(--color-brand)] bg-[var(--color-brand-soft)]'
-                          : 'border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--color-brand)]'
-                      )}
+                      onClick={() => handlePrepare(event)}
+                      disabled={preparingId === event.id}
+                      className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[var(--color-brand)] text-white text-xs font-bold hover:bg-[var(--color-brand-hover)] transition-colors disabled:opacity-60"
                     >
-                      {saved ? <BookmarkCheck size={14} /> : <Bookmark size={14} />}
-                      {saved ? t('opportunities.saved') : t('opportunities.save')}
+                      {preparingId === event.id ? (
+                        <>
+                          <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          {t('opportunities.prepare_building')}
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles size={14} />
+                          {t('opportunities.prepare_with_ai')}
+                        </>
+                      )}
                     </button>
-                    {event.link && (
-                      <a
-                        href={event.link}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="ml-auto inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[var(--color-brand)] text-white text-xs font-semibold hover:bg-[var(--color-brand-hover)] transition-colors"
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handleSave(event)}
+                        className={cn(
+                          'flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold border transition-colors',
+                          saved
+                            ? 'border-[var(--color-brand)] text-[var(--color-brand)] bg-[var(--color-brand-soft)]'
+                            : 'border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--color-brand)]'
+                        )}
                       >
-                        {t('opportunities.apply')}
-                        <ExternalLink size={11} />
-                      </a>
-                    )}
+                        {saved ? <BookmarkCheck size={14} /> : <Bookmark size={14} />}
+                        {saved ? t('opportunities.saved') : t('opportunities.save')}
+                      </button>
+                      {event.link && (
+                        <a
+                          href={event.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl border border-[var(--border)] text-[var(--text-secondary)] text-xs font-semibold hover:border-[var(--color-brand)] hover:text-[var(--color-brand)] transition-colors"
+                        >
+                          {t('opportunities.apply')}
+                          <ExternalLink size={11} />
+                        </a>
+                      )}
+                    </div>
                   </div>
                 </motion.div>
               );
