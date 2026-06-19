@@ -16,6 +16,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const admin = getAdminClient();
 
+  const { data: profileData } = await admin
+    .from('profiles')
+    .select('preferred_language')
+    .eq('id', user.id)
+    .single();
+  const langCode = profileData?.preferred_language ?? 'en';
+  const langName = langCode === 'am' ? 'Armenian' : langCode === 'ru' ? 'Russian' : 'English';
+  const langInstruction = `\n\nAlways respond in ${langName}. No exceptions.`;
+
   // Enforce 10-active-chat limit
   const { count } = await admin
     .from('chats')
@@ -30,7 +39,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   // Generate ONLY the opening discovery question — no plan yet.
   // The plan is generated after the AI finishes the discovery conversation.
-  const openingSystemPrompt = `You are May — a personal teacher built by Himq. Be brief and warm.`;
+  const openingSystemPrompt = `You are May — a personal teacher built by Himq. Be brief and warm.${langInstruction}`;
   const openingUserMessage = `A student wants to learn: "${goal}".
 
 Write your opening message. Keep it SHORT:

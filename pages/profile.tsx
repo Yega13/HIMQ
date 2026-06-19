@@ -24,7 +24,7 @@ interface Profile {
 }
 
 const SKILL_LEVELS = ['beginner', 'intermediate', 'advanced'];
-const LANGUAGES = [{ value: 'am', label: 'Հայերեն' }, { value: 'en', label: 'English' }];
+const LANGUAGES = [{ value: 'am', label: 'Հայերեն' }, { value: 'en', label: 'English' }, { value: 'ru', label: 'Русский' }];
 
 export default function ProfilePage() {
   const { t } = useTranslation('common');
