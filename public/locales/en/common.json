@@ -8,9 +8,11 @@
     "leaderboard": "Leaderboard"
   },
   "home": {
+
     "badge": "Free during beta",
     "hero_title": "Learn anything. Plan it with AI.",
     "hero_subtitle": "EduPath builds a personal learning plan for any goal, teaches it lesson by lesson, and connects you to real courses, scholarships and events — all in one place.",
+
     "cta_start": "Start for free",
     "cta_explore": "Browse opportunities",
 
@@ -98,14 +100,34 @@
     "no_account": "Don't have an account?"
   },
   "dashboard": {
-    "title": "My Dashboard",
-    "active_chats": "Active Chats",
+    "title": "Dashboard",
+    "subtitle": "Track your progress, pick up where you left off, and earn rewards as you learn.",
+    "welcome_back": "Welcome back, {{name}}",
+    "overview": "Overview",
     "xp_total": "Total XP",
-    "streak": "Day Streak",
-    "no_chats": "No learning sessions yet. Start one below.",
-    "start_learning": "Start Learning",
+    "streak": "Day streak",
+    "lessons_done": "Lessons completed",
+    "sessions": "Active sessions",
+    "active_chats": "Active sessions",
+    "continue_title": "Continue learning",
+    "continue_subtitle": "Jump back into your learning paths.",
     "continue": "Continue",
-    "lesson_of": "Lesson {{current}} of {{total}}"
+    "new_path": "New path",
+    "lesson_of": "Lesson {{current}} of {{total}}",
+    "progress": "Progress",
+    "roadmap": "Roadmap",
+    "no_chats": "No learning sessions yet.",
+    "no_chats_desc": "Start your first AI-built learning path and it will show up here.",
+    "start_learning": "Start learning",
+    "rewards_title": "Rewards",
+    "rewards_to_next": "{{xp}} XP to your next discount",
+    "rewards_caption": "Stay active to unlock a discount on next month.",
+    "streak_title": "Daily streak",
+    "streak_nudge": "Finish a lesson today to keep it going.",
+    "streak_start": "Learn something today to start a streak.",
+    "goal_title": "Your goal",
+    "goal_empty": "No goal set yet.",
+    "goal_edit": "Edit"
   },
   "chat": {
     "new_chat": "New Chat",
