@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { useTranslation } from 'next-i18next';
+import Logo from './Logo';
 
 const NAV_LINKS = [
   { href: '/', label: 'Home' },
@@ -17,9 +18,7 @@ export default function Footer() {
 
         {/* Brand */}
         <div>
-          <Link href="/" className="font-extrabold text-xl text-[var(--color-brand)] block mb-2">
-            Himq
-          </Link>
+          <Logo height={30} className="mb-2" />
           <p className="text-sm text-[var(--text-muted)] leading-relaxed max-w-xs">
             {t('footer.tagline')}
           </p>

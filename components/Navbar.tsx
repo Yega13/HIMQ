@@ -6,6 +6,7 @@ import { useTranslation } from 'next-i18next';
 import { motion } from 'framer-motion';
 import ThemeToggle from './ThemeToggle';
 import LanguageToggle from './LanguageToggle';
+import Logo from './Logo';
 import { cn } from '@/lib/utils';
 import { getBrowserClient } from '@/lib/supabase';
 
@@ -78,9 +79,7 @@ export default function Navbar() {
       <div className="max-w-6xl mx-auto">
         <div className="flex items-center justify-between px-5 py-2.5 rounded-2xl bg-[var(--bg-secondary)]/90 backdrop-blur-xl border border-[var(--border)] shadow-[0_4px_24px_rgba(0,0,0,0.10)]">
 
-          <Link href="/" className="font-bold text-xl text-[var(--color-brand)]">
-            Himq
-          </Link>
+          <Logo height={34} />
 
           {/* Nav links with sliding pill */}
           <nav
