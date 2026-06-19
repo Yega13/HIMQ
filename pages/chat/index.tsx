@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import Head from 'next/head';
 import { Sparkles, ArrowRight, BookOpen, Map, ChevronDown, Trash2 } from 'lucide-react';
-
+ 
 
 import Layout from '@/components/Layout';
 import { useUser } from '@/lib/useUser';
