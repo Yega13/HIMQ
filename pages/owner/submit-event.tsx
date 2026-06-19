@@ -80,7 +80,7 @@ export default function SubmitEventPage() {
   if (done) {
     return (
       <Layout>
-        <Head><title>Event Submitted — EduPath</title></Head>
+        <Head><title>Event Submitted — Himq</title></Head>
         <div className="max-w-lg mx-auto px-4 py-24 text-center">
           <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
             <div className="w-16 h-16 rounded-2xl bg-green-100 dark:bg-green-900/30 flex items-center justify-center mx-auto mb-4">
@@ -112,7 +112,7 @@ export default function SubmitEventPage() {
 
   return (
     <Layout>
-      <Head><title>Submit an Event — EduPath</title></Head>
+      <Head><title>Submit an Event — Himq</title></Head>
       <div className="max-w-2xl mx-auto px-4 py-8">
         <Link
           href="/opportunities"

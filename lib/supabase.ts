@@ -11,7 +11,7 @@ export const IS_MOCK = !supabaseUrl || supabaseUrl.includes('placeholder');
 
 if (IS_MOCK && typeof window !== 'undefined') {
   // eslint-disable-next-line no-console
-  console.info('[EduPath] Using local mock backend (no real Supabase configured). Accounts are stored in your browser.');
+  console.info('[Himq] Using local mock backend (no real Supabase configured). Accounts are stored in your browser.');
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

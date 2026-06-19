@@ -145,7 +145,7 @@ export default function ProfilePage() {
 
   return (
     <Layout>
-      <Head><title>Profile — EduPath</title></Head>
+      <Head><title>Profile — Himq</title></Head>
       <div className="max-w-2xl mx-auto px-4 py-8">
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
 

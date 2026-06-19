@@ -212,7 +212,7 @@ export default function ChatIndex() {
 
   return (
     <Layout>
-      <Head><title>Learn — EduPath</title></Head>
+      <Head><title>Learn — Himq</title></Head>
       <div
         className="max-w-6xl mx-auto px-4 py-8"
         onClick={() => setConfirmDeleteId(null)}

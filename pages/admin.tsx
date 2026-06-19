@@ -83,7 +83,7 @@ export default function Admin() {
   if (!authed) {
     return (
       <Layout>
-        <Head><title>Admin — EduPath</title></Head>
+        <Head><title>Admin — Himq</title></Head>
         <div className="max-w-sm mx-auto px-4 py-20">
           <h1 className="text-xl font-bold text-[var(--text-primary)] mb-6">Admin Login</h1>
           <form onSubmit={handleLogin} className="space-y-4">
@@ -106,7 +106,7 @@ export default function Admin() {
 
   return (
     <Layout>
-      <Head><title>Admin Panel — EduPath</title></Head>
+      <Head><title>Admin Panel — Himq</title></Head>
 
       {/* Toast */}
       <AnimatePresence>

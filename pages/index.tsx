@@ -326,7 +326,7 @@ export default function Home() {
               <span className="flex items-center justify-center w-7 h-7 rounded-lg bg-[var(--color-brand-soft)] text-[var(--color-brand)]">
                 <Sparkles size={14} />
               </span>
-              <span className="text-xs font-bold text-[var(--text-primary)]">EduPath</span>
+              <span className="text-xs font-bold text-[var(--text-primary)]">Himq</span>
             </div>
           </motion.div>
           <motion.div

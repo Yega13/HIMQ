@@ -47,12 +47,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const conversation = (messages ?? [])
     .map((m: { role: string; content: string }) =>
-      `[${m.role === 'assistant' ? 'EduPath AI' : 'Student'}]: ${m.content}`
+      `[${m.role === 'assistant' ? 'Himq AI' : 'Student'}]: ${m.content}`
     )
     .join('\n\n');
 
   const planSystemPrompt = `You are an expert curriculum designer. Return ONLY valid JSON — no markdown, no explanation.`;
-  const planUserMessage = `A student just completed a discovery conversation with EduPath AI.
+  const planUserMessage = `A student just completed a discovery conversation with Himq AI.
 Based on everything revealed in this conversation, create their PERSONALIZED learning plan.
 
 STUDENT'S ORIGINAL GOAL: "${chat.title}"

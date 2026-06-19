@@ -151,7 +151,7 @@ export default function Dashboard() {
 
   return (
     <Layout>
-      <Head><title>Dashboard — EduPath</title></Head>
+      <Head><title>Dashboard — Himq</title></Head>
       <div className="max-w-6xl mx-auto px-4 py-8">
         {/* Header */}
         <motion.div
