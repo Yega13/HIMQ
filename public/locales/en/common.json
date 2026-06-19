@@ -251,5 +251,12 @@
                    "beginner":  "Beginner",
                    "intermediate":  "Intermediate",
                    "advanced":  "Advanced"
+               },
+    "footer":  {
+                   "tagline":  "Your AI learning companion and opportunity guide.",
+                   "navigate":  "Navigate",
+                   "contact":  "Contact",
+                   "built_for":  "Built for Armenian students",
+                   "copyright":  "© {year} Himq. All rights reserved."
                }
 }

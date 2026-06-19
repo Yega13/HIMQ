@@ -6,7 +6,8 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Sparkles, MapPin, CalendarDays, ArrowRight,
-  BrainCircuit, Globe, Zap, Heart, Plus,
+  BrainCircuit, Globe, Zap, Heart, Plus, Mail,
+  Users, Rocket, Clock, BadgeCheck,
 } from 'lucide-react';
 import Layout from '@/components/Layout';
 
@@ -44,6 +45,13 @@ const WHAT_WE_DO = [
     title: 'Built with love from Armenia',
     desc: 'Every design decision, every translation, every feature was made with Armenian students in mind. This is not a global product localised for Armenia — it was born here.',
   },
+];
+
+const STATS = [
+  { icon: Users,     value: '3',        label: 'Founders' },
+  { icon: Rocket,    value: 'June 2026',label: 'Launched' },
+  { icon: Clock,     value: '< 5 min',  label: 'To start your first course' },
+  { icon: BadgeCheck,value: 'Free',     label: 'During SSS 2026 demo' },
 ];
 
 const FAQS = [
@@ -178,6 +186,32 @@ export default function AboutPage() {
           </motion.p>
         </div>
       </section>
+
+      {/* ── Stats strip ───────────────────────────────────────── */}
+      <div className="max-w-5xl mx-auto px-4 pb-12 -mt-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.18, ease: EASE }}
+          className="grid grid-cols-2 md:grid-cols-4 gap-4"
+        >
+          {STATS.map((s, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.45, delay: 0.22 + i * 0.07, ease: EASE }}
+              className="flex flex-col items-center text-center p-5 rounded-2xl border border-[var(--border)] bg-[var(--bg-card)] shadow-[var(--shadow-sm)]"
+            >
+              <div className="w-10 h-10 rounded-xl bg-[var(--color-brand-soft)] flex items-center justify-center mb-3">
+                <s.icon size={18} className="text-[var(--color-brand)]" />
+              </div>
+              <p className="text-xl font-extrabold text-[var(--text-primary)] leading-none mb-1">{s.value}</p>
+              <p className="text-xs text-[var(--text-muted)] leading-snug">{s.label}</p>
+            </motion.div>
+          ))}
+        </motion.div>
+      </div>
 
       {/* ── Yerevan aerial photo ──────────────────────────────── */}
       <div className="max-w-5xl mx-auto px-4 pb-16 -mt-2">
@@ -327,6 +361,29 @@ export default function AboutPage() {
           </div>
 
         </div>
+      </section>
+
+      {/* ── Contact ───────────────────────────────────────────── */}
+      <section className="max-w-5xl mx-auto px-4 py-20">
+        <motion.div
+          {...fadeUp()}
+          className="rounded-3xl border border-[var(--border)] bg-[var(--bg-card)] p-10 sm:p-14 flex flex-col sm:flex-row items-center justify-between gap-8"
+        >
+          <div>
+            <p className="text-xs font-bold uppercase tracking-widest text-[var(--color-brand)] mb-2">Get in touch</p>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-[var(--text-primary)] mb-2">Have a question?</h2>
+            <p className="text-[var(--text-secondary)] text-base max-w-sm leading-relaxed">
+              We&apos;re three students — we actually read our emails. Drop us a line anytime.
+            </p>
+          </div>
+          <a
+            href="mailto:himqaiteam@gmail.com"
+            className="flex-shrink-0 inline-flex items-center gap-3 px-7 py-4 rounded-2xl bg-[var(--color-brand)] text-white font-semibold text-base hover:bg-[var(--color-brand-hover)] transition-colors shadow-lg"
+          >
+            <Mail size={18} />
+            himqaiteam@gmail.com
+          </a>
+        </motion.div>
       </section>
 
       {/* ── SSS + CTA ─────────────────────────────────────────── */}
