@@ -2,10 +2,11 @@ import { GetStaticProps } from 'next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import Head from 'next/head';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Sparkles, MapPin, CalendarDays, ArrowRight,
-  BrainCircuit, Globe, Zap, Heart,
+  BrainCircuit, Globe, Zap, Heart, Plus,
 } from 'lucide-react';
 import Layout from '@/components/Layout';
 
@@ -44,6 +45,96 @@ const WHAT_WE_DO = [
     desc: 'Every design decision, every translation, every feature was made with Armenian students in mind. This is not a global product localised for Armenia — it was born here.',
   },
 ];
+
+const FAQS = [
+  {
+    q: 'What is Himq?',
+    a: 'Himq is an AI-powered learning and opportunity platform built specifically for Armenian students. You describe what you want to learn, our AI builds a personal 5-lesson course for you, and alongside that you get a live feed of scholarships, competitions, internships, and events available in Armenia.',
+  },
+  {
+    q: 'Is Himq free to use?',
+    a: 'Yes — Himq is completely free during the SSS 2026 demo period. No credit card required. After the demo, individual student accounts will stay free, and we plan to introduce a small monthly fee (3,000 AMD/month) only for institution or school accounts.',
+  },
+  {
+    q: 'How does the AI learning plan work?',
+    a: 'When you start a new course, our AI — called May — asks you a few questions: what you already know, what your goal is, and how much time you have. It then generates a structured 5-lesson plan built around your answers. Each lesson is an interactive conversation where May explains, quizzes, and adapts to your pace.',
+  },
+  {
+    q: 'What subjects can I study on Himq?',
+    a: 'Anything you can describe in a sentence. Students have used Himq to study programming, mathematics, English grammar, history, design basics, biology, economics, and more. If you can name the topic, May can build a course around it.',
+  },
+  {
+    q: 'What scholarships and opportunities does Himq track?',
+    a: 'Himq aggregates scholarships, Olympiads, hackathons, summer schools, grants, internships, and competitions that are open to students in Armenia. We focus on opportunities that are actually reachable — local deadlines, Armenian-language options, and programs that actively recruit from the South Caucasus region.',
+  },
+  {
+    q: 'Can I use Himq in Armenian, English, or Russian?',
+    a: 'Yes. Himq fully supports Armenian (Հայերեն), English, and Russian (Русский). You can switch language from the top navigation bar at any time. The AI conversations, lesson content, and UI all switch with it.',
+  },
+  {
+    q: 'How is Himq different from Coursera, YouTube, or ChatGPT?',
+    a: 'Coursera and YouTube offer content for a global audience — they do not know you are in Armenia, do not speak Armenian by default, and do not connect you to local opportunities. ChatGPT is a general assistant, not a structured learning tool. Himq combines a personal AI tutor with a curated Armenian opportunity board — it was designed from day one for students exactly like you.',
+  },
+  {
+    q: 'How does the XP and leaderboard system work?',
+    a: 'You earn XP (experience points) for every lesson you complete and every day you keep your streak alive. Your total XP places you on the Himq leaderboard, where you can see how you rank against other learners. Streaks reset if you miss a day, so consistency is rewarded.',
+  },
+  {
+    q: 'Who built Himq, and why?',
+    a: 'Himq was built in June 2026 by three students from Armenia — Suren, Hayk, and Artashes. We were frustrated by how scattered information about scholarships is, and how generic learning platforms never felt built for us. We built the tool we wished we had.',
+  },
+  {
+    q: 'How do I get started?',
+    a: 'Create a free account at himq.am/auth. No credit card, no verification process — just sign up and start your first course in under two minutes. If you already have an account, sign in and hit "Start learning" on the dashboard.',
+  },
+];
+
+function FaqItem({ q, a, index }: { q: string; a: string; index: number }) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: '-40px' as const }}
+      transition={{ duration: 0.45, delay: index * 0.05, ease: EASE }}
+      className="border-b border-[var(--border)] last:border-b-0"
+    >
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="w-full flex items-center justify-between gap-4 py-5 text-left group"
+      >
+        <span className="text-base font-semibold text-[var(--text-primary)] group-hover:text-[var(--color-brand)] transition-colors leading-snug">
+          {q}
+        </span>
+        <motion.span
+          animate={{ rotate: open ? 45 : 0 }}
+          transition={{ duration: 0.25, ease: EASE }}
+          className="flex-shrink-0 w-7 h-7 rounded-full border border-[var(--border)] flex items-center justify-center text-[var(--text-muted)] group-hover:border-[var(--color-brand)] group-hover:text-[var(--color-brand)] transition-colors"
+        >
+          <Plus size={14} />
+        </motion.span>
+      </button>
+
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            key="answer"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.32, ease: EASE }}
+            style={{ overflow: 'hidden' }}
+          >
+            <p className="pb-5 text-[var(--text-secondary)] leading-relaxed text-sm">
+              {a}
+            </p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
+  );
+}
 
 export default function AboutPage() {
   return (
@@ -171,8 +262,27 @@ export default function AboutPage() {
         </div>
       </section>
 
+      {/* ── FAQ ───────────────────────────────────────────────── */}
+      <section className="max-w-3xl mx-auto px-4 py-20">
+        <motion.div {...fadeUp()} className="text-center mb-14">
+          <p className="text-xs font-bold uppercase tracking-widest text-[var(--color-brand)] mb-3">FAQ</p>
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-[var(--text-primary)] mb-3">
+            Frequently asked questions
+          </h2>
+          <p className="text-[var(--text-secondary)] max-w-xl mx-auto">
+            Everything you need to know about Himq before you sign up.
+          </p>
+        </motion.div>
+
+        <div className="divide-y divide-[var(--border)] border-t border-[var(--border)]">
+          {FAQS.map((item, i) => (
+            <FaqItem key={i} q={item.q} a={item.a} index={i} />
+          ))}
+        </div>
+      </section>
+
       {/* ── SSS + CTA ─────────────────────────────────────────── */}
-      <section className="max-w-5xl mx-auto px-4 py-20">
+      <section className="max-w-5xl mx-auto px-4 pb-20">
         <motion.div
           initial={{ opacity: 0, scale: 0.97 }}
           whileInView={{ opacity: 1, scale: 1 }}
