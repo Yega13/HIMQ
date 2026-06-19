@@ -26,6 +26,7 @@ const config: Config = {
         accent: {
           green: '#22c55e',
           yellow: '#eab308',
+          gold: '#e0922e',
         },
       },
       fontFamily: {

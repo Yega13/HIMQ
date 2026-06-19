@@ -43,7 +43,7 @@ export default function Auth() {
     const supabase = getBrowserClient();
 
     if (mode === 'signup') {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: { data: { full_name: fullName } },
@@ -51,6 +51,10 @@ export default function Auth() {
       if (error) {
         setMessage(error.message);
         setIsError(true);
+      } else if (data?.session) {
+        // Signed in immediately (no email confirmation required) — go straight in.
+        const next = router.query.next as string | undefined;
+        await router.replace(next && next.startsWith('/') ? next : '/dashboard');
       } else {
         setPendingEmail(email);
       }

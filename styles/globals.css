@@ -8,45 +8,67 @@
   100% { transform: translateX(100%); }
 }
 
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-10px); }
+}
+
+@keyframes pulse-soft {
+  0%, 100% { opacity: 0.55; }
+  50%      { opacity: 1; }
+}
+
 /* ── CSS Custom Properties ─────────────────────────────────── */
+/* Palette: blue-dominant (trust, focus, intelligence) with a deep navy for
+   seriousness and a single warm gold accent reserved for rewards/XP. */
 :root {
-  --bg-primary: #f0f9ff;
+  --bg-primary: #f5f8fd;
   --bg-secondary: #ffffff;
   --bg-card: #ffffff;
-  --text-primary: #0f172a;
-  --text-secondary: #475569;
-  --text-muted: #94a3b8;
-  --border: #e2e8f0;
-  --border-strong: #cbd5e1;
+  --bg-deep: #0a1733;          /* deep navy — serious accent sections */
+  --bg-subtle: #eef3fb;        /* faint blue wash for alternating bands */
+  --text-primary: #0e1a33;
+  --text-secondary: #4a5a73;
+  --text-muted: #8b97ab;
+  --text-on-deep: #e8eefb;     /* text over navy sections */
+  --border: #e4eaf3;
+  --border-strong: #cbd6e6;
 
-  --color-brand: #2578e8;
-  --color-brand-hover: #1d62d5;
-  --color-green: #22c55e;
+  --color-brand: #1f5fe0;
+  --color-brand-hover: #1849bf;
+  --color-brand-soft: #e8f0fe; /* tinted brand surface */
+  --color-green: #16a34a;
+  --color-gold: #e0922e;       /* achievement / XP accent — used sparingly */
   --color-yellow: #eab308;
 
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.05);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.05);
+  --shadow-sm: 0 1px 2px 0 rgb(15 26 51 / 0.06);
+  --shadow-md: 0 4px 12px -2px rgb(15 26 51 / 0.10), 0 2px 4px -2px rgb(15 26 51 / 0.06);
+  --shadow-lg: 0 18px 40px -12px rgb(15 26 51 / 0.18), 0 6px 12px -6px rgb(15 26 51 / 0.08);
 }
 
 .dark {
-  --bg-primary: #0d1117;
-  --bg-secondary: #161b22;
-  --bg-card: #1c2230;
-  --text-primary: #e2e8f0;
-  --text-secondary: #94a3b8;
+  --bg-primary: #0a0f1c;
+  --bg-secondary: #111827;
+  --bg-card: #151f30;
+  --bg-deep: #060c1a;
+  --bg-subtle: #0f1726;
+  --text-primary: #e6edf7;
+  --text-secondary: #9aa7bd;
   --text-muted: #64748b;
-  --border: #30363d;
-  --border-strong: #3d4451;
+  --text-on-deep: #e6edf7;
+  --border: #232c3d;
+  --border-strong: #323d52;
 
-  --color-brand: #3b97f3;
-  --color-brand-hover: #60b6f8;
-  --color-green: #16a34a;
+  --color-brand: #4d93f5;
+  --color-brand-hover: #6fa9f8;
+  --color-brand-soft: #15233d;
+  --color-green: #22c55e;
+  --color-gold: #eab308;
   --color-yellow: #ca8a04;
 
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.2);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.3), 0 2px 4px -2px rgb(0 0 0 / 0.2);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.35), 0 4px 6px -4px rgb(0 0 0 / 0.2);
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+  --shadow-md: 0 4px 12px -2px rgb(0 0 0 / 0.45), 0 2px 4px -2px rgb(0 0 0 / 0.3);
+  --shadow-lg: 0 18px 40px -12px rgb(0 0 0 / 0.55), 0 6px 12px -6px rgb(0 0 0 / 0.35);
 }
 
 /* ── Base ──────────────────────────────────────────────────── */
