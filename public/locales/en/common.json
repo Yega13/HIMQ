@@ -76,6 +76,8 @@
 
     "about_title": "Why EduPath exists",
     "about_body": "We believe every student deserves a clear path forward. EduPath is a young startup from Armenia building one place where you can learn any skill with an AI teacher, find real opportunities, and stay motivated to keep going.",
+    "banner_title": "Built for students across Armenia — and anyone ready to learn.",
+    "events_pick_hint": "Pick one, prepare with AI, and apply.",
 
     "cta_badge": "100% free during beta · No card needed",
     "cta_title": "Ready to start your path?",
@@ -127,7 +129,9 @@
     "streak_start": "Learn something today to start a streak.",
     "goal_title": "Your goal",
     "goal_empty": "No goal set yet.",
-    "goal_edit": "Edit"
+    "goal_edit": "Edit",
+    "quick_start_title": "Start a new path",
+    "quick_start_subtitle": "Pick a topic and the AI will build your plan."
   },
   "chat": {
     "new_chat": "New Chat",

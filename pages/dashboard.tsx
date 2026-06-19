@@ -16,6 +16,12 @@ import {
   Map as MapIcon,
   Plus,
   Play,
+  Code,
+  Languages,
+  Calculator,
+  Briefcase,
+  Palette,
+  GraduationCap,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
@@ -41,6 +47,15 @@ type IconType = typeof Zap;
 
 // XP needed per reward (discount) milestone — placeholder, easy to tune later.
 const REWARD_STEP = 1000;
+
+const QUICK_SUBJECTS: { key: string; Icon: typeof Zap; iconBg: string; iconColor: string }[] = [
+  { key: 'home.subj_programming', Icon: Code, iconBg: 'bg-blue-50 dark:bg-blue-900/20', iconColor: 'text-[var(--color-brand)]' },
+  { key: 'home.subj_languages', Icon: Languages, iconBg: 'bg-green-50 dark:bg-green-900/20', iconColor: 'text-[var(--color-green)]' },
+  { key: 'home.subj_sciences', Icon: Calculator, iconBg: 'bg-violet-50 dark:bg-violet-900/20', iconColor: 'text-violet-500' },
+  { key: 'home.subj_business', Icon: Briefcase, iconBg: 'bg-amber-50 dark:bg-amber-900/20', iconColor: 'text-amber-500' },
+  { key: 'home.subj_design', Icon: Palette, iconBg: 'bg-rose-50 dark:bg-rose-900/20', iconColor: 'text-rose-500' },
+  { key: 'home.subj_exams', Icon: GraduationCap, iconBg: 'bg-teal-50 dark:bg-teal-900/20', iconColor: 'text-teal-500' },
+];
 
 function pct(current: number, total: number): number {
   if (!total || total <= 0) return 0;
@@ -309,6 +324,31 @@ export default function Dashboard() {
                 )}
               </div>
             )}
+
+            {/* Quick start a new path */}
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.15 }}
+              className="mt-6 rounded-2xl border border-[var(--border)] bg-[var(--bg-card)] p-5 shadow-[var(--shadow-sm)]"
+            >
+              <h3 className="font-bold text-[var(--text-primary)]">{t('dashboard.quick_start_title')}</h3>
+              <p className="text-sm text-[var(--text-secondary)] mb-4">{t('dashboard.quick_start_subtitle')}</p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                {QUICK_SUBJECTS.map((s) => (
+                  <Link
+                    key={s.key}
+                    href="/chat"
+                    className="group flex items-center gap-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg-secondary)] px-3 py-3 hover:border-[var(--color-brand)] hover:shadow-[var(--shadow-sm)] transition-all"
+                  >
+                    <span className={`flex items-center justify-center w-8 h-8 rounded-lg ${s.iconBg} shrink-0 group-hover:scale-105 transition-transform`}>
+                      <s.Icon size={16} className={s.iconColor} />
+                    </span>
+                    <span className="text-xs font-semibold text-[var(--text-primary)] truncate">{t(s.key)}</span>
+                  </Link>
+                ))}
+              </div>
+            </motion.div>
           </div>
 
           {/* Sidebar */}

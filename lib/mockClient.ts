@@ -69,6 +69,50 @@ function seedDB(): DB {
   };
 }
 
+/* ── Lesson plan builder (no AI needed) ───────────────────────────────── */
+export function buildLessonPlan(chatId: string, title: string): Row[] {
+  const topic = (title || 'your topic').trim();
+  const defs = [
+    { title: `Getting started with ${topic}`, description: 'The big picture and the key terms you need first.' },
+    { title: 'Core concepts', description: 'The essential ideas, explained step by step.' },
+    { title: 'Hands-on practice', description: 'Apply what you learned with guided exercises.' },
+    { title: 'Going deeper', description: 'More advanced techniques and common pitfalls.' },
+    { title: 'Build a small project', description: 'Put it all together in a real mini project.' },
+  ];
+  return defs.map((d, i) => ({
+    id: uuid(),
+    chat_id: chatId,
+    lesson_index: i,
+    title: d.title,
+    description: d.description,
+    status: i === 0 ? 'active' : 'locked',
+  }));
+}
+
+// Repair chats that were left mid-"discovery" (total_lessons 0) — e.g. created
+// before a real AI plan could be generated — so the UI shows proper levels.
+function healDB(db: DB): boolean {
+  let changed = false;
+  db.chats = db.chats || [];
+  db.lessons = db.lessons || [];
+  for (const chat of db.chats) {
+    const existing = db.lessons.filter((l) => l.chat_id === chat.id);
+    if (!chat.total_lessons || (chat.total_lessons as number) <= 0) {
+      if (existing.length === 0) {
+        const built = buildLessonPlan(chat.id as string, chat.title as string);
+        db.lessons.push(...built);
+        chat.total_lessons = built.length;
+      } else {
+        chat.total_lessons = existing.length;
+      }
+      if (chat.current_lesson_index == null) chat.current_lesson_index = 0;
+      if (chat.plan && typeof chat.plan === 'object') (chat.plan as Row).discovering = false;
+      changed = true;
+    }
+  }
+  return changed;
+}
+
 /* ── Storage (localStorage in browser, in-memory on server) ───────────── */
 let memoryDB: DB | null = null;
 let memoryUsers: any[] | null = null;
@@ -77,12 +121,18 @@ let memorySession: Session = null;
 function loadDB(): DB {
   if (isBrowser()) {
     const raw = localStorage.getItem(DB_KEY);
-    if (raw) { try { return JSON.parse(raw); } catch { /* fall through */ } }
-    const seeded = seedDB();
-    localStorage.setItem(DB_KEY, JSON.stringify(seeded));
-    return seeded;
+    let db: DB;
+    try {
+      db = raw ? (JSON.parse(raw) as DB) : seedDB();
+    } catch {
+      db = seedDB();
+    }
+    const changed = healDB(db);
+    if (!raw || changed) localStorage.setItem(DB_KEY, JSON.stringify(db));
+    return db;
   }
   if (!memoryDB) memoryDB = seedDB();
+  healDB(memoryDB);
   return memoryDB;
 }
 function saveDB(db: DB) {

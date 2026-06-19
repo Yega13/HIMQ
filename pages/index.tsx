@@ -1,7 +1,9 @@
 import { GetStaticProps } from 'next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { useTranslation } from 'next-i18next';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import Layout from '@/components/Layout';
 import { motion } from 'framer-motion';
 import {
@@ -32,20 +34,30 @@ const fadeUp = {
   viewport: { once: true, margin: '-60px' },
 };
 
+// Hero staggered text reveal
+const heroContainer = {
+  initial: {},
+  animate: { transition: { staggerChildren: 0.12, delayChildren: 0.05 } },
+};
+const heroItem = {
+  initial: { opacity: 0, y: 22 },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.5 } },
+};
+
 const SUBJECTS = [
-  { icon: Code, key: 'home.subj_programming' },
-  { icon: Languages, key: 'home.subj_languages' },
-  { icon: Calculator, key: 'home.subj_sciences' },
-  { icon: Briefcase, key: 'home.subj_business' },
-  { icon: Palette, key: 'home.subj_design' },
-  { icon: GraduationCap, key: 'home.subj_exams' },
+  { icon: Code, key: 'home.subj_programming', bg: 'bg-blue-50 dark:bg-blue-900/20', color: 'text-[var(--color-brand)]' },
+  { icon: Languages, key: 'home.subj_languages', bg: 'bg-green-50 dark:bg-green-900/20', color: 'text-[var(--color-green)]' },
+  { icon: Calculator, key: 'home.subj_sciences', bg: 'bg-violet-50 dark:bg-violet-900/20', color: 'text-violet-500' },
+  { icon: Briefcase, key: 'home.subj_business', bg: 'bg-amber-50 dark:bg-amber-900/20', color: 'text-amber-500' },
+  { icon: Palette, key: 'home.subj_design', bg: 'bg-rose-50 dark:bg-rose-900/20', color: 'text-rose-500' },
+  { icon: GraduationCap, key: 'home.subj_exams', bg: 'bg-teal-50 dark:bg-teal-900/20', color: 'text-teal-500' },
 ];
 
 const AI_STEPS = [
-  { icon: Target, titleKey: 'home.ai_step1_title', descKey: 'home.ai_step1_desc' },
-  { icon: BrainCircuit, titleKey: 'home.ai_step2_title', descKey: 'home.ai_step2_desc' },
-  { icon: Sparkles, titleKey: 'home.ai_step3_title', descKey: 'home.ai_step3_desc' },
-  { icon: Route, titleKey: 'home.ai_step4_title', descKey: 'home.ai_step4_desc' },
+  { icon: Target, titleKey: 'home.ai_step1_title', descKey: 'home.ai_step1_desc', bg: 'bg-[var(--color-brand)]' },
+  { icon: BrainCircuit, titleKey: 'home.ai_step2_title', descKey: 'home.ai_step2_desc', bg: 'bg-violet-500' },
+  { icon: Sparkles, titleKey: 'home.ai_step3_title', descKey: 'home.ai_step3_desc', bg: 'bg-amber-500' },
+  { icon: Route, titleKey: 'home.ai_step4_title', descKey: 'home.ai_step4_desc', bg: 'bg-[var(--color-green)]' },
 ];
 
 const EVENT_CATS = [
@@ -66,6 +78,14 @@ const REWARDS = [
   { icon: WalletCards, titleKey: 'home.rewards_p3_title', descKey: 'home.rewards_p3_desc' },
 ];
 
+const VALUES = [
+  { icon: BrainCircuit, key: 'home.value_1', bg: 'bg-blue-50 dark:bg-blue-900/20', color: 'text-[var(--color-brand)]' },
+  { icon: CalendarDays, key: 'home.value_2', bg: 'bg-violet-50 dark:bg-violet-900/20', color: 'text-violet-500' },
+  { icon: Gift, key: 'home.value_3', bg: 'bg-amber-50 dark:bg-amber-900/20', color: 'text-amber-500' },
+];
+
+type TFunc = (k: string) => string;
+
 export default function Home() {
   const { t } = useTranslation('common');
 
@@ -73,31 +93,34 @@ export default function Home() {
     <Layout>
       {/* ─── Hero ─────────────────────────────────────────────── */}
       <section className="relative overflow-hidden">
-        {/* soft brand glow background */}
         <div className="pointer-events-none absolute inset-0 -z-10">
           <div className="absolute -top-32 -left-24 w-[34rem] h-[34rem] rounded-full bg-[var(--color-brand)]/10 blur-3xl" />
-          <div className="absolute top-10 right-0 w-[26rem] h-[26rem] rounded-full bg-[var(--color-brand)]/5 blur-3xl" />
+          <div className="absolute top-10 right-0 w-[26rem] h-[26rem] rounded-full bg-violet-400/10 blur-3xl" />
         </div>
 
         <div className="max-w-7xl mx-auto px-4 pt-16 pb-14 md:pt-20">
           <div className="grid md:grid-cols-2 items-center gap-12">
-            <motion.div
-              initial={{ opacity: 0, y: 24 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.55 }}
-              className="text-center md:text-left"
-            >
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[var(--color-brand-soft)] text-[var(--color-brand)] mb-6">
+            <motion.div variants={heroContainer} initial="initial" animate="animate" className="text-center md:text-left">
+              <motion.span
+                variants={heroItem}
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[var(--color-brand-soft)] text-[var(--color-brand)] mb-6"
+              >
                 <Sparkles size={13} />
                 {t('home.badge')}
-              </span>
-              <h1 className="text-4xl sm:text-5xl md:text-[3.4rem] font-extrabold tracking-tight text-[var(--text-primary)] mb-5 leading-[1.08]">
+              </motion.span>
+              <motion.h1
+                variants={heroItem}
+                className="text-4xl sm:text-5xl md:text-[3.4rem] font-extrabold tracking-tight text-[var(--text-primary)] mb-5 leading-[1.08]"
+              >
                 {t('home.hero_title')}
-              </h1>
-              <p className="text-lg text-[var(--text-secondary)] max-w-xl md:max-w-lg mb-8 leading-relaxed mx-auto md:mx-0">
+              </motion.h1>
+              <motion.p
+                variants={heroItem}
+                className="text-lg text-[var(--text-secondary)] max-w-xl md:max-w-lg mb-8 leading-relaxed mx-auto md:mx-0"
+              >
                 {t('home.hero_subtitle')}
-              </p>
-              <div className="flex flex-col sm:flex-row gap-3 justify-center md:justify-start">
+              </motion.p>
+              <motion.div variants={heroItem} className="flex flex-col sm:flex-row gap-3 justify-center md:justify-start">
                 <Link
                   href="/auth"
                   className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl bg-[var(--color-brand)] text-white font-semibold text-base hover:bg-[var(--color-brand-hover)] transition-colors shadow-[var(--shadow-md)]"
@@ -111,10 +134,10 @@ export default function Home() {
                 >
                   {t('home.cta_explore')}
                 </Link>
-              </div>
+              </motion.div>
             </motion.div>
 
-            {/* Product preview card (replaces stock photo) */}
+            {/* Product preview card */}
             <motion.div
               initial={{ opacity: 0, scale: 0.96, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -129,19 +152,15 @@ export default function Home() {
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.35 }}
+            transition={{ duration: 0.5, delay: 0.55 }}
             className="mt-14 grid grid-cols-1 sm:grid-cols-3 gap-3"
           >
-            {[
-              { icon: BrainCircuit, key: 'home.value_1' },
-              { icon: CalendarDays, key: 'home.value_2' },
-              { icon: Gift, key: 'home.value_3' },
-            ].map((v) => (
+            {VALUES.map((v) => (
               <div
                 key={v.key}
                 className="flex items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--bg-card)] px-4 py-3.5 shadow-[var(--shadow-sm)]"
               >
-                <span className="flex items-center justify-center w-9 h-9 rounded-lg bg-[var(--color-brand-soft)] text-[var(--color-brand)] shrink-0">
+                <span className={`flex items-center justify-center w-9 h-9 rounded-lg ${v.bg} ${v.color} shrink-0`}>
                   <v.icon size={18} />
                 </span>
                 <span className="text-sm font-semibold text-[var(--text-primary)]">{t(v.key)}</span>
@@ -168,7 +187,7 @@ export default function Home() {
               transition={{ delay: i * 0.06, duration: 0.4 }}
               className="group flex items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--bg-card)] px-4 py-4 shadow-[var(--shadow-sm)] hover:border-[var(--color-brand)] hover:shadow-[var(--shadow-md)] transition-all"
             >
-              <span className="flex items-center justify-center w-10 h-10 rounded-lg bg-[var(--color-brand-soft)] text-[var(--color-brand)] shrink-0 group-hover:scale-105 transition-transform">
+              <span className={`flex items-center justify-center w-10 h-10 rounded-lg ${s.bg} ${s.color} shrink-0 group-hover:scale-110 transition-transform`}>
                 <s.icon size={20} />
               </span>
               <span className="font-semibold text-sm sm:text-base text-[var(--text-primary)]">{t(s.key)}</span>
@@ -199,10 +218,10 @@ export default function Home() {
                 transition={{ delay: i * 0.1, duration: 0.4 }}
                 className="relative rounded-2xl bg-[var(--bg-card)] border border-[var(--border)] p-6 shadow-[var(--shadow-sm)]"
               >
-                <span className="absolute top-5 right-5 text-5xl font-black text-[var(--color-brand)]/10 leading-none select-none">
+                <span className="absolute top-5 right-5 text-5xl font-black text-[var(--text-primary)]/[0.04] leading-none select-none">
                   {i + 1}
                 </span>
-                <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-[var(--color-brand)] text-white mb-4 shadow-[var(--shadow-sm)]">
+                <div className={`flex items-center justify-center w-12 h-12 rounded-xl ${step.bg} text-white mb-4 shadow-[var(--shadow-sm)]`}>
                   <step.icon size={22} />
                 </div>
                 <h3 className="font-bold text-[var(--text-primary)] mb-1.5">{t(step.titleKey)}</h3>
@@ -213,7 +232,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ─── Events / Opportunities ───────────────────────────── */}
+      {/* ─── Events / Opportunities (interactive) ─────────────── */}
       <section className="max-w-6xl mx-auto px-4 py-16">
         <div className="grid lg:grid-cols-2 gap-10 items-center">
           <motion.div {...fadeUp} transition={{ duration: 0.45 }}>
@@ -232,26 +251,8 @@ export default function Home() {
             </Link>
           </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, scale: 0.97 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.45 }}
-            className="flex flex-wrap gap-2.5 content-start"
-          >
-            {EVENT_CATS.map((c, i) => (
-              <motion.span
-                key={c}
-                initial={{ opacity: 0, y: 10 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.05 }}
-                className="inline-flex items-center gap-2 rounded-full border border-[var(--border-strong)] bg-[var(--bg-card)] px-4 py-2.5 text-sm font-semibold text-[var(--text-primary)] shadow-[var(--shadow-sm)]"
-              >
-                <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-brand)]" />
-                {t(c)}
-              </motion.span>
-            ))}
+          <motion.div {...fadeUp} transition={{ duration: 0.45 }}>
+            <EventPicker cats={EVENT_CATS} t={t} />
           </motion.div>
         </div>
       </section>
@@ -259,6 +260,7 @@ export default function Home() {
       {/* ─── Rewards (XP) — deep navy band ────────────────────── */}
       <section className="bg-[var(--bg-deep)] py-16 relative overflow-hidden">
         <div className="pointer-events-none absolute -top-20 right-10 w-80 h-80 rounded-full bg-[var(--color-gold)]/10 blur-3xl" />
+        <div className="pointer-events-none absolute bottom-0 -left-16 w-72 h-72 rounded-full bg-[var(--color-brand)]/10 blur-3xl" />
         <div className="max-w-6xl mx-auto px-4 relative">
           <motion.div {...fadeUp} transition={{ duration: 0.45 }} className="text-center max-w-2xl mx-auto mb-12">
             <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[var(--color-gold)] mb-3">
@@ -297,11 +299,61 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ─── About / mission ──────────────────────────────────── */}
-      <section className="max-w-3xl mx-auto px-4 py-20 text-center">
-        <motion.div {...fadeUp} transition={{ duration: 0.45 }}>
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-[var(--text-primary)] mb-5">{t('home.about_title')}</h2>
-          <p className="text-lg text-[var(--text-secondary)] leading-relaxed">{t('home.about_body')}</p>
+      {/* ─── About / mission (with image) ─────────────────────── */}
+      <section className="max-w-6xl mx-auto px-4 py-20">
+        <div className="grid md:grid-cols-2 gap-10 items-center">
+          <motion.div
+            initial={{ opacity: 0, x: -24 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="relative order-2 md:order-1"
+          >
+            <div className="rounded-3xl overflow-hidden shadow-[var(--shadow-lg)]">
+              <Image
+                src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1000&q=80"
+                alt="Students learning together"
+                width={1000}
+                height={750}
+                className="w-full h-[320px] object-cover"
+              />
+            </div>
+            <div className="absolute -bottom-4 -right-4 flex items-center gap-2 rounded-xl bg-[var(--bg-card)] border border-[var(--border)] px-3.5 py-2.5 shadow-[var(--shadow-lg)]">
+              <span className="flex items-center justify-center w-7 h-7 rounded-lg bg-[var(--color-brand-soft)] text-[var(--color-brand)]">
+                <Sparkles size={14} />
+              </span>
+              <span className="text-xs font-bold text-[var(--text-primary)]">EduPath</span>
+            </div>
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, x: 24 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="order-1 md:order-2"
+          >
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-[var(--text-primary)] mb-5">{t('home.about_title')}</h2>
+            <p className="text-lg text-[var(--text-secondary)] leading-relaxed">{t('home.about_body')}</p>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ─── Image banner ─────────────────────────────────────── */}
+      <section className="max-w-7xl mx-auto px-4 pb-16">
+        <motion.div {...fadeUp} transition={{ duration: 0.5 }} className="relative rounded-3xl overflow-hidden shadow-[var(--shadow-lg)]">
+          <Image
+            src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=1600&q=80"
+            alt="Students collaborating"
+            width={1600}
+            height={500}
+            className="w-full h-[240px] sm:h-[280px] object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-[var(--bg-deep)]/90 via-[var(--bg-deep)]/60 to-transparent" />
+          <div className="absolute inset-0 flex items-center px-8 sm:px-12">
+            <h3 className="text-2xl sm:text-3xl font-extrabold text-white max-w-lg leading-tight">
+              {t('home.banner_title')}
+            </h3>
+          </div>
         </motion.div>
       </section>
 
@@ -336,8 +388,62 @@ export default function Home() {
   );
 }
 
+/* ─── Interactive event picker ───────────────────────────────── */
+function EventPicker({ cats, t }: { cats: string[]; t: TFunc }) {
+  const [active, setActive] = useState(0);
+  const [paused, setPaused] = useState(false);
+
+  useEffect(() => {
+    if (paused) return;
+    const id = setInterval(() => setActive((a) => (a + 1) % cats.length), 1500);
+    return () => clearInterval(id);
+  }, [cats.length, paused]);
+
+  return (
+    <div
+      className="rounded-2xl border border-[var(--border)] bg-[var(--bg-card)] p-5 shadow-[var(--shadow-md)]"
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+    >
+      <div className="flex items-center gap-2 mb-4">
+        <span className="flex items-center justify-center w-7 h-7 rounded-lg bg-[var(--color-brand-soft)] text-[var(--color-brand)]">
+          <CalendarDays size={15} />
+        </span>
+        <p className="text-sm font-bold text-[var(--text-primary)]">{t('home.events_pick_hint')}</p>
+      </div>
+      <div className="flex flex-wrap gap-2.5">
+        {cats.map((c, i) => {
+          const isActive = i === active;
+          return (
+            <button
+              key={c}
+              type="button"
+              onMouseEnter={() => setActive(i)}
+              onClick={() => setActive(i)}
+              className={`relative inline-flex items-center gap-2 rounded-full border px-4 py-2.5 text-sm font-semibold transition-colors ${
+                isActive
+                  ? 'border-[var(--color-brand)] bg-[var(--color-brand)] text-white'
+                  : 'border-[var(--border-strong)] bg-[var(--bg-secondary)] text-[var(--text-primary)]'
+              }`}
+            >
+              <motion.span
+                animate={{ scale: isActive ? 1 : 0, width: isActive ? 16 : 0 }}
+                transition={{ duration: 0.2 }}
+                className="flex items-center justify-center overflow-hidden"
+              >
+                <CheckCircle2 size={15} />
+              </motion.span>
+              {t(c)}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 /* ─── Hero product-preview card ──────────────────────────────── */
-function PlanPreview({ t }: { t: (k: string) => string }) {
+function PlanPreview({ t }: { t: TFunc }) {
   const lessons = [
     { key: 'home.plan_lesson_1', state: 'done' as const },
     { key: 'home.plan_lesson_2', state: 'done' as const },
@@ -348,7 +454,6 @@ function PlanPreview({ t }: { t: (k: string) => string }) {
 
   return (
     <div className="relative">
-      {/* floating XP chip — tasteful, real mechanic */}
       <motion.div
         animate={{ y: [0, -8, 0] }}
         transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
@@ -360,7 +465,12 @@ function PlanPreview({ t }: { t: (k: string) => string }) {
 
       <div className="rounded-2xl bg-[var(--bg-card)] border border-[var(--border)] shadow-[var(--shadow-lg)] p-5 sm:p-6">
         {/* header */}
-        <div className="flex items-center justify-between mb-5">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3 }}
+          className="flex items-center justify-between mb-5"
+        >
           <div className="flex items-center gap-2">
             <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-[var(--color-brand)] text-white">
               <Sparkles size={16} />
@@ -373,13 +483,16 @@ function PlanPreview({ t }: { t: (k: string) => string }) {
           <span className="text-[11px] font-semibold text-[var(--color-brand)] bg-[var(--color-brand-soft)] px-2.5 py-1 rounded-full">
             AI
           </span>
-        </div>
+        </motion.div>
 
-        {/* lessons */}
+        {/* lessons — appear one by one */}
         <div className="space-y-2.5 mb-5">
-          {lessons.map((l) => (
-            <div
+          {lessons.map((l, i) => (
+            <motion.div
               key={l.key}
+              initial={{ opacity: 0, x: 12 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.4 + i * 0.13, duration: 0.35 }}
               className={`flex items-center gap-3 rounded-lg px-3 py-2.5 border ${
                 l.state === 'current'
                   ? 'border-[var(--color-brand)] bg-[var(--color-brand-soft)]'
@@ -401,12 +514,12 @@ function PlanPreview({ t }: { t: (k: string) => string }) {
                   {t('home.plan_current')}
                 </span>
               )}
-            </div>
+            </motion.div>
           ))}
         </div>
 
         {/* progress */}
-        <div>
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.1 }}>
           <div className="flex items-center justify-between mb-1.5">
             <span className="text-xs font-semibold text-[var(--text-secondary)]">{t('home.plan_progress')}</span>
             <span className="text-xs font-bold text-[var(--color-brand)]">40%</span>
@@ -415,11 +528,11 @@ function PlanPreview({ t }: { t: (k: string) => string }) {
             <motion.div
               initial={{ width: 0 }}
               animate={{ width: '40%' }}
-              transition={{ duration: 1, delay: 0.5, ease: 'easeOut' }}
+              transition={{ duration: 1, delay: 1.2, ease: 'easeOut' }}
               className="h-full rounded-full bg-[var(--color-brand)]"
             />
           </div>
-        </div>
+        </motion.div>
       </div>
     </div>
   );

@@ -11,7 +11,8 @@ import { Sparkles, ArrowRight, BookOpen, Map, ChevronDown, Trash2 } from 'lucide
 
 import Layout from '@/components/Layout';
 import { useUser } from '@/lib/useUser';
-import { getBrowserClient } from '@/lib/supabase';
+import { getBrowserClient, IS_MOCK } from '@/lib/supabase';
+import { buildLessonPlan } from '@/lib/mockClient';
 import { cn } from '@/lib/utils';
 
 
@@ -86,6 +87,35 @@ export default function ChatIndex() {
 
     try {
       const supabase = getBrowserClient();
+
+      // In local mock mode there is no AI backend — build a plan client-side
+      // so the learning path is created with proper lessons immediately.
+      if (IS_MOCK) {
+        const chatId =
+          typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `${Date.now()}`;
+        const lessons = buildLessonPlan(chatId, goal.trim());
+        await supabase.from('chats').insert({
+          id: chatId,
+          user_id: user.id,
+          title: goal.trim(),
+          chat_type: 'learning',
+          plan: { discovering: false },
+          total_lessons: lessons.length,
+          current_lesson_index: 0,
+          status: 'active',
+          updated_at: new Date().toISOString(),
+        });
+        await supabase.from('lessons').insert(lessons);
+        await supabase.from('messages').insert({
+          chat_id: chatId,
+          role: 'assistant',
+          content: `Hi! I'm May, your personal teacher. I've put together a 5-lesson plan for "${goal.trim()}" — open the first lesson whenever you're ready.`,
+          lesson_index: 0,
+        });
+        await router.push(`/chat/${chatId}`);
+        return;
+      }
+
       const { data: { session } } = await supabase.auth.getSession();
 
       const res = await fetch('/api/create-chat', {
