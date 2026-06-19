@@ -352,15 +352,32 @@ const auth = {
   async resend(_args?: any) {
     return { data: {}, error: null };
   },
-  async updateUser({ data }: { data?: Record<string, any> }) {
+  async updateUser({ data, email, password }: { data?: Record<string, any>; email?: string; password?: string }) {
     const s = loadSession();
     if (!s) return { data: { user: null }, error: { message: 'Not signed in' } };
-    const user: MockUser = { ...s.user, user_metadata: { ...s.user.user_metadata, ...data } };
+    const users = loadUsers();
+    if (email && users.some((x) => x.email === email && x.id !== s.user.id)) {
+      return { data: { user: null }, error: { message: 'Email already in use' } };
+    }
+    const user: MockUser = {
+      ...s.user,
+      email: email ?? s.user.email,
+      user_metadata: { ...s.user.user_metadata, ...data },
+    };
     saveSession({ user });
-    if (data?.full_name != null) {
-      const users = loadUsers();
-      const u = users.find((x) => x.id === user.id);
-      if (u) { u.full_name = data.full_name; saveUsers(users); }
+    const u = users.find((x) => x.id === user.id);
+    if (u) {
+      if (data?.full_name != null) u.full_name = data.full_name;
+      if (email) u.email = email;
+      if (password) u.password = password;
+      saveUsers(users);
+    }
+    const db = loadDB();
+    const p = (db.profiles || []).find((row) => row.id === user.id);
+    if (p) {
+      if (data?.full_name != null) p.full_name = data.full_name;
+      if (email) p.email = email;
+      saveDB(db);
     }
     notify('USER_UPDATED');
     return { data: { user }, error: null };
@@ -372,6 +389,23 @@ const auth = {
     return { data: { subscription: { unsubscribe() { listeners.delete(cb); } } } };
   },
 };
+
+// Fully remove the signed-in mock account and its data, then sign out.
+export function mockDeleteAccount() {
+  const s = loadSession();
+  if (!s) return;
+  const uid = s.user.id;
+  saveUsers(loadUsers().filter((u) => u.id !== uid));
+  const db = loadDB();
+  const myChatIds = (db.chats || []).filter((c) => c.user_id === uid).map((c) => c.id);
+  db.profiles = (db.profiles || []).filter((p) => p.id !== uid);
+  db.chats = (db.chats || []).filter((c) => c.user_id !== uid);
+  db.lessons = (db.lessons || []).filter((l) => !myChatIds.includes(l.chat_id as string));
+  db.messages = (db.messages || []).filter((m) => !myChatIds.includes(m.chat_id as string));
+  saveDB(db);
+  saveSession(null);
+  notify('SIGNED_OUT');
+}
 
 /* ── Client factory ───────────────────────────────────────────────────── */
 export function createMockClient(): any {
