@@ -179,39 +179,85 @@ export default function AboutPage() {
         </div>
       </section>
 
+      {/* ── Yerevan aerial photo ──────────────────────────────── */}
+      <div className="max-w-5xl mx-auto px-4 pb-16 -mt-2">
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 0.2, ease: EASE }}
+          className="relative rounded-2xl overflow-hidden shadow-2xl"
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="https://images.unsplash.com/photo-1600758208050-a22f17dc5bb9?w=1400&q=80&auto=format&fit=crop"
+            alt="Aerial view of Yerevan, Armenia — where Himq was built"
+            className="w-full h-[260px] sm:h-[360px] md:h-[440px] object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent" />
+          <div className="absolute bottom-5 left-6 text-white">
+            <p className="text-base font-semibold">Yerevan, Armenia</p>
+            <p className="text-xs opacity-50 mt-0.5">Photo: Levon Vardanyan / Unsplash</p>
+          </div>
+        </motion.div>
+      </div>
+
       {/* ── Origin story (dark band) ───────────────────────────── */}
       <section className="bg-[var(--bg-deep)] py-20 relative overflow-hidden">
         <div className="pointer-events-none absolute -top-16 left-1/2 -translate-x-1/2 w-[40rem] h-[20rem] rounded-full bg-[var(--color-brand)]/8 blur-3xl" />
-        <div className="max-w-3xl mx-auto px-4 relative">
 
-          <div className="flex flex-col sm:flex-row gap-4 mb-10">
-            <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/[0.06] border border-white/10 text-sm text-[var(--text-on-deep)]/70 w-fit">
-              <CalendarDays size={14} className="text-[var(--color-brand)]" />
-              Founded June 2026
+        <div className="max-w-5xl mx-auto px-4 relative">
+          <div className="grid md:grid-cols-2 gap-12 items-start">
+
+            {/* Left: text */}
+            <div>
+              <div className="flex flex-col sm:flex-row gap-4 mb-10">
+                <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/[0.06] border border-white/10 text-sm text-[var(--text-on-deep)]/70 w-fit">
+                  <CalendarDays size={14} className="text-[var(--color-brand)]" />
+                  Founded June 2026
+                </div>
+                <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/[0.06] border border-white/10 text-sm text-[var(--text-on-deep)]/70 w-fit">
+                  <MapPin size={14} className="text-[var(--color-brand)]" />
+                  Yerevan, Armenia
+                </div>
+              </div>
+
+              <motion.h2 {...fadeUp()} className="text-2xl sm:text-3xl font-extrabold text-[var(--text-on-deep)] mb-6 leading-snug">
+                The story behind Himq
+              </motion.h2>
+
+              <div className="space-y-5 text-[var(--text-on-deep)]/75 leading-relaxed text-base">
+                <motion.p {...fadeUp(0.07)}>
+                  We are three students from Armenia — Suren, Hayk, and Artashes — who met through a shared frustration: the gap between ambition and opportunity in our country is huge, but it doesn&apos;t have to be.
+                </motion.p>
+                <motion.p {...fadeUp(0.12)}>
+                  Armenian students are sharp, motivated, and hungry. But the information they need — which scholarship to apply for, how to prepare, where to start learning — is scattered across hundreds of websites, Telegram channels, and word-of-mouth. Most students miss deadlines simply because no one told them in time.
+                </motion.p>
+                <motion.p {...fadeUp(0.17)}>
+                  At the same time, generic online learning platforms like Coursera or YouTube weren&apos;t built for us. They don&apos;t know that we&apos;re preparing for TUMO selection. They don&apos;t speak Armenian. They don&apos;t point us toward what&apos;s actually available in Yerevan this month.
+                </motion.p>
+                <motion.p {...fadeUp(0.22)}>
+                  So we built the tool we wished we had. In June 2026, we launched Himq — an AI that builds your personal learning plan and sits alongside a live feed of real Armenian opportunities. One platform. One goal: help every Armenian student take the next step.
+                </motion.p>
+              </div>
             </div>
-            <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/[0.06] border border-white/10 text-sm text-[var(--text-on-deep)]/70 w-fit">
-              <MapPin size={14} className="text-[var(--color-brand)]" />
-              Yerevan, Armenia
-            </div>
-          </div>
 
-          <motion.h2 {...fadeUp()} className="text-2xl sm:text-3xl font-extrabold text-[var(--text-on-deep)] mb-6 leading-snug">
-            The story behind Himq
-          </motion.h2>
+            {/* Right: Republic Square photo */}
+            <motion.div {...fadeUp(0.1)} className="md:sticky md:top-28">
+              <div className="relative rounded-2xl overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.4)]">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="https://images.unsplash.com/photo-1697700257503-1b6e2034eb37?w=800&q=80&auto=format&fit=crop"
+                  alt="Republic Square, Yerevan"
+                  className="w-full h-[320px] sm:h-[420px] object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+                <div className="absolute bottom-4 left-4 text-white">
+                  <p className="text-sm font-medium">Republic Square</p>
+                  <p className="text-xs opacity-50">Photo: Yuri Oparin / Unsplash</p>
+                </div>
+              </div>
+            </motion.div>
 
-          <div className="space-y-5 text-[var(--text-on-deep)]/75 leading-relaxed text-base">
-            <motion.p {...fadeUp(0.07)}>
-              We are three students from Armenia — Suren, Hayk, and Artashes — who met through a shared frustration: the gap between ambition and opportunity in our country is huge, but it doesn&apos;t have to be.
-            </motion.p>
-            <motion.p {...fadeUp(0.12)}>
-              Armenian students are sharp, motivated, and hungry. But the information they need — which scholarship to apply for, how to prepare, where to start learning — is scattered across hundreds of websites, Telegram channels, and word-of-mouth. Most students miss deadlines simply because no one told them in time.
-            </motion.p>
-            <motion.p {...fadeUp(0.17)}>
-              At the same time, generic online learning platforms like Coursera or YouTube weren&apos;t built for us. They don&apos;t know that we&apos;re preparing for TUMO selection. They don&apos;t speak Armenian. They don&apos;t point us toward what&apos;s actually available in Yerevan this month.
-            </motion.p>
-            <motion.p {...fadeUp(0.22)}>
-              So we built the tool we wished we had. In June 2026, we launched Himq — an AI that builds your personal learning plan and sits alongside a live feed of real Armenian opportunities. One platform. One goal: help every Armenian student take the next step.
-            </motion.p>
           </div>
         </div>
       </section>
