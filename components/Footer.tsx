@@ -1,14 +1,17 @@
 import Link from 'next/link';
+import { useTranslation } from 'next-i18next';
 
 const NAV_LINKS = [
-  { href: '/', label: 'Home' },
-  { href: '/about', label: 'About' },
-  { href: '/opportunities', label: 'Opportunities' },
-  { href: '/dashboard', label: 'Dashboard' },
-  { href: '/profile', label: 'Profile' },
+  { href: '/',             key: 'nav.home' },
+  { href: '/about',        key: 'nav.about' },
+  { href: '/opportunities', key: 'nav.opportunities' },
+  { href: '/dashboard',    key: 'nav.dashboard' },
+  { href: '/profile',      key: 'nav.profile' },
 ];
 
 export default function Footer() {
+  const { t } = useTranslation('common');
+
   return (
     <footer className="border-t border-[var(--border)] bg-[var(--bg-secondary)] mt-16">
       <div className="max-w-7xl mx-auto px-4 py-10 grid grid-cols-1 sm:grid-cols-3 gap-8">
@@ -16,16 +19,18 @@ export default function Footer() {
         {/* Brand */}
         <div>
           <Link href="/" className="font-extrabold text-xl text-[var(--color-brand)] block mb-2">
-            EduPath
+            Himq
           </Link>
           <p className="text-sm text-[var(--text-muted)] leading-relaxed max-w-xs">
-            AI-powered learning paths and real Armenian opportunities — all in one place.
+            {t('footer.tagline')}
           </p>
         </div>
 
         {/* Links */}
         <div>
-          <p className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-3">Navigate</p>
+          <p className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-3">
+            {t('footer.navigate')}
+          </p>
           <ul className="space-y-2">
             {NAV_LINKS.map((l) => (
               <li key={l.href}>
@@ -33,7 +38,7 @@ export default function Footer() {
                   href={l.href}
                   className="text-sm text-[var(--text-muted)] hover:text-[var(--color-brand)] transition-colors"
                 >
-                  {l.label}
+                  {t(l.key)}
                 </Link>
               </li>
             ))}
@@ -42,20 +47,22 @@ export default function Footer() {
 
         {/* Contact */}
         <div>
-          <p className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-3">Contact</p>
+          <p className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-3">
+            {t('footer.contact')}
+          </p>
           <a
-            href="mailto:EduPathTeam2026@gmail.com"
+            href="mailto:himqaiteam@gmail.com"
             className="text-sm text-[var(--text-muted)] hover:text-[var(--color-brand)] transition-colors block mb-2"
           >
-            EduPathTeam2026@gmail.com
+            himqaiteam@gmail.com
           </a>
-          <p className="text-sm text-[var(--text-muted)]">Built for Armenia&apos;s students 🇦🇲</p>
+          <p className="text-sm text-[var(--text-muted)]">{t('footer.built_for')}</p>
         </div>
       </div>
 
       <div className="border-t border-[var(--border)] py-4">
         <p className="text-center text-xs text-[var(--text-muted)]">
-          © {new Date().getFullYear()} EduPath · Free during SSS 2026 demo
+          {t('footer.copyright', { year: new Date().getFullYear() })}
         </p>
       </div>
     </footer>

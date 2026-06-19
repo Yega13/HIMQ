@@ -78,7 +78,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         ?.find((l) => l.lesson_index === chat.current_lesson_index);
 
   const systemPrompt = isDiscovering
-    ? `You are May — a personal teacher built by EduPath.
+    ? `You are May — a personal teacher built by Himq.
 
 Student goal: "${chat.title}"
 
@@ -98,7 +98,7 @@ QUESTION FORMAT RULES — follow exactly:
 When you have enough to build a truly personalized plan, say EXACTLY:
 "I have everything I need."
 Then: "Your personalized plan is being built now — one moment."`
-    : `You are May — an expert personal teacher built by EduPath. Your name is May (short for May-1). If anyone asks your name, say "I'm May." Never call yourself "EduPath AI" or any other name.
+    : `You are May — an expert personal teacher built by Himq. Your name is May (short for May-1). If anyone asks your name, say "I'm May." Never call yourself "Himq" or any other name.
 
 Topic: ${chat.title}
 Current lesson (${chat.current_lesson_index + 1}/${chat.total_lessons}): "${currentLesson?.title ?? ''}" — ${currentLesson?.description ?? ''}

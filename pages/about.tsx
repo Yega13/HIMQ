@@ -41,7 +41,7 @@ const FEATURES = [
     icon: Target,
     color: 'bg-pink-100 dark:bg-pink-900/30 text-pink-600 dark:text-pink-400',
     title: '"Prepare Me with AI"',
-    desc: 'Found a scholarship? Click Prepare Me — EduPath builds a custom course to help you qualify.',
+    desc: 'Found a scholarship? Click Prepare Me — Himq builds a custom course to help you qualify.',
   },
 ];
 
@@ -80,8 +80,8 @@ export default function AboutPage() {
   return (
     <Layout>
       <Head>
-        <title>About EduPath — AI Tutor for Armenian Students</title>
-        <meta name="description" content="EduPath is an AI-powered personal tutor and opportunity discovery platform built for Armenian students." />
+        <title>About Himq — AI Tutor for Armenian Students</title>
+        <meta name="description" content="Himq is an AI-powered personal tutor and opportunity discovery platform built for Armenian students." />
       </Head>
 
       {/* Hero */}
@@ -96,7 +96,7 @@ export default function AboutPage() {
             <span className="text-[var(--color-brand)]">built for Armenia.</span>
           </h1>
           <p className="text-lg text-[var(--text-secondary)] max-w-2xl mx-auto mb-8">
-            EduPath gives every Armenian student a personalized AI tutor and a curated list of real local opportunities — scholarships, competitions, internships — all in one place.
+            Himq gives every Armenian student a personalized AI tutor and a curated list of real local opportunities — scholarships, competitions, internships — all in one place.
           </p>
           <div className="flex items-center justify-center gap-3 flex-wrap">
             <Link
@@ -145,7 +145,7 @@ export default function AboutPage() {
       {/* How it works */}
       <section className="max-w-4xl mx-auto px-4 py-16">
         <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
-          <h2 className="text-2xl font-bold text-[var(--text-primary)] text-center mb-2">How EduPath works</h2>
+          <h2 className="text-2xl font-bold text-[var(--text-primary)] text-center mb-2">How Himq works</h2>
           <p className="text-[var(--text-secondary)] text-center text-sm mb-10">Three steps to your next achievement.</p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {STEPS.map((s, i) => (

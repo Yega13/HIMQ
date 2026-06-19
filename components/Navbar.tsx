@@ -45,7 +45,7 @@ export default function Navbar() {
     <header className="hidden md:block sticky top-0 z-50 bg-[var(--bg-secondary)] border-b border-[var(--border)]">
       <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
         <Link href="/" className="font-bold text-xl text-[var(--color-brand)]">
-          EduPath
+          Himq
         </Link>
 
         <nav className="flex items-center gap-1">
@@ -79,10 +79,10 @@ export default function Navbar() {
             {leaderboardOpen && (
               <div className="absolute right-0 top-full mt-2 w-72 bg-[var(--bg-card)] border border-[var(--border)] rounded-xl shadow-[var(--shadow-lg)] animate-fade-in overflow-hidden">
                 <div className="p-3 border-b border-[var(--border)]">
-                  <p className="text-sm font-semibold text-[var(--text-primary)]">Top Learners</p>
+                  <p className="text-sm font-semibold text-[var(--text-primary)]">{t('nav.top_learners')}</p>
                 </div>
                 <div className="p-2 max-h-80 overflow-y-auto">
-                  <p className="text-xs text-[var(--text-muted)] text-center py-4">Coming soon</p>
+                  <p className="text-xs text-[var(--text-muted)] text-center py-4">{t('nav.coming_soon')}</p>
                 </div>
                 <div className="p-2 border-t border-[var(--border)]">
                   <Link
@@ -90,7 +90,7 @@ export default function Navbar() {
                     onClick={() => setLeaderboardOpen(false)}
                     className="block text-center text-xs text-[var(--color-brand)] hover:underline py-1"
                   >
-                    View full leaderboard →
+                    {t('nav.view_leaderboard')}
                   </Link>
                 </div>
               </div>
