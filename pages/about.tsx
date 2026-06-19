@@ -94,26 +94,26 @@ function FaqItem({ q, a, index }: { q: string; a: string; index: number }) {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 16 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: '-40px' as const }}
-      transition={{ duration: 0.45, delay: index * 0.05, ease: EASE }}
-      className="border-b border-[var(--border)] last:border-b-0"
+      viewport={{ once: true, margin: '-30px' as const }}
+      transition={{ duration: 0.4, delay: index * 0.04, ease: EASE }}
+      className="border-b border-[var(--border)]"
     >
       <button
         onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center justify-between gap-6 py-6 text-left group"
+        className="w-full flex items-start gap-4 py-6 text-left group"
       >
-        <span className="text-lg font-semibold text-[var(--text-primary)] group-hover:text-[var(--color-brand)] transition-colors leading-snug">
-          {q}
-        </span>
         <motion.span
           animate={{ rotate: open ? 45 : 0 }}
-          transition={{ duration: 0.25, ease: EASE }}
-          className="flex-shrink-0 w-8 h-8 rounded-full border border-[var(--border)] flex items-center justify-center text-[var(--text-muted)] group-hover:border-[var(--color-brand)] group-hover:text-[var(--color-brand)] transition-colors"
+          transition={{ duration: 0.22, ease: EASE }}
+          className="flex-shrink-0 mt-0.5 text-[var(--color-brand)]"
         >
-          <Plus size={16} />
+          <Plus size={20} strokeWidth={2.5} />
         </motion.span>
+        <span className="text-lg font-medium text-[var(--text-primary)] group-hover:text-[var(--color-brand)] transition-colors leading-snug">
+          {q}
+        </span>
       </button>
 
       <AnimatePresence initial={false}>
@@ -123,10 +123,10 @@ function FaqItem({ q, a, index }: { q: string; a: string; index: number }) {
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.32, ease: EASE }}
+            transition={{ duration: 0.3, ease: EASE }}
             style={{ overflow: 'hidden' }}
           >
-            <p className="pb-6 text-[var(--text-secondary)] leading-relaxed text-base">
+            <p className="pl-9 pb-6 text-[var(--text-secondary)] leading-relaxed text-base">
               {a}
             </p>
           </motion.div>
@@ -263,21 +263,23 @@ export default function AboutPage() {
       </section>
 
       {/* ── FAQ ───────────────────────────────────────────────── */}
-      <section className="max-w-4xl mx-auto px-4 py-24">
-        <motion.div {...fadeUp()} className="text-center mb-16">
-          <p className="text-xs font-bold uppercase tracking-widest text-[var(--color-brand)] mb-3">FAQ</p>
-          <h2 className="text-4xl sm:text-5xl font-extrabold text-[var(--text-primary)] mb-4">
-            Frequently asked questions
-          </h2>
-          <p className="text-lg text-[var(--text-secondary)] max-w-xl mx-auto">
-            Everything you need to know about Himq before you sign up.
-          </p>
-        </motion.div>
+      <section className="max-w-6xl mx-auto px-4 py-24">
+        <div className="grid md:grid-cols-2 gap-16 items-start">
 
-        <div className="border-t border-[var(--border)]">
-          {FAQS.map((item, i) => (
-            <FaqItem key={i} q={item.q} a={item.a} index={i} />
-          ))}
+          {/* Left: sticky big heading */}
+          <motion.div {...fadeUp()} className="md:sticky md:top-28">
+            <h2 className="text-5xl sm:text-6xl font-extrabold text-[var(--text-primary)] leading-tight">
+              Frequently<br />asked<br />questions
+            </h2>
+          </motion.div>
+
+          {/* Right: accordion */}
+          <div className="border-t border-[var(--border)]">
+            {FAQS.map((item, i) => (
+              <FaqItem key={i} q={item.q} a={item.a} index={i} />
+            ))}
+          </div>
+
         </div>
       </section>
 
