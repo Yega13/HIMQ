@@ -71,8 +71,9 @@ export default function RoadmapPage({ chatId }: { chatId: string }) {
   }
 
   const completedCount = lessons.filter((l) => l.status === 'completed').length;
-  const pct = chat ? Math.round((completedCount / chat.total_lessons) * 100) : 0;
-  const allDone = chat ? completedCount >= chat.total_lessons : false;
+  const discovering = chat ? chat.total_lessons === 0 : false;
+  const pct = (chat && chat.total_lessons > 0) ? Math.round((completedCount / chat.total_lessons) * 100) : 0;
+  const allDone = (chat && chat.total_lessons > 0) ? completedCount >= chat.total_lessons : false;
 
   return (
     <Layout>
@@ -92,19 +93,23 @@ export default function RoadmapPage({ chatId }: { chatId: string }) {
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
           <h1 className="text-xl font-bold text-[var(--text-primary)] leading-snug mb-1">{chat?.title}</h1>
           <p className="text-sm text-[var(--text-secondary)] mb-4">
-            {allDone ? 'Course complete!' : `${completedCount} of ${chat?.total_lessons} lessons done`}
+            {discovering ? 'Still setting up your plan…' : allDone ? 'Course complete!' : `${completedCount} of ${chat?.total_lessons} lessons done`}
           </p>
 
           {/* Progress bar */}
-          <div className="h-2.5 rounded-full bg-[var(--border)] overflow-hidden">
-            <motion.div
-              className="h-full rounded-full bg-[var(--color-brand)]"
-              initial={{ width: 0 }}
-              animate={{ width: `${pct}%` }}
-              transition={{ duration: 0.9, ease: 'easeOut' }}
-            />
-          </div>
-          <p className="text-xs text-[var(--text-muted)] mt-1.5">{pct}% complete · +{completedCount * 50} XP earned</p>
+          {!discovering && (
+            <>
+              <div className="h-2.5 rounded-full bg-[var(--border)] overflow-hidden">
+                <motion.div
+                  className="h-full rounded-full bg-[var(--color-brand)]"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${pct}%` }}
+                  transition={{ duration: 0.9, ease: 'easeOut' }}
+                />
+              </div>
+              <p className="text-xs text-[var(--text-muted)] mt-1.5">{pct}% complete · +{completedCount * 50} XP earned</p>
+            </>
+          )}
         </motion.div>
 
         {/* ── Island path ── */}

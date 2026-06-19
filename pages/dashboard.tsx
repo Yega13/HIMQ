@@ -239,23 +239,29 @@ export default function Dashboard() {
                     <h3 className="text-xl font-bold text-[var(--text-primary)] mb-4 truncate">{featured.title}</h3>
 
                     <div className="mb-5">
-                      <div className="flex items-center justify-between mb-1.5">
-                        <span className="text-xs font-medium text-[var(--text-secondary)]">
-                          {t('dashboard.lesson_of', {
-                            current: featured.current_lesson_index + 1,
-                            total: lessonTotal(featured),
-                          })}
-                        </span>
-                        <span className="text-xs font-bold text-[var(--color-brand)]">
-                          {pct(featured.current_lesson_index, lessonTotal(featured))}%
-                        </span>
-                      </div>
-                      <div className="h-2 rounded-full bg-[var(--bg-subtle)] overflow-hidden">
-                        <div
-                          className="h-full rounded-full bg-[var(--color-brand)] transition-all"
-                          style={{ width: `${pct(featured.current_lesson_index, lessonTotal(featured))}%` }}
-                        />
-                      </div>
+                      {featured.total_lessons === 0 ? (
+                        <span className="text-xs font-medium text-[var(--color-brand)]">Discovering…</span>
+                      ) : (
+                        <>
+                          <div className="flex items-center justify-between mb-1.5">
+                            <span className="text-xs font-medium text-[var(--text-secondary)]">
+                              {t('dashboard.lesson_of', {
+                                current: featured.current_lesson_index + 1,
+                                total: featured.total_lessons,
+                              })}
+                            </span>
+                            <span className="text-xs font-bold text-[var(--color-brand)]">
+                              {pct(featured.current_lesson_index, featured.total_lessons)}%
+                            </span>
+                          </div>
+                          <div className="h-2 rounded-full bg-[var(--bg-subtle)] overflow-hidden">
+                            <div
+                              className="h-full rounded-full bg-[var(--color-brand)] transition-all"
+                              style={{ width: `${pct(featured.current_lesson_index, featured.total_lessons)}%` }}
+                            />
+                          </div>
+                        </>
+                      )}
                     </div>
 
                     <div className="flex gap-2">
@@ -300,23 +306,29 @@ export default function Dashboard() {
                             <MapIcon size={15} />
                           </Link>
                         </div>
-                        <div className="flex items-center justify-between mb-1.5">
-                          <span className="text-[11px] text-[var(--text-muted)]">
-                            {t('dashboard.lesson_of', {
-                              current: chat.current_lesson_index + 1,
-                              total: lessonTotal(chat),
-                            })}
-                          </span>
-                          <span className="text-[11px] font-bold text-[var(--color-brand)]">
-                            {pct(chat.current_lesson_index, lessonTotal(chat))}%
-                          </span>
-                        </div>
-                        <div className="h-1.5 rounded-full bg-[var(--bg-subtle)] overflow-hidden">
-                          <div
-                            className="h-full rounded-full bg-[var(--color-brand)]"
-                            style={{ width: `${pct(chat.current_lesson_index, lessonTotal(chat))}%` }}
-                          />
-                        </div>
+                        {chat.total_lessons === 0 ? (
+                          <span className="text-[11px] font-medium text-[var(--color-brand)]">Discovering…</span>
+                        ) : (
+                          <>
+                            <div className="flex items-center justify-between mb-1.5">
+                              <span className="text-[11px] text-[var(--text-muted)]">
+                                {t('dashboard.lesson_of', {
+                                  current: chat.current_lesson_index + 1,
+                                  total: chat.total_lessons,
+                                })}
+                              </span>
+                              <span className="text-[11px] font-bold text-[var(--color-brand)]">
+                                {pct(chat.current_lesson_index, chat.total_lessons)}%
+                              </span>
+                            </div>
+                            <div className="h-1.5 rounded-full bg-[var(--bg-subtle)] overflow-hidden">
+                              <div
+                                className="h-full rounded-full bg-[var(--color-brand)]"
+                                style={{ width: `${pct(chat.current_lesson_index, chat.total_lessons)}%` }}
+                              />
+                            </div>
+                          </>
+                        )}
                       </motion.div>
                     ))}
                   </div>

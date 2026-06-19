@@ -104,7 +104,7 @@ export default function ChatDetail({ id }: { id: string }) {
       choices: m[3].split('|').map((c) => c.trim()).filter(Boolean),
       type: m[4] as 'single' | 'multiple',
     };
-    return { preamble: '', text: content.trim(), choices: undefined, type: 'text' as const };
+    return { preamble: '', text: content.replace(/^Q:\s*/i, '').trim(), choices: undefined, type: 'text' as const };
   }
 
   const sendMessage = async (overrideMsg?: string) => {

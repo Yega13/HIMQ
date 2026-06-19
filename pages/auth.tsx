@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mail, RefreshCw, CheckCircle } from 'lucide-react';
+import { Mail, RefreshCw, CheckCircle, Eye, EyeOff } from 'lucide-react';
 import { getBrowserClient } from '@/lib/supabase';
 import ThemeToggle from '@/components/ThemeToggle';
 import LanguageToggle from '@/components/LanguageToggle';
@@ -18,6 +18,7 @@ export default function Auth() {
   const [email, setEmail]       = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading]   = useState(false);
   const [message, setMessage]   = useState('');
   const [isError, setIsError]   = useState(false);
@@ -85,7 +86,7 @@ export default function Auth() {
     return (
       <div className="min-h-screen bg-[var(--bg-primary)] flex flex-col">
         <div className="flex justify-between items-center p-4">
-          <Link href="/" className="font-bold text-xl text-[var(--color-brand)]">EduPath</Link>
+          <Link href="/" className="font-bold text-xl text-[var(--color-brand)]">Himq</Link>
           <div className="flex items-center gap-2">
             <LanguageToggle />
             <ThemeToggle />
@@ -110,7 +111,7 @@ export default function Auth() {
 
               <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4 text-left mb-6 space-y-2">
                 <p className="text-xs text-[var(--text-secondary)] flex gap-2">
-                  <span>1.</span><span>Open the email from EduPath</span>
+                  <span>1.</span><span>Open the email from Himq</span>
                 </p>
                 <p className="text-xs text-[var(--text-secondary)] flex gap-2">
                   <span>2.</span><span>Click the confirmation link</span>
@@ -158,7 +159,7 @@ export default function Auth() {
   return (
     <div className="min-h-screen bg-[var(--bg-primary)] flex flex-col">
       <div className="flex justify-between items-center p-4">
-        <Link href="/" className="font-bold text-xl text-[var(--color-brand)]">EduPath</Link>
+        <Link href="/" className="font-bold text-xl text-[var(--color-brand)]">Himq</Link>
         <div className="flex items-center gap-2">
           <LanguageToggle />
           <ThemeToggle />
@@ -218,15 +219,25 @@ export default function Auth() {
                 <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1.5">
                   {t('auth.password')}
                 </label>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  minLength={8}
-                  className="w-full px-4 py-3 rounded-xl border border-[var(--border)] bg-[var(--bg-secondary)] text-[var(--text-primary)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-brand)] transition"
-                  placeholder="••••••••"
-                />
+                <div className="relative">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    minLength={8}
+                    className="w-full px-4 py-3 pr-11 rounded-xl border border-[var(--border)] bg-[var(--bg-secondary)] text-[var(--text-primary)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-brand)] transition"
+                    placeholder="••••••••"
+                  />
+                  <button
+                    type="button"
+                    tabIndex={-1}
+                    onClick={() => setShowPassword((v) => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--color-brand)] transition-colors"
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
               </div>
 
               {message && (
