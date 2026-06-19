@@ -29,11 +29,13 @@ interface Ranked {
 
 type Period = 'all' | 'week' | 'month';
 
+// XP thresholds tuned for an early-stage app so learners actually progress
+// through tiers: Bronze 0 → Silver 150 → Gold 400 → Platinum 800 → Diamond 1500.
 const TIERS = [
-  { id: 'diamond', min: 2000, icon: Gem, avatar: 'bg-sky-500', badge: 'bg-sky-50 text-sky-600 dark:bg-sky-900/20 dark:text-sky-300' },
-  { id: 'platinum', min: 1200, icon: Shield, avatar: 'bg-cyan-500', badge: 'bg-cyan-50 text-cyan-600 dark:bg-cyan-900/20 dark:text-cyan-300' },
-  { id: 'gold', min: 700, icon: Trophy, avatar: 'bg-yellow-500', badge: 'bg-yellow-50 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-300' },
-  { id: 'silver', min: 300, icon: Medal, avatar: 'bg-slate-400', badge: 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300' },
+  { id: 'diamond', min: 1500, icon: Gem, avatar: 'bg-sky-500', badge: 'bg-sky-50 text-sky-600 dark:bg-sky-900/20 dark:text-sky-300' },
+  { id: 'platinum', min: 800, icon: Shield, avatar: 'bg-cyan-500', badge: 'bg-cyan-50 text-cyan-600 dark:bg-cyan-900/20 dark:text-cyan-300' },
+  { id: 'gold', min: 400, icon: Trophy, avatar: 'bg-yellow-500', badge: 'bg-yellow-50 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-300' },
+  { id: 'silver', min: 150, icon: Medal, avatar: 'bg-slate-400', badge: 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300' },
   { id: 'bronze', min: 0, icon: Award, avatar: 'bg-amber-600', badge: 'bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-300' },
 ];
 function tierFor(xp: number) {
@@ -84,11 +86,15 @@ export default function Leaderboard({ profiles }: { profiles: Entry[] }) {
   );
 
   const podium = ranked.slice(0, 3);
-  const restAll = ranked.slice(3);
-  const restShown = expanded ? restAll : restAll.slice(0, INITIAL_COUNT);
+  const listShown = expanded ? ranked : ranked.slice(0, INITIAL_COUNT);
 
   const totalLearners = profiles.length;
-  const myTier = tierFor(meRow?.entry.xp ?? 0);
+  const myXpTotal = meRow?.entry.xp ?? 0;
+  const myTier = tierFor(myXpTotal);
+  const tierIdx = TIERS.findIndex((tt) => tt.id === myTier.id);
+  const nextTier = tierIdx > 0 ? TIERS[tierIdx - 1] : null;
+  const toNext = nextTier ? Math.max(0, nextTier.min - myXpTotal) : 0;
+  const tierPct = nextTier ? Math.min(100, Math.round(((myXpTotal - myTier.min) / (nextTier.min - myTier.min)) * 100)) : 100;
 
   return (
     <Layout>
@@ -118,6 +124,18 @@ export default function Leaderboard({ profiles }: { profiles: Entry[] }) {
               <myTier.icon size={13} />
               {t(`leaderboard.tier_${myTier.id}`)}
             </span>
+            {nextTier ? (
+              <div className="mt-2.5">
+                <div className="h-1.5 rounded-full bg-[var(--bg-subtle)] overflow-hidden">
+                  <div className="h-full rounded-full bg-[var(--color-brand)]" style={{ width: `${tierPct}%` }} />
+                </div>
+                <p className="text-[10px] text-[var(--text-muted)] mt-1">
+                  {t('leaderboard.to_next_tier', { xp: toNext, tier: t(`leaderboard.tier_${nextTier.id}`) })}
+                </p>
+              </div>
+            ) : (
+              <p className="text-[10px] text-[var(--text-muted)] mt-2">{t('leaderboard.top_tier')}</p>
+            )}
           </div>
         </div>
 
@@ -175,13 +193,13 @@ export default function Leaderboard({ profiles }: { profiles: Entry[] }) {
               </div>
             )}
 
-            {/* Rest of the list */}
-            {restAll.length > 0 && (
+            {/* Full ranking list */}
+            {ranked.length > 0 && (
               <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl overflow-hidden">
                 <ul className="divide-y divide-[var(--border)]">
-                  {restShown.map((r) => <RankRow key={r.entry.id} r={r} me={r.entry.id === currentUserId} period={period} t={t} />)}
+                  {listShown.map((r) => <RankRow key={r.entry.id} r={r} me={r.entry.id === currentUserId} period={period} t={t} />)}
                 </ul>
-                {restAll.length > INITIAL_COUNT && (
+                {ranked.length > INITIAL_COUNT && (
                   <button
                     onClick={() => setExpanded((v) => !v)}
                     className="w-full flex items-center justify-center gap-1.5 py-3 text-xs font-semibold text-[var(--color-brand)] border-t border-[var(--border)] hover:bg-[var(--bg-subtle)] transition-colors"

@@ -247,7 +247,9 @@
     "tier_silver": "Silver",
     "tier_gold": "Gold",
     "tier_platinum": "Platinum",
-    "tier_diamond": "Diamond"
+    "tier_diamond": "Diamond",
+    "to_next_tier": "{{xp}} XP to {{tier}}",
+    "top_tier": "Top tier reached"
   },
   "common": {
     "loading": "Loading...",

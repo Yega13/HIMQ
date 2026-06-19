@@ -247,7 +247,9 @@
     "tier_silver": "Արծաթ",
     "tier_gold": "Ոսկի",
     "tier_platinum": "Պլատին",
-    "tier_diamond": "Ադամանդ"
+    "tier_diamond": "Ադամանդ",
+    "to_next_tier": "{{xp}} XP մինչև {{tier}}",
+    "top_tier": "Հասել ես բարձրագույն մակարդակին"
   },
   "common": {
     "loading": "Բեռնվում է...",
