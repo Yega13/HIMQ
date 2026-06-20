@@ -198,7 +198,18 @@
                           "location":  "Location",
                           "ended":  "Ended",
                           "sign_in_ai":  "Sign in to use AI preparation.",
-                          "results":  "{{count}} results"
+                          "results":  "{{count}} results",
+                          "not_found": "Opportunity not found.",
+                          "share": "Share",
+                          "link_copied": "Link copied",
+                          "how_to_prepare": "How to prepare",
+                          "prepare_callout": "Not sure where to start? Let your AI teacher build a personalized prep plan for this opportunity.",
+                          "eligibility": "Eligibility",
+                          "requirements": "Requirements",
+                          "prize": "Prize / funding",
+                          "organizer": "Organizer",
+                          "website": "Website",
+                          "closing_soon_tag": "Closing soon"
                       },
     "profile":  {
                     "title":  "My Profile",
