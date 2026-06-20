@@ -142,6 +142,7 @@
                   "build":  "Build my plan",
                   "building":  "Building your plan…",
                   "how_title":  "How it works",
+                  "step": "Step",
                   "delete":  "Delete",
                   "confirm":  "Confirm?",
                   "roadmap":  "Roadmap",

@@ -217,7 +217,7 @@ export default function ChatIndex() {
         className="max-w-6xl mx-auto px-4 py-8"
         onClick={() => setConfirmDeleteId(null)}
       >
-        <div className="grid lg:grid-cols-[280px_1fr] gap-6">
+        <div className="grid lg:grid-cols-[340px_1fr] gap-6">
           {/* ── Sidebar: your paths ─────────────────────────── */}
           <aside className="order-2 lg:order-1">
             <div className="lg:sticky lg:top-6">
@@ -257,7 +257,7 @@ export default function ChatIndex() {
                             <div className="flex-1 h-1.5 rounded-full bg-[var(--bg-subtle)] overflow-hidden">
                               <div className="h-full rounded-full bg-[var(--color-brand)]" style={{ width: `${pctVal}%` }} />
                             </div>
-                            <span className="text-[10px] text-[var(--text-muted)] shrink-0">
+                            <span className="text-[10px] font-semibold text-[var(--text-secondary)] shrink-0">
                               {t('learn.lesson_short', { current: chat.current_lesson_index + 1, total })}
                             </span>
                           </div>
@@ -342,9 +342,9 @@ export default function ChatIndex() {
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
-                className="rounded-2xl border border-[var(--border)] bg-[var(--bg-card)] shadow-[var(--shadow-sm)] focus-within:border-[var(--color-brand)] focus-within:shadow-[var(--shadow-md)] transition-all p-4 mb-4"
+                className="rounded-2xl border border-[var(--border)] bg-[var(--bg-card)] shadow-[var(--shadow-sm)] focus-within:border-[var(--color-brand)] focus-within:shadow-[var(--shadow-md)] transition-all px-5 pt-5 pb-4 mb-4"
               >
-                <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)] mb-2">
+                <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)] mb-3">
                   {t('learn.goal_label')}
                 </label>
                 <textarea
@@ -352,7 +352,7 @@ export default function ChatIndex() {
                   onChange={(e) => setGoal(e.target.value)}
                   placeholder={t('chat.goal_placeholder') as string}
                   rows={3}
-                  className="w-full bg-transparent text-[var(--text-primary)] text-base resize-none focus:outline-none placeholder-[var(--text-muted)]"
+                  className="w-full bg-transparent text-[var(--text-primary)] text-base leading-relaxed resize-none focus:outline-none placeholder-[var(--text-muted)] pt-1"
                 />
 
                 {/* Skill level */}
@@ -431,26 +431,31 @@ export default function ChatIndex() {
               </motion.button>
             </form>
 
-            {/* How it works */}
+            {/* How it works — dedicated section */}
             <motion.div
               initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.25 }}
-              className="mt-10 pt-6 border-t border-[var(--border)]"
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.4 }}
+              className="mt-16"
             >
-              <p className="text-xs font-bold uppercase tracking-wider text-[var(--text-muted)] mb-4">{t('learn.how_title')}</p>
-              <div className="grid sm:grid-cols-3 gap-4">
-                {HOW.map((h, i) => (
-                  <div key={h.titleKey} className="flex items-start gap-3">
-                    <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-[var(--color-brand-soft)] text-[var(--color-brand)] shrink-0">
-                      <h.icon size={16} />
-                    </span>
-                    <div>
-                      <p className="text-[11px] font-bold text-[var(--text-muted)]">{i + 1}</p>
-                      <p className="text-sm font-semibold text-[var(--text-primary)] leading-snug">{t(h.titleKey)}</p>
+              <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-subtle)] p-6 sm:p-8 shadow-[var(--shadow-sm)]">
+                <h2 className="text-lg font-bold text-[var(--text-primary)] mb-6">{t('learn.how_title')}</h2>
+                <div className="grid sm:grid-cols-3 gap-7 sm:gap-8">
+                  {HOW.map((h, i) => (
+                    <div key={h.titleKey} className="flex items-start gap-4">
+                      <span className="flex items-center justify-center w-12 h-12 rounded-xl bg-[var(--color-brand)] text-white shrink-0 shadow-[var(--shadow-sm)]">
+                        <h.icon size={22} />
+                      </span>
+                      <div className="pt-0.5">
+                        <p className="text-[11px] font-bold uppercase tracking-wider text-[var(--color-brand)] mb-1">
+                          {t('learn.step')} {i + 1}
+                        </p>
+                        <p className="text-sm font-semibold text-[var(--text-primary)] leading-snug">{t(h.titleKey)}</p>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             </motion.div>
           </main>
