@@ -13,7 +13,7 @@ function ItemCard({ item }: { item: ThreeDMarqueeItem }) {
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/logo-light.png" alt="Himq" className="block dark:hidden h-24 w-auto" />
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/logo-white.png" alt="Himq" className="hidden dark:block h-36 w-auto" />
+        <img src="/logo-white.png" alt="Himq" className="hidden dark:block h-40 w-auto" />
       </div>
     );
   }
