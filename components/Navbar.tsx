@@ -68,7 +68,7 @@ export default function Navbar() {
       <div className="max-w-6xl mx-auto">
         <div className="flex items-center justify-between px-5 py-1.5 rounded-lg bg-[var(--bg-secondary)]/90 backdrop-blur-xl border border-[var(--border)] shadow-[0_6px_20px_-8px_rgba(15,26,51,0.18)]">
 
-          <Logo height={52} />
+          <Logo height={34} />
 
           <div className="flex items-center gap-4">
             {/* Nav links with sliding pill */}

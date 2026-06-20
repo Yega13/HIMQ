@@ -23,6 +23,7 @@ import {
   Palette,
   GraduationCap,
   Sparkles,
+  CalendarDays,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
@@ -232,11 +233,14 @@ export default function Dashboard() {
                     <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-[var(--color-brand)] mb-3">
                       <Play size={12} /> {t('dashboard.continue')}
                     </span>
-                    <h3 className="text-xl font-bold text-[var(--text-primary)] mb-4 truncate">{featured.title}</h3>
+                    <h3 className="text-lg sm:text-xl font-bold text-[var(--text-primary)] mb-4 leading-snug line-clamp-2">{featured.title}</h3>
 
                     <div className="mb-5">
                       {featured.total_lessons === 0 ? (
-                        <span className="text-xs font-medium text-[var(--color-brand)]">Discovering…</span>
+                        <span className="inline-flex items-center gap-2 text-xs font-medium text-[var(--color-brand)]">
+                          <span className="w-3.5 h-3.5 rounded-full border-2 border-[var(--color-brand)] border-t-transparent animate-spin" />
+                          {t('dashboard.discovering')}
+                        </span>
                       ) : (
                         <>
                           <div className="flex items-center justify-between mb-1.5">
@@ -270,7 +274,7 @@ export default function Dashboard() {
                       </Link>
                       <Link
                         href={`/roadmap/${featured.id}`}
-                        className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[var(--border-strong)] text-sm font-semibold text-[var(--text-primary)] hover:border-[var(--color-brand)] hover:text-[var(--color-brand)] transition-colors"
+                        className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[var(--border-strong)] bg-[var(--bg-card)] text-sm font-semibold text-[var(--text-primary)] hover:border-[var(--color-brand)] hover:bg-[var(--color-brand-soft)] hover:text-[var(--color-brand)] transition-colors"
                       >
                         <MapIcon size={15} />
                         {t('dashboard.roadmap')}
@@ -303,7 +307,10 @@ export default function Dashboard() {
                           </Link>
                         </div>
                         {chat.total_lessons === 0 ? (
-                          <span className="text-[11px] font-medium text-[var(--color-brand)]">Discovering…</span>
+                          <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-[var(--color-brand)]">
+                            <span className="w-3 h-3 rounded-full border-2 border-[var(--color-brand)] border-t-transparent animate-spin" />
+                            {t('dashboard.discovering')}
+                          </span>
                         ) : (
                           <>
                             <div className="flex items-center justify-between mb-1.5">
@@ -342,18 +349,21 @@ export default function Dashboard() {
               <h3 className="font-bold text-[var(--text-primary)]">{t('dashboard.quick_start_title')}</h3>
               <p className="text-sm text-[var(--text-secondary)] mb-4">{t('dashboard.quick_start_subtitle')}</p>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-                {QUICK_SUBJECTS.map((s) => (
-                  <Link
-                    key={s.key}
-                    href="/chat"
-                    className="group flex items-center gap-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg-secondary)] px-3 py-3 hover:border-[var(--color-brand)] hover:shadow-[var(--shadow-sm)] transition-all"
-                  >
-                    <span className={`flex items-center justify-center w-8 h-8 rounded-lg ${s.iconBg} shrink-0 group-hover:scale-105 transition-transform`}>
-                      <s.Icon size={16} className={s.iconColor} />
-                    </span>
-                    <span className="text-xs font-semibold text-[var(--text-primary)] truncate">{t(s.key)}</span>
-                  </Link>
-                ))}
+                {QUICK_SUBJECTS.map((s) => {
+                  const isOther = s.key === 'home.subj_other';
+                  return (
+                    <Link
+                      key={s.key}
+                      href="/chat"
+                      className={`group flex items-center gap-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg-secondary)] px-3 py-3 hover:border-[var(--color-brand)] hover:shadow-[var(--shadow-sm)] transition-all ${isOther ? 'col-span-2 sm:col-span-3 justify-center' : ''}`}
+                    >
+                      <span className={`flex items-center justify-center w-8 h-8 rounded-lg ${s.iconBg} shrink-0 group-hover:scale-105 transition-transform`}>
+                        <s.Icon size={16} className={s.iconColor} />
+                      </span>
+                      <span className="text-xs font-semibold text-[var(--text-primary)] truncate">{t(s.key)}</span>
+                    </Link>
+                  );
+                })}
               </div>
             </motion.div>
           </div>
@@ -385,7 +395,7 @@ export default function Dashboard() {
               <p className="text-xs text-[var(--text-muted)] leading-relaxed">{t('dashboard.rewards_caption')}</p>
             </motion.div>
 
-            {/* Streak */}
+            {/* Opportunities teaser */}
             <motion.div
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
@@ -393,15 +403,19 @@ export default function Dashboard() {
               className="rounded-2xl border border-[var(--border)] bg-[var(--bg-card)] p-5 shadow-[var(--shadow-sm)]"
             >
               <div className="flex items-center gap-2 mb-3">
-                <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-orange-50 dark:bg-orange-900/20 text-orange-500">
-                  <Flame size={16} />
+                <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-violet-50 dark:bg-violet-900/20 text-violet-500">
+                  <CalendarDays size={16} />
                 </span>
-                <h3 className="font-bold text-[var(--text-primary)]">{t('dashboard.streak_title')}</h3>
+                <h3 className="font-bold text-[var(--text-primary)]">{t('nav.opportunities')}</h3>
               </div>
-              <p className="text-2xl font-bold text-[var(--text-primary)] tabular-nums mb-1">{streakDays}</p>
-              <p className="text-xs text-[var(--text-muted)] leading-relaxed">
-                {streakDays > 0 ? t('dashboard.streak_nudge') : t('dashboard.streak_start')}
-              </p>
+              <p className="text-xs text-[var(--text-muted)] leading-relaxed mb-3">{t('dashboard.explore_desc')}</p>
+              <Link
+                href="/opportunities"
+                className="inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--color-brand)] hover:gap-2.5 transition-all"
+              >
+                {t('home.cta_explore')}
+                <ArrowRight size={14} />
+              </Link>
             </motion.div>
 
             {/* Goal */}
@@ -418,13 +432,27 @@ export default function Dashboard() {
                   </span>
                   <h3 className="font-bold text-[var(--text-primary)]">{t('dashboard.goal_title')}</h3>
                 </div>
-                <Link href="/profile" className="text-xs font-medium text-[var(--color-brand)] hover:underline">
-                  {t('dashboard.goal_edit')}
-                </Link>
+                {profile?.goal && (
+                  <Link href="/profile" className="text-xs font-medium text-[var(--color-brand)] hover:underline">
+                    {t('dashboard.goal_edit')}
+                  </Link>
+                )}
               </div>
-              <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
-                {profile?.goal || <span className="italic text-[var(--text-muted)]">{t('dashboard.goal_empty')}</span>}
-              </p>
+              {profile?.goal ? (
+                <p className="text-sm text-[var(--text-secondary)] leading-relaxed">{profile.goal}</p>
+              ) : (
+                <div className="flex flex-col items-center text-center pt-1 pb-1">
+                  <span className="flex items-center justify-center w-11 h-11 rounded-xl bg-[var(--color-brand-soft)] text-[var(--color-brand)] mb-3">
+                    <Target size={20} />
+                  </span>
+                  <Link
+                    href="/profile"
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[var(--color-brand)] text-white text-xs font-semibold hover:bg-[var(--color-brand-hover)] transition-colors"
+                  >
+                    {t('dashboard.set_goal')}
+                  </Link>
+                </div>
+              )}
             </motion.div>
           </div>
         </div>

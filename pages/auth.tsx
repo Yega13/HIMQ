@@ -87,7 +87,7 @@ export default function Auth() {
     return (
       <div className="min-h-screen bg-[var(--bg-primary)] flex flex-col">
         <div className="flex justify-between items-center p-4">
-          <Logo height={48} />
+          <Logo height={40} />
           <div className="flex items-center gap-2">
             <LanguageToggle />
             <ThemeToggle />

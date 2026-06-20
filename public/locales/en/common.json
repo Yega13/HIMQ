@@ -122,7 +122,10 @@
                       "goal_empty":  "No goal set yet.",
                       "goal_edit":  "Edit",
                       "quick_start_title":  "Start a new path",
-                      "quick_start_subtitle":  "Pick a topic and the AI will build your plan."
+                      "quick_start_subtitle":  "Pick a topic and the AI will build your plan.",
+                      "discovering": "Setting up your plan",
+                      "explore_desc": "Find scholarships, courses and events near you.",
+                      "set_goal": "Set your first goal"
                   },
     "learn":  {
                   "title":  "What do you want to master?",

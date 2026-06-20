@@ -16,23 +16,23 @@ export default function Footer() {
     <footer className="border-t border-[var(--border)] bg-[var(--bg-secondary)] mt-16">
       <div className="max-w-7xl mx-auto px-4 py-10 grid grid-cols-1 sm:grid-cols-3 gap-8">
 
-        {/* Brand */}
-        <div>
-          <Logo height={48} className="mb-2" />
-          <p className="text-sm text-[var(--text-muted)] leading-relaxed max-w-xs">
+        {/* Brand — logo and tagline share the same left edge */}
+        <div className="flex flex-col items-start">
+          <Logo height={28} className="mb-3" />
+          <p className="text-sm text-[var(--text-secondary)] leading-relaxed max-w-xs">
             {t('footer.tagline')}
           </p>
         </div>
 
         {/* Links */}
         <div>
-          <p className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-3">{t('footer.navigate')}</p>
+          <p className="text-[11px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-3">{t('footer.navigate')}</p>
           <ul className="space-y-2">
             {NAV_LINKS.map((l) => (
               <li key={l.href}>
                 <Link
                   href={l.href}
-                  className="text-sm text-[var(--text-muted)] hover:text-[var(--color-brand)] transition-colors"
+                  className="text-sm text-[var(--text-secondary)] hover:text-[var(--color-brand)] transition-colors"
                 >
                   {l.label}
                 </Link>
@@ -43,14 +43,14 @@ export default function Footer() {
 
         {/* Contact */}
         <div>
-          <p className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-3">{t('footer.contact')}</p>
+          <p className="text-[11px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-3">{t('footer.contact')}</p>
           <a
             href="mailto:himqaiteam@gmail.com"
-            className="text-sm text-[var(--text-muted)] hover:text-[var(--color-brand)] transition-colors block mb-2"
+            className="text-sm text-[var(--text-secondary)] hover:text-[var(--color-brand)] transition-colors block mb-2"
           >
             himqaiteam@gmail.com
           </a>
-          <p className="text-sm text-[var(--text-muted)]">{t('footer.built_for')}</p>
+          <p className="text-sm text-[var(--text-secondary)]">{t('footer.built_for')}</p>
         </div>
       </div>
 
