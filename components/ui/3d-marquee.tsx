@@ -8,7 +8,7 @@ export type ThreeDMarqueeItem =
 function ItemCard({ item }: { item: ThreeDMarqueeItem }) {
   if (item.type === "logo") {
     return (
-      <div className="w-80 h-52 rounded-2xl flex items-center justify-center shadow-xl flex-shrink-0 bg-white border border-[var(--border)] dark:bg-[var(--bg-secondary)] dark:border-[var(--border)]">
+      <div className="w-[420px] h-64 rounded-2xl flex items-center justify-center shadow-xl flex-shrink-0 bg-white border border-[var(--border)] dark:bg-[var(--bg-secondary)] dark:border-[var(--border)]">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/logo-light.png" alt="Himq" className="block dark:hidden h-16 w-auto" />
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -17,7 +17,7 @@ function ItemCard({ item }: { item: ThreeDMarqueeItem }) {
     );
   }
   return (
-    <div className="w-80 h-52 rounded-2xl border border-[var(--border)] bg-[var(--bg-card)] flex flex-col items-center justify-center gap-4 shadow-[var(--shadow-md)] flex-shrink-0 px-6 text-center">
+    <div className="w-[420px] h-64 rounded-2xl border border-[var(--border)] bg-[var(--bg-card)] flex flex-col items-center justify-center gap-4 shadow-[var(--shadow-md)] flex-shrink-0 px-6 text-center">
       <p className="text-sm text-[var(--text-secondary)] leading-relaxed">{item.desc}</p>
       <Link
         href="/auth"
@@ -63,7 +63,7 @@ export function ThreeDMarquee({
   const columns = Array.from({ length: cols }, (_, i) =>
     items.slice(i * perCol, (i + 1) * perCol)
   );
-  const speeds = [55, 44, 65, 50];
+  const speeds = [90, 72, 108, 82];
 
   return (
     <div className={cn("relative h-[600px] overflow-hidden", className)}>
