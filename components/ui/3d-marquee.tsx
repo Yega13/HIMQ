@@ -8,16 +8,16 @@ export type ThreeDMarqueeItem =
 function ItemCard({ item }: { item: ThreeDMarqueeItem }) {
   if (item.type === "logo") {
     return (
-      <div className="w-[420px] h-64 rounded-2xl flex items-center justify-center shadow-xl flex-shrink-0 bg-white border border-[var(--border)] dark:bg-[var(--bg-secondary)] dark:border-[var(--border)]">
+      <div className="w-[420px] h-64 rounded-xl flex items-center justify-center shadow-xl flex-shrink-0 bg-white dark:bg-[var(--bg-secondary)]">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/logo-light.png" alt="Himq" className="block dark:hidden h-16 w-auto" />
+        <img src="/logo-light.png" alt="Himq" className="block dark:hidden h-24 w-auto" />
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/logo-white.png" alt="Himq" className="hidden dark:block h-16 w-auto" />
+        <img src="/logo-white.png" alt="Himq" className="hidden dark:block h-24 w-auto" />
       </div>
     );
   }
   return (
-    <div className="w-[420px] h-64 rounded-2xl border border-[var(--border)] bg-[var(--bg-card)] flex flex-col items-center justify-center gap-4 shadow-[var(--shadow-md)] flex-shrink-0 px-6 text-center">
+    <div className="w-[420px] h-64 rounded-xl border-0 bg-[var(--bg-card)] flex flex-col items-center justify-center gap-4 flex-shrink-0 px-8 text-center">
       <p className="text-sm text-[var(--text-secondary)] leading-relaxed">{item.desc}</p>
       <Link
         href="/auth"
@@ -41,7 +41,7 @@ function MarqueeCol({
   const doubled = [...items, ...items];
   return (
     <div
-      className="flex flex-col gap-4 flex-shrink-0"
+      className="flex flex-col gap-3 flex-shrink-0"
       style={{ animation: `marquee-col-${direction} ${speed}s linear infinite` }}
     >
       {doubled.map((item, i) => (
@@ -66,18 +66,19 @@ export function ThreeDMarquee({
   const speeds = [90, 72, 108, 82];
 
   return (
-    <div className={cn("relative h-[600px] overflow-hidden", className)}>
-      <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-36 bg-gradient-to-b from-[var(--bg-primary)] to-transparent" />
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-36 bg-gradient-to-t from-[var(--bg-primary)] to-transparent" />
+    <div className={cn("relative h-[620px] overflow-hidden", className)}>
+      <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-40 bg-gradient-to-b from-[var(--bg-primary)] to-transparent" />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-40 bg-gradient-to-t from-[var(--bg-primary)] to-transparent" />
 
       <div
         className="flex h-full items-center justify-center"
-        style={{ perspective: "800px" }}
+        style={{ perspective: "700px" }}
       >
+        {/* The gap-3 + bg on this wrapper creates the Aceternity "grout line" effect */}
         <div
-          className="flex gap-4 items-start"
+          className="flex gap-3 p-3 items-start bg-neutral-200 dark:bg-[var(--border-strong)]"
           style={{
-            transform: "rotateX(25deg) rotateZ(-25deg)",
+            transform: "rotateX(35deg) rotateZ(-30deg)",
             transformOrigin: "center center",
           }}
         >
