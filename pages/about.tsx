@@ -7,9 +7,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Sparkles, MapPin, CalendarDays, ArrowRight,
   BrainCircuit, Globe, Zap, Heart, Plus, Mail,
-  Users, Rocket, Clock, BadgeCheck,
+  Users, Rocket, Clock, BadgeCheck, Trophy, TrendingUp, Flame,
 } from 'lucide-react';
 import Layout from '@/components/Layout';
+import { ThreeDMarquee, type ThreeDMarqueeItem } from '@/components/ui/3d-marquee';
 
 const EASE = 'easeOut' as const;
 
@@ -23,35 +24,39 @@ const fadeUp = (delay = 0) => ({
 const WHAT_WE_DO = [
   {
     icon: BrainCircuit,
-    color: 'bg-[var(--color-brand-soft)] text-[var(--color-brand)]',
+    iconColor: 'bg-blue-500/10 text-[var(--color-brand)]',
+    cardBg: 'bg-blue-500/[0.04] border-blue-500/20 hover:border-blue-500/40',
     title: 'AI that actually teaches',
     desc: 'You tell May — our AI — what you want to learn. It asks a few smart questions, then builds a focused 5-lesson course tailored to your level and goal. No generic YouTube rabbit holes.',
   },
   {
     icon: Globe,
-    color: 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400',
+    iconColor: 'bg-green-500/10 text-green-600 dark:text-green-400',
+    cardBg: 'bg-green-500/[0.04] border-green-500/20 hover:border-green-500/40',
     title: 'Real opportunities in one place',
     desc: 'We collect scholarships, competitions, internships, grants, and events happening in Armenia and make them easy to find, filter, and prepare for — all inside Himq.',
   },
   {
     icon: Zap,
-    color: 'bg-amber-100 dark:bg-amber-900/30 text-amber-500',
+    iconColor: 'bg-yellow-500/10 text-yellow-500',
+    cardBg: 'bg-yellow-500/[0.04] border-yellow-500/20 hover:border-yellow-500/40',
     title: 'Motivation that sticks',
     desc: 'XP, daily streaks, and a leaderboard turn lonely studying into something you actually look forward to. Learning should feel like progress — because it is.',
   },
   {
     icon: Heart,
-    color: 'bg-rose-100 dark:bg-rose-900/30 text-rose-500',
+    iconColor: 'bg-blue-500/10 text-[var(--color-brand)]',
+    cardBg: 'bg-blue-500/[0.04] border-blue-500/20 hover:border-blue-500/40',
     title: 'Built with love from Armenia',
     desc: 'Every design decision, every translation, every feature was made with Armenian students in mind. This is not a global product localised for Armenia — it was born here.',
   },
 ];
 
 const STATS = [
-  { icon: Users,     value: '3',        label: 'Founders' },
-  { icon: Rocket,    value: 'June 2026',label: 'Launched' },
-  { icon: Clock,     value: '< 5 min',  label: 'To start your first course' },
-  { icon: BadgeCheck,value: 'Free',     label: 'During SSS 2026 demo' },
+  { icon: Users,      value: '3',         label: 'Founders',                   iconBg: 'bg-blue-500/10',   iconColor: 'text-[var(--color-brand)]', border: 'border-blue-500/20' },
+  { icon: Rocket,     value: 'June 2026', label: 'Launched',                   iconBg: 'bg-green-500/10',  iconColor: 'text-green-600 dark:text-green-400', border: 'border-green-500/20' },
+  { icon: Clock,      value: '< 5 min',   label: 'To start your first course', iconBg: 'bg-yellow-500/10', iconColor: 'text-yellow-500', border: 'border-yellow-500/20' },
+  { icon: BadgeCheck, value: 'Free',      label: 'During SSS 2026 demo',       iconBg: 'bg-green-500/10',  iconColor: 'text-green-600 dark:text-green-400', border: 'border-green-500/20' },
 ];
 
 const FAQS = [
@@ -95,6 +100,42 @@ const FAQS = [
     q: 'How do I get started?',
     a: 'Create a free account at himq.am/auth. No credit card, no verification process — just sign up and start your first course in under two minutes. If you already have an account, sign in and hit "Start learning" on the dashboard.',
   },
+];
+
+// ── 3D Marquee items ──────────────────────────────────────────
+const MARQUEE_ITEMS: ThreeDMarqueeItem[] = [
+  { type: 'logo' },
+  { type: 'cta', label: 'Create Path',    icon: BrainCircuit },
+  { type: 'logo' },
+  { type: 'cta', label: 'Find Grants',    icon: Globe },
+  { type: 'logo' },
+  { type: 'cta', label: 'Earn XP',        icon: Zap },
+  { type: 'logo' },
+  { type: 'cta', label: 'Beat the Board', icon: Trophy },
+  { type: 'logo' },
+  { type: 'cta', label: 'Stay Sharp',     icon: Flame },
+  { type: 'logo' },
+  { type: 'cta', label: 'Track Progress', icon: TrendingUp },
+  { type: 'logo' },
+  { type: 'cta', label: 'Start Free',     icon: ArrowRight },
+  { type: 'logo' },
+  { type: 'cta', label: 'Learn Anything', icon: Sparkles },
+  { type: 'logo' },
+  { type: 'cta', label: 'Create Path',    icon: BrainCircuit },
+  { type: 'logo' },
+  { type: 'cta', label: 'Find Grants',    icon: Globe },
+  { type: 'logo' },
+  { type: 'cta', label: 'Earn XP',        icon: Zap },
+  { type: 'logo' },
+  { type: 'cta', label: 'Beat the Board', icon: Trophy },
+  { type: 'logo' },
+  { type: 'cta', label: 'Stay Sharp',     icon: Flame },
+  { type: 'logo' },
+  { type: 'cta', label: 'Track Progress', icon: TrendingUp },
+  { type: 'logo' },
+  { type: 'cta', label: 'Start Free',     icon: ArrowRight },
+  { type: 'logo' },
+  { type: 'cta', label: 'Learn Anything', icon: Sparkles },
 ];
 
 function FaqItem({ q, a, index }: { q: string; a: string; index: number }) {
@@ -156,20 +197,20 @@ export default function AboutPage() {
       <section className="relative overflow-hidden">
         <div className="pointer-events-none absolute inset-0 -z-10">
           <div className="absolute -top-24 -left-20 w-[32rem] h-[32rem] rounded-full bg-[var(--color-brand)]/10 blur-3xl" />
-          <div className="absolute top-8 right-0 w-[22rem] h-[22rem] rounded-full bg-violet-400/8 blur-3xl" />
+          <div className="absolute top-8 right-0 w-[22rem] h-[22rem] rounded-full bg-green-400/8 blur-3xl" />
         </div>
 
-        <div className="max-w-3xl mx-auto px-4 pt-20 pb-16 text-center">
+        <div className="max-w-5xl mx-auto px-4 pt-14 pb-8 text-center">
           <motion.span
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5, ease: EASE }}
-            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[var(--color-brand-soft)] text-[var(--color-brand)] mb-6"
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[var(--color-brand-soft)] text-[var(--color-brand)] mb-5"
           >
             <Sparkles size={12} /> About us
           </motion.span>
 
           <motion.h1
             initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.55, delay: 0.05, ease: EASE }}
-            className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight text-[var(--text-primary)] leading-[1.07] mb-6"
+            className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight text-[var(--text-primary)] leading-[1.07] mb-5"
           >
             We&apos;re three students<br />
             <span className="text-[var(--color-brand)]">who got tired of waiting.</span>
@@ -177,7 +218,7 @@ export default function AboutPage() {
 
           <motion.p
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.55, delay: 0.12, ease: EASE }}
-            className="text-lg text-[var(--text-secondary)] leading-relaxed"
+            className="text-lg text-[var(--text-secondary)] leading-relaxed max-w-2xl mx-auto"
           >
             Tired of watching talented classmates miss scholarships they never heard about.
             Tired of generic courses that teach nothing real.
@@ -188,33 +229,28 @@ export default function AboutPage() {
       </section>
 
       {/* ── Stats strip ───────────────────────────────────────── */}
-      <div className="max-w-5xl mx-auto px-4 pb-12 -mt-4">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.18, ease: EASE }}
-          className="grid grid-cols-2 md:grid-cols-4 gap-4"
-        >
+      <div className="max-w-7xl mx-auto px-4 pb-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {STATS.map((s, i) => (
             <motion.div
               key={i}
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.45, delay: 0.22 + i * 0.07, ease: EASE }}
-              className="flex flex-col items-center text-center p-5 rounded-2xl border border-[var(--border)] bg-[var(--bg-card)] shadow-[var(--shadow-sm)]"
+              transition={{ duration: 0.45, delay: 0.18 + i * 0.07, ease: EASE }}
+              className={`flex flex-col items-center text-center p-5 rounded-2xl border bg-[var(--bg-card)] shadow-[var(--shadow-sm)] ${s.border}`}
             >
-              <div className="w-10 h-10 rounded-xl bg-[var(--color-brand-soft)] flex items-center justify-center mb-3">
-                <s.icon size={18} className="text-[var(--color-brand)]" />
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-3 ${s.iconBg}`}>
+                <s.icon size={18} className={s.iconColor} />
               </div>
               <p className="text-xl font-extrabold text-[var(--text-primary)] leading-none mb-1">{s.value}</p>
               <p className="text-xs text-[var(--text-muted)] leading-snug">{s.label}</p>
             </motion.div>
           ))}
-        </motion.div>
+        </div>
       </div>
 
       {/* ── Yerevan aerial photo ──────────────────────────────── */}
-      <div className="max-w-5xl mx-auto px-4 pb-16 -mt-2">
+      <div className="max-w-7xl mx-auto px-4 pb-10">
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
@@ -223,9 +259,9 @@ export default function AboutPage() {
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="https://images.unsplash.com/photo-1600758208050-a22f17dc5bb9?w=1400&q=80&auto=format&fit=crop"
+            src="https://images.unsplash.com/photo-1600758208050-a22f17dc5bb9?w=1600&q=80&auto=format&fit=crop"
             alt="Aerial view of Yerevan, Armenia — where Himq was built"
-            className="w-full h-[260px] sm:h-[360px] md:h-[440px] object-cover"
+            className="w-full h-[260px] sm:h-[360px] md:h-[460px] object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent" />
           <div className="absolute bottom-5 left-6 text-white">
@@ -236,21 +272,21 @@ export default function AboutPage() {
       </div>
 
       {/* ── Origin story (dark band) ───────────────────────────── */}
-      <section className="bg-[var(--bg-deep)] py-20 relative overflow-hidden">
+      <section className="bg-[var(--bg-deep)] py-14 relative overflow-hidden">
         <div className="pointer-events-none absolute -top-16 left-1/2 -translate-x-1/2 w-[40rem] h-[20rem] rounded-full bg-[var(--color-brand)]/8 blur-3xl" />
 
-        <div className="max-w-5xl mx-auto px-4 relative">
+        <div className="max-w-7xl mx-auto px-4 relative">
           <div className="grid md:grid-cols-2 gap-12 items-start">
 
             {/* Left: text */}
             <div>
-              <div className="flex flex-col sm:flex-row gap-4 mb-10">
-                <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/[0.06] border border-white/10 text-sm text-[var(--text-on-deep)]/70 w-fit">
+              <div className="flex flex-col sm:flex-row gap-3 mb-8">
+                <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/[0.06] border border-white/10 text-sm text-[var(--text-on-deep)]/70 w-fit">
                   <CalendarDays size={14} className="text-[var(--color-brand)]" />
                   Founded June 2026
                 </div>
-                <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/[0.06] border border-white/10 text-sm text-[var(--text-on-deep)]/70 w-fit">
-                  <MapPin size={14} className="text-[var(--color-brand)]" />
+                <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/[0.06] border border-white/10 text-sm text-[var(--text-on-deep)]/70 w-fit">
+                  <MapPin size={14} className="text-green-400" />
                   Yerevan, Armenia
                 </div>
               </div>
@@ -259,7 +295,7 @@ export default function AboutPage() {
                 The story behind Himq
               </motion.h2>
 
-              <div className="space-y-5 text-[var(--text-on-deep)]/75 leading-relaxed text-base">
+              <div className="space-y-4 text-[var(--text-on-deep)]/75 leading-relaxed text-base">
                 <motion.p {...fadeUp(0.07)}>
                   We are three students from Armenia — Suren, Hayk, and Artashes — who met through a shared frustration: the gap between ambition and opportunity in our country is huge, but it doesn&apos;t have to be.
                 </motion.p>
@@ -282,7 +318,7 @@ export default function AboutPage() {
                 <img
                   src="https://images.unsplash.com/photo-1697700257503-1b6e2034eb37?w=800&q=80&auto=format&fit=crop"
                   alt="Republic Square, Yerevan"
-                  className="w-full h-[320px] sm:h-[420px] object-cover"
+                  className="w-full h-[320px] sm:h-[440px] object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
                 <div className="absolute bottom-4 left-4 text-white">
@@ -297,8 +333,8 @@ export default function AboutPage() {
       </section>
 
       {/* ── What Himq does ────────────────────────────────────── */}
-      <section className="max-w-5xl mx-auto px-4 py-20">
-        <motion.div {...fadeUp()} className="text-center mb-14">
+      <section className="max-w-7xl mx-auto px-4 py-12">
+        <motion.div {...fadeUp()} className="text-center mb-10">
           <p className="text-xs font-bold uppercase tracking-widest text-[var(--color-brand)] mb-3">What we built</p>
           <h2 className="text-3xl sm:text-4xl font-extrabold text-[var(--text-primary)] mb-3">
             What Himq actually does
@@ -308,34 +344,41 @@ export default function AboutPage() {
           </p>
         </motion.div>
 
-        <div className="grid md:grid-cols-2 gap-5">
+        <div className="grid md:grid-cols-2 xl:grid-cols-4 gap-5">
           {WHAT_WE_DO.map((item, i) => (
             <motion.div
               key={i}
               {...fadeUp(0.07 + i * 0.08)}
               whileHover={{ y: -4 }}
               transition={{ duration: 0.2 }}
-              className="rounded-2xl border border-[var(--border)] bg-[var(--bg-card)] p-7 shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-md)] hover:border-[var(--color-brand)]/40 transition-all"
+              className={`rounded-2xl border p-6 shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-md)] transition-all ${item.cardBg}`}
             >
-              <div className={`flex items-center justify-center w-12 h-12 rounded-xl mb-5 ${item.color}`}>
-                <item.icon size={22} />
+              <div className={`flex items-center justify-center w-11 h-11 rounded-xl mb-4 ${item.iconColor}`}>
+                <item.icon size={20} />
               </div>
-              <h3 className="font-bold text-[var(--text-primary)] text-lg mb-2">{item.title}</h3>
-              <p className="text-[var(--text-secondary)] leading-relaxed">{item.desc}</p>
+              <h3 className="font-bold text-[var(--text-primary)] text-base mb-2">{item.title}</h3>
+              <p className="text-[var(--text-secondary)] leading-relaxed text-sm">{item.desc}</p>
             </motion.div>
           ))}
         </div>
       </section>
 
       {/* ── Mission statement ─────────────────────────────────── */}
-      <section className="bg-[var(--bg-subtle)] border-y border-[var(--border)] py-20">
-        <div className="max-w-3xl mx-auto px-4 text-center">
+      <section className="relative overflow-hidden py-14 my-4">
+        <div className="absolute inset-0 bg-gradient-to-br from-[var(--color-brand)] via-blue-600 to-green-500" />
+        <div className="pointer-events-none absolute inset-0 opacity-[0.07]"
+          style={{ backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '28px 28px' }}
+        />
+        <div className="absolute -top-20 -right-20 w-72 h-72 rounded-full bg-yellow-400/20 blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-16 -left-16 w-64 h-64 rounded-full bg-green-400/20 blur-3xl pointer-events-none" />
+
+        <div className="relative max-w-4xl mx-auto px-4 text-center text-white">
           <motion.div {...fadeUp()}>
-            <p className="text-xs font-bold uppercase tracking-widest text-[var(--color-brand)] mb-6">Our mission</p>
-            <blockquote className="text-2xl sm:text-3xl font-extrabold text-[var(--text-primary)] leading-snug mb-6">
+            <p className="text-xs font-bold uppercase tracking-widest opacity-70 mb-5">Our mission</p>
+            <blockquote className="text-3xl sm:text-4xl font-extrabold leading-snug mb-5">
               &ldquo;Every Armenian student deserves a clear path forward — regardless of who they know or where they heard about it.&rdquo;
             </blockquote>
-            <p className="text-[var(--text-secondary)] text-base leading-relaxed max-w-2xl mx-auto">
+            <p className="text-white/75 text-base leading-relaxed max-w-2xl mx-auto">
               We believe the next generation of Armenian scientists, engineers, artists, and entrepreneurs is already here. They just need the right tools to take the first step. Himq is that first step.
             </p>
           </motion.div>
@@ -343,17 +386,15 @@ export default function AboutPage() {
       </section>
 
       {/* ── FAQ ───────────────────────────────────────────────── */}
-      <section className="max-w-6xl mx-auto px-4 py-24">
+      <section className="max-w-7xl mx-auto px-4 py-14">
         <div className="grid md:grid-cols-2 gap-8 items-start">
 
-          {/* Left: sticky big heading */}
           <motion.div {...fadeUp()} className="md:sticky md:top-28">
             <h2 className="text-5xl sm:text-6xl font-extrabold text-[var(--text-primary)] leading-tight">
               Frequently<br />asked<br />questions
             </h2>
           </motion.div>
 
-          {/* Right: accordion */}
           <div className="border-t border-[var(--border)]">
             {FAQS.map((item, i) => (
               <FaqItem key={i} q={item.q} a={item.a} index={i} />
@@ -364,10 +405,10 @@ export default function AboutPage() {
       </section>
 
       {/* ── Contact ───────────────────────────────────────────── */}
-      <section className="max-w-5xl mx-auto px-4 py-20">
+      <section className="max-w-7xl mx-auto px-4 py-12">
         <motion.div
           {...fadeUp()}
-          className="rounded-3xl border border-[var(--border)] bg-[var(--bg-card)] p-10 sm:p-14 flex flex-col sm:flex-row items-center justify-between gap-8"
+          className="rounded-3xl border border-[var(--border)] bg-[var(--bg-card)] p-10 sm:p-12 flex flex-col sm:flex-row items-center justify-between gap-8"
         >
           <div>
             <p className="text-xs font-bold uppercase tracking-widest text-[var(--color-brand)] mb-2">Get in touch</p>
@@ -386,35 +427,25 @@ export default function AboutPage() {
         </motion.div>
       </section>
 
-      {/* ── SSS + CTA ─────────────────────────────────────────── */}
-      <section className="max-w-5xl mx-auto px-4 pb-20">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.97 }}
-          whileInView={{ opacity: 1, scale: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5, ease: EASE }}
-          className="rounded-3xl bg-gradient-to-br from-[var(--color-brand)] to-[var(--color-brand-hover)] p-12 sm:p-16 text-center text-white relative overflow-hidden"
-        >
-          <div className="pointer-events-none absolute -top-14 -right-14 w-56 h-56 bg-white/10 rounded-full" />
-          <div className="pointer-events-none absolute -bottom-12 -left-12 w-48 h-48 bg-white/10 rounded-full" />
-          <div className="relative z-10">
-            <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-white/20 mb-5">
-              SSS 2026 Starter Track · Yerevan, Armenia
-            </span>
-            <h2 className="text-3xl sm:text-4xl font-extrabold mb-3">
-              Want to try it yourself?
-            </h2>
-            <p className="text-blue-100 text-base mb-8 max-w-sm mx-auto leading-relaxed">
-              Himq is completely free during the SSS 2026 demo. No credit card. Just sign up and start learning.
-            </p>
-            <Link
-              href="/auth"
-              className="inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-white text-[var(--color-brand)] font-bold text-base hover:bg-blue-50 transition-colors shadow-lg"
-            >
-              Create your free account <ArrowRight size={17} />
-            </Link>
-          </div>
+      {/* ── 3D Marquee ────────────────────────────────────────── */}
+      <section className="pb-14 overflow-hidden">
+        <motion.div {...fadeUp()} className="text-center mb-10 px-4">
+          <p className="text-xs font-bold uppercase tracking-widest text-[var(--color-brand)] mb-3">SSS 2026 · Yerevan, Armenia</p>
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-[var(--text-primary)] mb-3">
+            Ready to take the next step?
+          </h2>
+          <p className="text-[var(--text-secondary)] max-w-xl mx-auto leading-relaxed">
+            Armenian students are already building their learning paths on Himq. Start yours free in under 2 minutes.
+          </p>
+          <Link
+            href="/auth"
+            className="inline-flex items-center gap-2 mt-6 px-7 py-3.5 rounded-xl bg-[var(--color-brand)] text-white font-semibold text-base hover:bg-[var(--color-brand-hover)] transition-colors shadow-lg"
+          >
+            Create free account <ArrowRight size={16} />
+          </Link>
         </motion.div>
+
+        <ThreeDMarquee items={MARQUEE_ITEMS} />
       </section>
     </Layout>
   );

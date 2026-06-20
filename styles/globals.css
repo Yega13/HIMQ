@@ -2,6 +2,26 @@
 @tailwind components;
 @tailwind utilities;
 
+@keyframes marquee-left {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+@keyframes marquee-right {
+  from { transform: translateX(-50%); }
+  to   { transform: translateX(0); }
+}
+
+@keyframes marquee-col-up {
+  from { transform: translateY(0); }
+  to   { transform: translateY(-50%); }
+}
+
+@keyframes marquee-col-down {
+  from { transform: translateY(-50%); }
+  to   { transform: translateY(0); }
+}
+
 @keyframes loading-bar {
   0%   { transform: translateX(-100%); }
   50%  { transform: translateX(0%); }
