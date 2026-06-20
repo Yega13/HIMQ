@@ -241,7 +241,17 @@ export default function ProfilePage() {
 
         {/* Header banner */}
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="relative mb-20">
-          <div className="h-36 sm:h-44 rounded-3xl bg-gradient-to-r from-[var(--color-brand)] via-[#1d3262] to-[#0a1733] relative overflow-hidden">
+          <div className="h-36 sm:h-44 rounded-3xl bg-gradient-to-br from-[var(--color-brand)] via-[#1d3262] to-[#0a1733] relative overflow-hidden">
+            {/* subtle dot pattern */}
+            <div
+              className="absolute inset-0 opacity-[0.18]"
+              style={{ backgroundImage: 'radial-gradient(rgba(255,255,255,0.7) 1px, transparent 1px)', backgroundSize: '16px 16px' }}
+            />
+            {/* soft corner highlight */}
+            <div
+              className="absolute inset-0"
+              style={{ background: 'radial-gradient(circle at 18% 18%, rgba(255,255,255,0.16), transparent 55%)' }}
+            />
             <div className="absolute -top-10 -right-10 w-52 h-52 rounded-full bg-white/10" />
             <div className="absolute bottom-0 left-0 w-40 h-40 rounded-full bg-[var(--color-gold)]/10 blur-2xl" />
           </div>
@@ -313,7 +323,18 @@ export default function ProfilePage() {
         </div>
 
         {/* About / Edit */}
-        <Section title={t('profile.about') as string}>
+        <Section
+          title={t('profile.about') as string}
+          action={!editing ? (
+            <button
+              onClick={() => setEditing(true)}
+              className="inline-flex items-center gap-1 text-xs font-medium text-[var(--color-brand)] hover:underline"
+            >
+              <Edit2 size={13} />
+              {t('profile.edit')}
+            </button>
+          ) : undefined}
+        >
           {editing ? (
             <div className="space-y-4">
               <Field label={t('auth.full_name') as string}>
@@ -355,15 +376,31 @@ export default function ProfilePage() {
             <div className="space-y-4">
               <div>
                 <p className="text-xs text-[var(--text-muted)] mb-0.5">{t('profile.bio_label')}</p>
-                <p className="text-sm text-[var(--text-primary)]">
-                  {profile?.bio || <span className="italic text-[var(--text-muted)]">{t('profile.no_bio')}</span>}
-                </p>
+                {profile?.bio ? (
+                  <p className="text-sm text-[var(--text-primary)] leading-relaxed">{profile.bio}</p>
+                ) : (
+                  <button
+                    onClick={() => setEditing(true)}
+                    className="inline-flex items-center gap-1.5 text-sm font-normal text-[var(--text-muted)] hover:text-[var(--color-brand)] transition-colors"
+                  >
+                    {t('profile.no_bio')}
+                    <Edit2 size={12} />
+                  </button>
+                )}
               </div>
               <div>
                 <p className="text-xs text-[var(--text-muted)] mb-0.5">{t('profile.goal_label')}</p>
-                <p className="text-sm text-[var(--text-primary)]">
-                  {profile?.goal || <span className="italic text-[var(--text-muted)]">{t('profile.no_goal')}</span>}
-                </p>
+                {profile?.goal ? (
+                  <p className="text-sm text-[var(--text-primary)] leading-relaxed">{profile.goal}</p>
+                ) : (
+                  <button
+                    onClick={() => setEditing(true)}
+                    className="inline-flex items-center gap-1.5 text-sm font-normal text-[var(--text-muted)] hover:text-[var(--color-brand)] transition-colors"
+                  >
+                    {t('profile.no_goal')}
+                    <Edit2 size={12} />
+                  </button>
+                )}
               </div>
               <div>
                 <p className="text-xs text-[var(--text-muted)] mb-0.5">{t('profile.skill_label')}</p>
