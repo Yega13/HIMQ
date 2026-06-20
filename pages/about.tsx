@@ -104,14 +104,14 @@ const FAQS = [
 
 // ── 3D Marquee items ──────────────────────────────────────────
 const CTA_DESCS = [
-  'Build a 5-lesson AI plan in minutes',
-  'Scholarships picked for Armenian students',
-  'Get rewarded for every lesson done',
-  'Compete with learners across Armenia',
-  'Daily streaks keep your skills sharp',
-  'See how far you\'ve come, visually',
-  'No card needed — sign up and go',
-  'Any topic, a course in under 60 sec',
+  'Tell our AI what you want to learn and get a fully personalized 5-lesson plan built around your exact goal — in minutes.',
+  'We collect scholarships, Olympiads, internships, and competitions open to Armenian students so you never miss a deadline.',
+  'Every lesson you finish earns XP. Every day you study keeps your streak alive. Learning that actually feels like progress.',
+  'Your score appears on the Himq leaderboard alongside every other learner in Armenia. How high can you climb?',
+  'Miss a day and your streak resets. Stay consistent and watch your XP compound — small daily habits build big results.',
+  'Your roadmap shows every lesson, your current position, and how much XP you\'ve earned — all in one clear view.',
+  'Himq is completely free during SSS 2026. No credit card, no trial period. Just sign up and start your first lesson now.',
+  'Name any subject — programming, math, history, design — and May will build a focused course tailored to your level.',
 ];
 
 const MARQUEE_ITEMS: ThreeDMarqueeItem[] = Array.from({ length: 32 }, (_, i) =>
