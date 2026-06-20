@@ -5,14 +5,14 @@ import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import Head from 'next/head';
-import { Calendar, Globe, ExternalLink, Search, Bookmark, BookmarkCheck, ArrowUp, ChevronDown, Sparkles } from 'lucide-react';
+import { Calendar, Globe, ExternalLink, Search, Bookmark, BookmarkCheck, ArrowUp, ChevronDown, Sparkles, Heart, ArrowUpDown } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
 import { supabase, getBrowserClient, IS_MOCK } from '@/lib/supabase';
 import { buildLessonPlan } from '@/lib/mockClient';
 import { useUser } from '@/lib/useUser';
 import { cn } from '@/lib/utils';
-import { getSavedEvents, toggleSavedEvent, type SavedEvent } from '@/lib/savedEvents';
+import { getSavedEvents, toggleSavedEvent, getLikedIds, toggleLike, type SavedEvent } from '@/lib/savedEvents';
 
 interface Event {
   id: string;
@@ -86,9 +86,11 @@ export default function Opportunities({ events }: Props) {
   const [sort, setSort] = useState('deadline');
   const [pageLoading, setPageLoading] = useState(false);
   const [savedIds, setSavedIds] = useState<string[]>([]);
+  const [likedIds, setLikedIds] = useState<string[]>([]);
 
   useEffect(() => {
     setSavedIds(getSavedEvents().map((e) => e.id));
+    setLikedIds(getLikedIds());
   }, []);
 
   useEffect(() => {
@@ -109,6 +111,11 @@ export default function Opportunities({ events }: Props) {
   const handleSave = (e: Event) => {
     const nowSaved = toggleSavedEvent(toSaved(e));
     setSavedIds((prev) => (nowSaved ? [...prev, e.id] : prev.filter((id) => id !== e.id)));
+  };
+
+  const handleLike = (id: string) => {
+    const nowLiked = toggleLike(id);
+    setLikedIds((prev) => (nowLiked ? [...prev, id] : prev.filter((x) => x !== id)));
   };
 
   const handlePrepare = async (e: Event) => {
@@ -174,9 +181,6 @@ export default function Opportunities({ events }: Props) {
     return list;
   }, [events, activeType, onlineOnly, closingSoon, query, sort]);
 
-  // only show category chips for types that actually appear
-  const presentTypes = useMemo(() => TYPE_ORDER.filter((tp) => events.some((e) => e.event_type === tp)), [events]);
-
   return (
     <Layout>
       <Head><title>Opportunities — Himq</title></Head>
@@ -197,26 +201,28 @@ export default function Opportunities({ events }: Props) {
               className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg-card)] text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand)] transition placeholder-[var(--text-muted)]"
             />
           </div>
-          <div className="relative sm:w-52">
+          <div className="relative flex items-center gap-2 rounded-xl border-[1.5px] border-[var(--border-strong)] bg-[var(--bg-card)] pl-3.5 pr-9 shadow-[var(--shadow-sm)] sm:w-60 focus-within:border-[var(--color-brand)] focus-within:ring-2 focus-within:ring-[var(--color-brand)] transition">
+            <ArrowUpDown size={15} className="text-[var(--text-muted)] shrink-0" />
+            <span className="text-xs font-semibold text-[var(--text-muted)] whitespace-nowrap">{t('opportunities.sort_label')}:</span>
             <select
               value={sort}
               onChange={(e) => setSort(e.target.value)}
-              className="w-full appearance-none pl-4 pr-9 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg-card)] text-sm font-medium text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand)] transition cursor-pointer"
+              className="flex-1 appearance-none bg-transparent py-2.5 text-sm font-semibold text-[var(--text-primary)] focus:outline-none cursor-pointer"
             >
               <option value="deadline">{t('opportunities.sort_deadline')}</option>
               <option value="popular">{t('opportunities.sort_popular')}</option>
               <option value="newest">{t('opportunities.sort_newest')}</option>
             </select>
-            <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] pointer-events-none" />
+            <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-secondary)] pointer-events-none" />
           </div>
         </div>
 
-        {/* Type filters */}
-        <div className="flex gap-2 flex-wrap mb-3">
+        {/* Type filters — all categories for full consistency */}
+        <div className="flex gap-2.5 flex-wrap mb-3.5">
           <FilterChip active={activeType === 'all'} onClick={() => setActiveType('all')}>
             {t('opportunities.filter_all')}
           </FilterChip>
-          {presentTypes.map((type) => (
+          {TYPE_ORDER.map((type) => (
             <FilterChip key={type} active={activeType === type} onClick={() => setActiveType(type)}>
               {typeLabel(type)}
             </FilterChip>
@@ -224,47 +230,63 @@ export default function Opportunities({ events }: Props) {
         </div>
 
         {/* Extra toggles */}
-        <div className="flex gap-2 flex-wrap mb-6">
+        <div className="flex gap-2.5 flex-wrap mb-6 items-center">
           <ToggleChip active={onlineOnly} onClick={() => setOnlineOnly((v) => !v)}>
-            <Globe size={12} /> {t('opportunities.filter_online')}
+            <Globe size={15} /> {t('opportunities.filter_online')}
           </ToggleChip>
           <ToggleChip active={closingSoon} onClick={() => setClosingSoon((v) => !v)}>
-            <Calendar size={12} /> {t('opportunities.filter_closing')}
+            <Calendar size={15} /> {t('opportunities.filter_closing')}
           </ToggleChip>
-          <span className="ml-auto self-center text-xs text-[var(--text-muted)]">
+          <span className="ml-auto text-xs font-medium text-[var(--text-muted)]">
             {t('opportunities.results', { count: visible.length })}
           </span>
         </div>
 
         {pageLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {Array.from({ length: 6 }).map((_, i) => <EventCardSkeleton key={i} />)}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            {Array.from({ length: 4 }).map((_, i) => <EventCardSkeleton key={i} />)}
           </div>
         ) : visible.length === 0 ? (
           <div className="text-center py-16">
             <p className="text-sm text-[var(--text-muted)]">{t('opportunities.no_events')}</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {visible.map((event, i) => {
               const days = daysLeft(event.deadline);
               const saved = savedIds.includes(event.id);
+              const liked = likedIds.includes(event.id);
+              const popularity = (event.upvote_count ?? 0) + (liked ? 1 : 0);
               return (
                 <motion.div
                   key={event.id}
                   initial={{ opacity: 0, y: 16 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: Math.min(i * 0.03, 0.3) }}
-                  className="group bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl flex flex-col hover:border-[var(--color-brand)] hover:shadow-[var(--shadow-md)] transition-all"
+                  className="group relative bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl flex flex-col hover:border-[var(--color-brand)] hover:shadow-[var(--shadow-md)] transition-all"
                 >
+                  {/* Floating Like / favorite */}
+                  <button
+                    onClick={() => handleLike(event.id)}
+                    aria-label="Like"
+                    className={cn(
+                      'absolute top-3 right-3 z-10 flex items-center justify-center w-9 h-9 rounded-full border-[1.5px] backdrop-blur-sm transition-all',
+                      liked
+                        ? 'border-red-200 bg-red-50 text-red-500 dark:border-red-900/40 dark:bg-red-900/20'
+                        : 'border-[var(--border-strong)] bg-[var(--bg-card)]/80 text-[var(--text-muted)] hover:text-red-500 hover:border-red-200'
+                    )}
+                  >
+                    <Heart size={16} className={liked ? 'fill-current' : ''} />
+                  </button>
+
                   <Link href={`/opportunities/${event.id}`} className="flex-1 p-5 flex flex-col gap-3">
-                    <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center gap-2 flex-wrap pr-10">
                       <span className={cn('text-[11px] font-semibold px-2.5 py-1 rounded-full', TYPE_META[event.event_type]?.badge ?? 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300')}>
                         {typeLabel(event.event_type)}
                       </span>
                       {days !== null && (
                         <span className={cn(
-                          'text-[11px] font-medium flex items-center gap-1 shrink-0',
+                          'text-[11px] font-medium flex items-center gap-1',
                           days <= 0 ? 'text-[var(--text-muted)]' : days <= 7 ? 'text-red-500' : days <= 30 ? 'text-orange-500' : 'text-[var(--text-muted)]'
                         )}>
                           <Calendar size={11} />
@@ -274,29 +296,29 @@ export default function Opportunities({ events }: Props) {
                     </div>
 
                     <div className="flex-1">
-                      <h3 className="font-bold text-[var(--text-primary)] leading-snug mb-1 group-hover:text-[var(--color-brand)] transition-colors">{event.title}</h3>
-                      <p className="text-xs text-[var(--text-secondary)] line-clamp-2 leading-relaxed">{event.description}</p>
+                      <h3 className="text-base font-bold text-[var(--text-primary)] leading-snug mb-1.5 group-hover:text-[var(--color-brand)] transition-colors">{event.title}</h3>
+                      <p className="text-sm text-[var(--text-secondary)] line-clamp-2 leading-relaxed">{event.description}</p>
                     </div>
 
                     <div className="flex items-center gap-3 text-[11px] text-[var(--text-muted)]">
-                      <span className="truncate">{event.organizer}</span>
+                      <span className="truncate font-medium">{event.organizer}</span>
                       {event.is_online ? (
                         <span className="flex items-center gap-1 shrink-0"><Globe size={11} />{t('opportunities.online')}</span>
                       ) : event.location ? (
                         <span className="shrink-0">{event.location}</span>
                       ) : null}
                       <span className="ml-auto flex items-center gap-0.5 shrink-0" title="Popularity">
-                        <ArrowUp size={11} />{event.upvote_count ?? 0}
+                        <ArrowUp size={11} />{popularity}
                       </span>
                     </div>
                   </Link>
 
                   {/* actions */}
-                  <div className="border-t border-[var(--border)] px-5 py-3 space-y-2">
+                  <div className="border-t border-[var(--border)] px-5 py-4 space-y-2.5">
                     <button
                       onClick={() => handlePrepare(event)}
                       disabled={preparingId === event.id}
-                      className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[var(--color-brand)] text-white text-xs font-bold hover:bg-[var(--color-brand-hover)] transition-colors disabled:opacity-60"
+                      className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[var(--color-brand)] text-white text-sm font-bold hover:bg-[var(--color-brand-hover)] transition-colors disabled:opacity-60 shadow-[var(--shadow-sm)]"
                     >
                       {preparingId === event.id ? (
                         <>
@@ -305,22 +327,22 @@ export default function Opportunities({ events }: Props) {
                         </>
                       ) : (
                         <>
-                          <Sparkles size={14} />
+                          <Sparkles size={15} />
                           {t('opportunities.prepare_with_ai')}
                         </>
                       )}
                     </button>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2.5">
                       <button
                         onClick={() => handleSave(event)}
                         className={cn(
-                          'flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold border transition-colors',
+                          'flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl text-sm font-semibold border-[1.5px] transition-colors',
                           saved
                             ? 'border-[var(--color-brand)] text-[var(--color-brand)] bg-[var(--color-brand-soft)]'
-                            : 'border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--color-brand)]'
+                            : 'border-[var(--border-strong)] text-[var(--text-secondary)] hover:border-[var(--color-brand)] hover:text-[var(--color-brand)]'
                         )}
                       >
-                        {saved ? <BookmarkCheck size={14} /> : <Bookmark size={14} />}
+                        {saved ? <BookmarkCheck size={15} /> : <Bookmark size={15} />}
                         {saved ? t('opportunities.saved') : t('opportunities.save')}
                       </button>
                       {event.link && (
@@ -328,10 +350,10 @@ export default function Opportunities({ events }: Props) {
                           href={event.link}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl border border-[var(--border)] text-[var(--text-secondary)] text-xs font-semibold hover:border-[var(--color-brand)] hover:text-[var(--color-brand)] transition-colors"
+                          className="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border-[1.5px] border-[var(--border-strong)] text-[var(--text-secondary)] text-sm font-semibold hover:border-[var(--color-brand)] hover:text-[var(--color-brand)] transition-colors"
                         >
                           {t('opportunities.apply')}
-                          <ExternalLink size={11} />
+                          <ExternalLink size={13} />
                         </a>
                       )}
                     </div>
@@ -351,10 +373,10 @@ function FilterChip({ active, onClick, children }: { active: boolean; onClick: (
     <button
       onClick={onClick}
       className={cn(
-        'px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-colors',
+        'px-4 py-2 rounded-lg text-sm font-semibold transition-colors',
         active
-          ? 'bg-[var(--color-brand)] text-white'
-          : 'bg-[var(--bg-card)] border border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--color-brand)]'
+          ? 'bg-[var(--color-brand)] text-white shadow-[var(--shadow-sm)]'
+          : 'bg-[var(--bg-card)] border-[1.5px] border-[var(--border-strong)] text-[var(--text-secondary)] hover:border-[var(--color-brand)] hover:text-[var(--color-brand)]'
       )}
     >
       {children}
@@ -367,10 +389,10 @@ function ToggleChip({ active, onClick, children }: { active: boolean; onClick: (
     <button
       onClick={onClick}
       className={cn(
-        'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors',
+        'inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold border-[1.5px] transition-colors',
         active
           ? 'border-[var(--color-green)] text-[var(--color-green)] bg-green-50 dark:bg-green-900/20'
-          : 'border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--color-green)]'
+          : 'border-[var(--border-strong)] text-[var(--text-secondary)] hover:border-[var(--color-green)] hover:text-[var(--color-green)]'
       )}
     >
       {children}

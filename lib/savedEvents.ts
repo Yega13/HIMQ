@@ -50,3 +50,25 @@ export function toggleSavedEvent(event: SavedEvent): boolean {
   write([event, ...list]);
   return true;
 }
+
+/* ── Likes (lightweight favorite, stored as ids) ──────────────────────── */
+const LIKES_KEY = 'ep_liked_events';
+
+export function getLikedIds(): string[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = localStorage.getItem(LIKES_KEY);
+    return raw ? (JSON.parse(raw) as string[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+// Returns the new liked state (true = now liked, false = unliked).
+export function toggleLike(id: string): boolean {
+  const list = getLikedIds();
+  const liked = !list.includes(id);
+  const next = liked ? [id, ...list] : list.filter((x) => x !== id);
+  if (typeof window !== 'undefined') localStorage.setItem(LIKES_KEY, JSON.stringify(next));
+  return liked;
+}
