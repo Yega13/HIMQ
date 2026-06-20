@@ -3,6 +3,8 @@ import { supabase, getAdminClient } from '@/lib/supabase';
 import { generateAIResponse } from '@/lib/ai';
 import { type ModelId, DEFAULT_MODEL } from '@/lib/models';
 
+export const config = { maxDuration: 60 };
+
 const DAILY_LIMIT = 50;
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {

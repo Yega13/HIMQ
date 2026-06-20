@@ -52,9 +52,6 @@ export default function Navbar() {
     { href: '/leaderboard',   label: t('nav.leaderboard') },
   ];
 
-  // Hide navbar on full-screen chat and roadmap pages
-  if (pathname.startsWith('/chat/') || pathname.startsWith('/roadmap/')) return null;
-
   const activeLink = NAV_LINKS.find(
     (l) => pathname === l.href || pathname.startsWith(l.href + '/')
   );

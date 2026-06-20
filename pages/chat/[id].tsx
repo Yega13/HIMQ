@@ -61,6 +61,7 @@ export default function ChatDetail({ id }: { id: string }) {
   }
   const [celebration, setCelebration] = useState<CelebrationData | null>(null);
   const [selectedChoices, setSelectedChoices] = useState<string[]>([]);
+  const [sendError, setSendError] = useState('');
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef  = useRef<HTMLTextAreaElement>(null);
@@ -113,6 +114,7 @@ export default function ChatDetail({ id }: { id: string }) {
 
     if (!overrideMsg) setInput('');
     setSelectedChoices([]);
+    setSendError('');
     setSending(true);
 
     const tempId = `tmp-${Date.now()}`;
@@ -167,9 +169,10 @@ export default function ChatDetail({ id }: { id: string }) {
           setGeneratingPlan(false);
         }
       }
-    } catch {
+    } catch (err) {
       setMessages((prev) => prev.filter((m) => m.id !== tempId));
       setInput(userMsg);
+      setSendError(err instanceof Error ? err.message : 'Failed to send — please try again');
     } finally {
       setSending(false);
       inputRef.current?.focus();
@@ -482,7 +485,7 @@ export default function ChatDetail({ id }: { id: string }) {
         )}
       </AnimatePresence>
 
-      <div className="flex h-screen overflow-hidden">
+      <div className="flex h-full overflow-hidden" style={{ height: 'calc(100vh - 4rem)' }}>
 
         {/* Lesson Sidebar */}
         <aside className={cn(
@@ -701,6 +704,9 @@ export default function ChatDetail({ id }: { id: string }) {
                 })()}
               </div>
 
+              {sendError && (
+                <p className="text-xs text-red-500 mb-2 max-w-3xl mx-auto">{sendError}</p>
+              )}
               <div className="flex items-end gap-2 max-w-3xl mx-auto">
                 <textarea
                   ref={inputRef}

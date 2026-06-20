@@ -13,7 +13,7 @@ export default function Layout({ children, hideFooter = false, fullscreen = fals
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      <main className={`flex-1 ${fullscreen ? '' : 'pb-20 md:pb-0 md:pt-20'}`}>
+      <main className={`flex-1 ${fullscreen ? 'md:pt-16' : 'pb-20 md:pb-0 md:pt-20'}`}>
         {children}
       </main>
       {!hideFooter && !fullscreen && <Footer />}
