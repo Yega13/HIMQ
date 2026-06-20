@@ -286,6 +286,21 @@
                    "intermediate":  "Intermediate",
                    "advanced":  "Advanced"
                },
+    "roadmap": {
+      "dashboard": "Dashboard",
+      "lessons_done": "{{done}} of {{total}} lessons done",
+      "progress_meta": "{{pct}}% complete · +{{xp}} XP earned",
+      "discovering": "Setting up your plan",
+      "discovering_desc": "Your AI teacher is preparing the lessons — this only takes a moment.",
+      "course_complete": "Course complete!",
+      "continue": "Continue learning",
+      "all_done_title": "All done!",
+      "all_done_desc": "You earned +{{xp}} XP.",
+      "back_to_dashboard": "Back to dashboard",
+      "lesson": "Lesson {{n}}",
+      "completed": "Completed",
+      "in_progress": "In progress"
+    },
     "footer":  {
                    "tagline":  "Your AI learning companion and opportunity guide.",
                    "navigate":  "Navigate",

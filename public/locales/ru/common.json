@@ -286,6 +286,21 @@
                    "intermediate":  "Средний",
                    "advanced":  "Продвинутый"
                },
+    "roadmap": {
+      "dashboard": "Панель",
+      "lessons_done": "{{done}} из {{total}} уроков пройдено",
+      "progress_meta": "{{pct}}% пройдено · +{{xp}} XP заработано",
+      "discovering": "Готовим твой план",
+      "discovering_desc": "ИИ-преподаватель готовит уроки — это займёт всего мгновение.",
+      "course_complete": "Курс пройден!",
+      "continue": "Продолжить обучение",
+      "all_done_title": "Всё готово!",
+      "all_done_desc": "Ты заработал +{{xp}} XP.",
+      "back_to_dashboard": "Вернуться на панель",
+      "lesson": "Урок {{n}}",
+      "completed": "Пройдено",
+      "in_progress": "В процессе"
+    },
     "footer":  {
                    "tagline":  "Ваш AI-помощник в обучении и поиске возможностей.",
                    "navigate":  "Навигация",

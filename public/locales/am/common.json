@@ -286,6 +286,21 @@
                    "intermediate":  "Միջին",
                    "advanced":  "Առաջադեմ"
                },
+    "roadmap": {
+      "dashboard": "Վահանակ",
+      "lessons_done": "{{done}} / {{total}} դաս ավարտված",
+      "progress_meta": "{{pct}}% ավարտված · +{{xp}} XP վաստակած",
+      "discovering": "Կազմվում է քո պլանը",
+      "discovering_desc": "AI ուսուցիչը պատրաստում է դասերը — սա ընդամենը մի պահ կտևի։",
+      "course_complete": "Դասընթացն ավարտված է!",
+      "continue": "Շարունակել ուսումը",
+      "all_done_title": "Ամեն ինչ ավարտված է!",
+      "all_done_desc": "Դու վաստակեցիր +{{xp}} XP։",
+      "back_to_dashboard": "Վերադառնալ վահանակ",
+      "lesson": "Դաս {{n}}",
+      "completed": "Ավարտված",
+      "in_progress": "Ընթացքի մեջ"
+    },
     "footer":  {
                    "tagline":  "Ձեր AI ուղեկիցը ուսուցման և հնարավորությունների որոնման մեջ։",
                    "navigate":  "Նավիգացիա",
