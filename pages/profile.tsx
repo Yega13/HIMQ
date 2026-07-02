@@ -194,14 +194,17 @@ export default function ProfilePage() {
   };
 
   const handleSignOut = async () => {
-    await getBrowserClient().auth.signOut();
+    // scope: 'local' signs out ONLY this device. The default ('global')
+    // revokes every refresh token for the user, which would log them out
+    // on their phone / other devices too.
+    await getBrowserClient().auth.signOut({ scope: 'local' });
     router.push('/auth');
   };
 
   const handleDelete = async () => {
     setDeleting(true);
     if (IS_MOCK) mockDeleteAccount();
-    else await getBrowserClient().auth.signOut();
+    else await getBrowserClient().auth.signOut({ scope: 'local' });
     router.push('/auth');
   };
 
