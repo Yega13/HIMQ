@@ -256,6 +256,7 @@
                     "delete_account": "Delete account",
                     "delete_warning": "This permanently deletes your account and data. This cannot be undone.",
                     "delete_confirm": "Yes, delete my account",
+                    "delete_failed": "Couldn't delete your account. Please try again.",
                     "sign_out": "Sign out"
                 },
     "leaderboard":  {

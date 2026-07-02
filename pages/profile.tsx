@@ -82,6 +82,7 @@ export default function ProfilePage() {
   const [pwSaving, setPwSaving] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
 
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -203,8 +204,37 @@ export default function ProfilePage() {
 
   const handleDelete = async () => {
     setDeleting(true);
-    if (IS_MOCK) mockDeleteAccount();
-    else await getBrowserClient().auth.signOut({ scope: 'local' });
+    setDeleteError('');
+
+    if (IS_MOCK) {
+      mockDeleteAccount();
+      router.push('/auth');
+      return;
+    }
+
+    const client = getBrowserClient();
+    const { data: { session } } = await client.auth.getSession();
+    const token = session?.access_token;
+    if (!token) {
+      setDeleting(false);
+      setDeleteError(t('profile.delete_failed') as string);
+      return;
+    }
+
+    // Actually delete the account server-side (needs the service-role key).
+    const res = await fetch('/api/delete-account', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (!res.ok) {
+      setDeleting(false);
+      setDeleteError(t('profile.delete_failed') as string);
+      return;
+    }
+
+    // Account is gone — clear the local session and leave.
+    await client.auth.signOut({ scope: 'local' });
     router.push('/auth');
   };
 
@@ -539,6 +569,9 @@ export default function ProfilePage() {
               </button>
             )}
           </div>
+          {deleteError && (
+            <p className="mt-3 text-xs text-red-600 dark:text-red-400">{deleteError}</p>
+          )}
         </div>
       </div>
     </Layout>
