@@ -23,7 +23,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const admin = getAdminClient();
   const { error } = await admin.auth.admin.deleteUser(user.id);
   if (error) {
-    return res.status(500).json({ error: error.message });
+    console.error('delete-account failed:', error);
+    return res.status(500).json({ error: 'Failed to delete account' });
   }
 
   return res.status(200).json({ ok: true });

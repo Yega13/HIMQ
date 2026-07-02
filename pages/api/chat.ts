@@ -24,39 +24,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const admin = getAdminClient();
 
-  // Rate limiting via the daily_usage table (UNIQUE(user_id, usage_date)).
-  // Day boundary is Asia/Yerevan to match the table default and the user base.
-  const usageDate = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Yerevan' });
+  // Atomic rate limit: a single row-locked DB function does the check-and-
+  // increment, so concurrent requests can't both read the same count and blow
+  // past the limit. Fails closed (503) if the limiter can't run.
   const { data: usage, error: usageErr } = await admin
-    .from('daily_usage')
-    .select('message_count')
-    .eq('user_id', user.id)
-    .eq('usage_date', usageDate)
-    .maybeSingle();
-
+    .rpc('consume_daily_message', { p_user_id: user.id, p_limit: DAILY_LIMIT });
   if (usageErr) {
-    // Do NOT silently allow unlimited usage — fail closed so a broken limiter
-    // is loud, not a silent cost leak.
-    console.error('Rate-limit lookup failed:', usageErr);
+    console.error('Rate-limit RPC failed:', usageErr);
     return res.status(503).json({ error: 'Service temporarily unavailable. Please try again.' });
   }
-
-  const used = usage?.message_count ?? 0;
-  if (used >= DAILY_LIMIT) {
+  if (!usage?.allowed) {
     return res.status(429).json({
       error: `You've reached today's limit of ${DAILY_LIMIT} messages. Come back tomorrow!`,
     });
-  }
-
-  const { error: incErr } = await admin
-    .from('daily_usage')
-    .upsert(
-      { user_id: user.id, usage_date: usageDate, message_count: used + 1 },
-      { onConflict: 'user_id,usage_date' },
-    );
-  if (incErr) {
-    console.error('Rate-limit increment failed:', incErr);
-    return res.status(503).json({ error: 'Service temporarily unavailable. Please try again.' });
   }
 
   // Verify chat ownership

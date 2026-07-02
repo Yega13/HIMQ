@@ -20,8 +20,8 @@ interface Event {
 }
 
 // 'checking' = verifying session, 'anon' = not logged in, 'forbidden' = logged
-// in but not an admin, 'ok' = admin.
-type Access = 'checking' | 'anon' | 'forbidden' | 'ok';
+// in but not an admin, 'error' = request failed, 'ok' = admin.
+type Access = 'checking' | 'anon' | 'forbidden' | 'error' | 'ok';
 
 export default function Admin() {
   const [access, setAccess]   = useState<Access>('checking');
@@ -37,26 +37,37 @@ export default function Admin() {
 
   const fetchEvents = useCallback(async (accessToken: string) => {
     setLoading(true);
-    const res = await fetch('/api/admin-events', {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    });
-    if (res.ok) {
-      const data = await res.json();
-      setEvents(data.events ?? []);
-      setAccess('ok');
-    } else if (res.status === 403) {
-      setAccess('forbidden');
+    try {
+      const res = await fetch('/api/admin-events', {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setEvents(data.events ?? []);
+        setAccess('ok');
+      } else if (res.status === 403) {
+        setAccess('forbidden');
+      } else {
+        setAccess('error');
+      }
+    } catch {
+      setAccess('error');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }, []);
 
   // Authorize via the logged-in Supabase session + server-side is_admin check.
   useEffect(() => {
     (async () => {
-      const { data: { session } } = await getBrowserClient().auth.getSession();
-      if (!session) { setAccess('anon'); return; }
-      setToken(session.access_token);
-      await fetchEvents(session.access_token);
+      try {
+        const { data: { session } } = await getBrowserClient().auth.getSession();
+        if (!session) { setAccess('anon'); return; }
+        setToken(session.access_token);
+        await fetchEvents(session.access_token);
+      } catch {
+        setAccess('error');
+      }
     })();
   }, [fetchEvents]);
 
@@ -101,6 +112,18 @@ export default function Admin() {
             <>
               <h1 className="text-xl font-bold text-[var(--text-primary)] mb-3">Not authorized</h1>
               <p className="text-sm text-[var(--text-secondary)]">Your account doesn&apos;t have admin access.</p>
+            </>
+          )}
+          {access === 'error' && (
+            <>
+              <h1 className="text-xl font-bold text-[var(--text-primary)] mb-3">Couldn&apos;t load</h1>
+              <p className="text-sm text-[var(--text-secondary)] mb-6">Something went wrong. Please try again.</p>
+              <button
+                onClick={() => window.location.reload()}
+                className="inline-block px-5 py-3 rounded-xl bg-[var(--color-brand)] text-white font-semibold text-sm"
+              >
+                Retry
+              </button>
             </>
           )}
         </div>

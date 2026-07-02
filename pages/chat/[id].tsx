@@ -63,6 +63,7 @@ export default function ChatDetail({ id }: { id: string }) {
   const [selectedChoices, setSelectedChoices] = useState<string[]>([]);
   const [sendError, setSendError] = useState('');
   const [completing, setCompleting] = useState(false);
+  const completingRef = useRef(false);
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef  = useRef<HTMLTextAreaElement>(null);
@@ -188,7 +189,11 @@ export default function ChatDetail({ id }: { id: string }) {
   };
 
   const completeLesson = async () => {
-    if (!chat || !user || completing) return;
+    // Synchronous ref guard: state updates are async, so two clicks in the same
+    // tick could both pass a `completing` state check before the re-render
+    // disables the button. The ref flips immediately.
+    if (!chat || !user || completingRef.current) return;
+    completingRef.current = true;
     setCompleting(true);
     const currentIndex = chat.current_lesson_index;
     const nextIndex = currentIndex + 1;
@@ -263,6 +268,7 @@ export default function ChatDetail({ id }: { id: string }) {
         isFinal,
       });
     } finally {
+      completingRef.current = false;
       setCompleting(false);
     }
   };

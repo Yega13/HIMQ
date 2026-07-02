@@ -9,6 +9,7 @@ const EVENT_TYPES = new Set([
 
 const MAX_TITLE = 200;
 const MAX_TEXT = 4000;
+const MAX_SHORT = 300;
 
 // Any authenticated user can submit an event; it always lands as unapproved
 // (is_approved = false) for admin review. Runs server-side with the admin
@@ -34,8 +35,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (!event_type || !EVENT_TYPES.has(event_type)) {
     return res.status(400).json({ error: 'Invalid event type.' });
   }
-  if (title.length > MAX_TITLE || description.length > MAX_TEXT) {
-    return res.status(400).json({ error: 'Title or description is too long.' });
+  if (title.length > MAX_TITLE || description.length > MAX_TEXT
+      || organizer.length > MAX_SHORT || (link?.length ?? 0) > MAX_SHORT) {
+    return res.status(400).json({ error: 'One or more fields are too long.' });
+  }
+  // Validate the deadline is a real date before it hits a TIMESTAMPTZ column
+  // (otherwise a bad string 500s instead of a clean 400).
+  if (deadline && Number.isNaN(Date.parse(deadline))) {
+    return res.status(400).json({ error: 'Invalid deadline date.' });
   }
 
   const admin = getAdminClient();
