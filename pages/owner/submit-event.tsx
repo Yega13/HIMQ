@@ -10,7 +10,7 @@ import Layout from '@/components/Layout';
 import { useUser } from '@/lib/useUser';
 import { getBrowserClient } from '@/lib/supabase';
 
-const EVENT_TYPES = ['scholarship', 'competition', 'internship', 'grant', 'other'] as const;
+const EVENT_TYPES = ['scholarship', 'competition', 'internship', 'grant', 'course', 'fellowship'] as const;
 type EventType = typeof EVENT_TYPES[number];
 
 interface FormState {
@@ -58,19 +58,30 @@ export default function SubmitEventPage() {
     setSubmitting(true);
     setError('');
 
-    const supabase = getBrowserClient();
-    const { error: dbErr } = await supabase.from('events').insert({
-      title: form.title.trim(),
-      type: form.type,
-      organizer: form.organizer.trim(),
-      deadline: form.deadline || null,
-      description: form.description.trim(),
-      link: form.link.trim() || null,
-      is_approved: false,
+    const { data: { session } } = await getBrowserClient().auth.getSession();
+    const token = session?.access_token;
+    if (!token) {
+      setError('Your session expired. Please sign in again.');
+      setSubmitting(false);
+      return;
+    }
+
+    const res = await fetch('/api/submit-event', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({
+        title: form.title.trim(),
+        event_type: form.type,
+        organizer: form.organizer.trim(),
+        deadline: form.deadline || null,
+        description: form.description.trim(),
+        link: form.link.trim() || null,
+      }),
     });
 
-    if (dbErr) {
-      setError('Failed to submit. Please try again.');
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      setError(data.error ?? 'Failed to submit. Please try again.');
     } else {
       setDone(true);
     }

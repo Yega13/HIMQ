@@ -24,35 +24,39 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const admin = getAdminClient();
 
-  // Rate limiting — graceful if columns not yet migrated
-  try {
-    const { data: profile } = await admin
-      .from('profiles')
-      .select('daily_messages_used, last_message_date')
-      .eq('id', user.id)
-      .single();
+  // Rate limiting via the daily_usage table (UNIQUE(user_id, usage_date)).
+  // Day boundary is Asia/Yerevan to match the table default and the user base.
+  const usageDate = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Yerevan' });
+  const { data: usage, error: usageErr } = await admin
+    .from('daily_usage')
+    .select('message_count')
+    .eq('user_id', user.id)
+    .eq('usage_date', usageDate)
+    .maybeSingle();
 
-    if (profile && 'daily_messages_used' in profile) {
-      const today = new Date().toISOString().split('T')[0];
-      const isNewDay = profile.last_message_date !== today;
-      const used = isNewDay ? 0 : (profile.daily_messages_used ?? 0);
+  if (usageErr) {
+    // Do NOT silently allow unlimited usage — fail closed so a broken limiter
+    // is loud, not a silent cost leak.
+    console.error('Rate-limit lookup failed:', usageErr);
+    return res.status(503).json({ error: 'Service temporarily unavailable. Please try again.' });
+  }
 
-      if (used >= DAILY_LIMIT) {
-        return res.status(429).json({
-          error: `You've reached today's limit of ${DAILY_LIMIT} messages. Come back tomorrow!`,
-        });
-      }
+  const used = usage?.message_count ?? 0;
+  if (used >= DAILY_LIMIT) {
+    return res.status(429).json({
+      error: `You've reached today's limit of ${DAILY_LIMIT} messages. Come back tomorrow!`,
+    });
+  }
 
-      await admin
-        .from('profiles')
-        .update({
-          daily_messages_used: used + 1,
-          last_message_date: today,
-        })
-        .eq('id', user.id);
-    }
-  } catch {
-    // columns not migrated yet — skip rate limiting
+  const { error: incErr } = await admin
+    .from('daily_usage')
+    .upsert(
+      { user_id: user.id, usage_date: usageDate, message_count: used + 1 },
+      { onConflict: 'user_id,usage_date' },
+    );
+  if (incErr) {
+    console.error('Rate-limit increment failed:', incErr);
+    return res.status(503).json({ error: 'Service temporarily unavailable. Please try again.' });
   }
 
   // Verify chat ownership

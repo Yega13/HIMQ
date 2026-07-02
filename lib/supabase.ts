@@ -33,11 +33,16 @@ export const supabase: Client = IS_MOCK
 let _browser: Client | null = null;
 export function getBrowserClient(): Client {
   if (typeof window === 'undefined') throw new Error('getBrowserClient() must only be called client-side');
-  if (IS_MOCK) return asClient(createMockClient());
+  // Cache the client in BOTH modes so it's a true singleton. Previously mock
+  // mode returned a fresh client every call, so every consumer (useUser,
+  // Navbar, each page) registered its own auth listener and raced on the
+  // localStorage session read.
   if (!_browser) {
-    _browser = createClient<AnyDB>(supabaseUrl, supabaseAnonKey, {
-      auth: { persistSession: true, storageKey: 'ep-auth' },
-    });
+    _browser = IS_MOCK
+      ? asClient(createMockClient())
+      : createClient<AnyDB>(supabaseUrl, supabaseAnonKey, {
+          auth: { persistSession: true, storageKey: 'ep-auth' },
+        });
   }
   return _browser;
 }

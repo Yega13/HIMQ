@@ -9,8 +9,11 @@ export function useUser() {
   useEffect(() => {
     const supabase = getBrowserClient();
 
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      setUser(user);
+    // getSession() reads the persisted session locally (no network round-trip),
+    // so signed-in users resolve immediately and don't briefly appear logged
+    // out — which previously caused spurious redirects to /auth.
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
       setLoading(false);
     });
 

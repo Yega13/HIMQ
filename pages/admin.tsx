@@ -1,15 +1,17 @@
 import { GetServerSideProps } from 'next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import Head from 'next/head';
+import Link from 'next/link';
 import Layout from '@/components/Layout';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { CheckCircle, XCircle, Trash2, RefreshCw, Calendar, ExternalLink } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { getBrowserClient } from '@/lib/supabase';
 
 interface Event {
   id: string;
   title: string;
-  type: string;
+  event_type: string;
   organizer: string | null;
   deadline: string | null;
   description: string | null;
@@ -17,11 +19,13 @@ interface Event {
   created_at: string;
 }
 
+// 'checking' = verifying session, 'anon' = not logged in, 'forbidden' = logged
+// in but not an admin, 'ok' = admin.
+type Access = 'checking' | 'anon' | 'forbidden' | 'ok';
+
 export default function Admin() {
-  const [authed, setAuthed]   = useState(false);
-  const [pass, setPass]       = useState('');
-  const [adminPass, setAdminPass] = useState('');
-  const [err, setErr]         = useState('');
+  const [access, setAccess]   = useState<Access>('checking');
+  const [token, setToken]     = useState('');
   const [events, setEvents]   = useState<Event[]>([]);
   const [loading, setLoading] = useState(false);
   const [toast, setToast]     = useState('');
@@ -31,39 +35,35 @@ export default function Admin() {
     setTimeout(() => setToast(''), 3000);
   };
 
-  const fetchEvents = useCallback(async (pw: string) => {
+  const fetchEvents = useCallback(async (accessToken: string) => {
     setLoading(true);
     const res = await fetch('/api/admin-events', {
-      headers: { 'x-admin-password': pw },
+      headers: { Authorization: `Bearer ${accessToken}` },
     });
     if (res.ok) {
       const data = await res.json();
       setEvents(data.events ?? []);
+      setAccess('ok');
+    } else if (res.status === 403) {
+      setAccess('forbidden');
     }
     setLoading(false);
   }, []);
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const res = await fetch('/api/admin-auth', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ password: pass }),
-    });
-    if (res.ok) {
-      setAdminPass(pass);
-      localStorage.setItem('adminPass', pass);
-      setAuthed(true);
-      fetchEvents(pass);
-    } else {
-      setErr('Wrong password');
-    }
-  };
+  // Authorize via the logged-in Supabase session + server-side is_admin check.
+  useEffect(() => {
+    (async () => {
+      const { data: { session } } = await getBrowserClient().auth.getSession();
+      if (!session) { setAccess('anon'); return; }
+      setToken(session.access_token);
+      await fetchEvents(session.access_token);
+    })();
+  }, [fetchEvents]);
 
   const handleDecision = async (id: string, approve: boolean) => {
     await fetch('/api/admin-events', {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json', 'x-admin-password': adminPass },
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify({ id, approve }),
     });
     setEvents((prev) => prev.filter((e) => e.id !== id));
@@ -73,32 +73,36 @@ export default function Admin() {
   const handleDelete = async (id: string) => {
     await fetch('/api/admin-events', {
       method: 'DELETE',
-      headers: { 'Content-Type': 'application/json', 'x-admin-password': adminPass },
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify({ id }),
     });
     setEvents((prev) => prev.filter((e) => e.id !== id));
     showToast('Event deleted.');
   };
 
-  if (!authed) {
+  if (access !== 'ok') {
     return (
       <Layout>
         <Head><title>Admin — Himq</title></Head>
-        <div className="max-w-sm mx-auto px-4 py-20">
-          <h1 className="text-xl font-bold text-[var(--text-primary)] mb-6">Admin Login</h1>
-          <form onSubmit={handleLogin} className="space-y-4">
-            <input
-              type="password"
-              value={pass}
-              onChange={(e) => setPass(e.target.value)}
-              placeholder="Admin password"
-              className="w-full px-4 py-3 rounded-xl border border-[var(--border)] bg-[var(--bg-secondary)] text-[var(--text-primary)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-brand)]"
-            />
-            {err && <p className="text-red-500 text-sm">{err}</p>}
-            <button type="submit" className="w-full py-3 rounded-xl bg-[var(--color-brand)] text-white font-semibold text-sm">
-              Enter
-            </button>
-          </form>
+        <div className="max-w-sm mx-auto px-4 py-20 text-center">
+          {access === 'checking' && (
+            <div className="w-6 h-6 border-2 border-[var(--color-brand)] border-t-transparent rounded-full animate-spin mx-auto" />
+          )}
+          {access === 'anon' && (
+            <>
+              <h1 className="text-xl font-bold text-[var(--text-primary)] mb-3">Admin</h1>
+              <p className="text-sm text-[var(--text-secondary)] mb-6">Sign in with an admin account to continue.</p>
+              <Link href="/auth?next=/admin" className="inline-block px-5 py-3 rounded-xl bg-[var(--color-brand)] text-white font-semibold text-sm">
+                Sign in
+              </Link>
+            </>
+          )}
+          {access === 'forbidden' && (
+            <>
+              <h1 className="text-xl font-bold text-[var(--text-primary)] mb-3">Not authorized</h1>
+              <p className="text-sm text-[var(--text-secondary)]">Your account doesn&apos;t have admin access.</p>
+            </>
+          )}
         </div>
       </Layout>
     );
@@ -131,7 +135,7 @@ export default function Admin() {
             </p>
           </div>
           <button
-            onClick={() => fetchEvents(adminPass)}
+            onClick={() => fetchEvents(token)}
             disabled={loading}
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-[var(--border)] text-sm text-[var(--text-secondary)] hover:border-[var(--color-brand)] transition-colors"
           >
@@ -168,7 +172,7 @@ export default function Admin() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap mb-1">
                         <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-xs font-medium capitalize">
-                          {event.type}
+                          {event.event_type}
                         </span>
                         {event.deadline && (
                           <span className="flex items-center gap-1 text-xs text-[var(--text-muted)]">

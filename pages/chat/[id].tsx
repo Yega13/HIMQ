@@ -9,7 +9,7 @@ import { Send, CheckCircle, Circle, Lock, ChevronLeft, BookOpen, Zap, Flame, Che
 import { MODELS, DEFAULT_MODEL, type ModelId } from '@/lib/models';
 import Layout from '@/components/Layout';
 import { useUser } from '@/lib/useUser';
-import { getBrowserClient } from '@/lib/supabase';
+import { getBrowserClient, IS_MOCK } from '@/lib/supabase';
 import { cn } from '@/lib/utils';
 
 interface Lesson {
@@ -62,6 +62,7 @@ export default function ChatDetail({ id }: { id: string }) {
   const [celebration, setCelebration] = useState<CelebrationData | null>(null);
   const [selectedChoices, setSelectedChoices] = useState<string[]>([]);
   const [sendError, setSendError] = useState('');
+  const [completing, setCompleting] = useState(false);
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef  = useRef<HTMLTextAreaElement>(null);
@@ -187,58 +188,83 @@ export default function ChatDetail({ id }: { id: string }) {
   };
 
   const completeLesson = async () => {
-    if (!chat || !user) return;
-    const supabase = getBrowserClient();
-    const nextIndex = chat.current_lesson_index + 1;
+    if (!chat || !user || completing) return;
+    setCompleting(true);
+    const currentIndex = chat.current_lesson_index;
+    const nextIndex = currentIndex + 1;
     const isFinal = nextIndex >= chat.total_lessons;
-    const completedLesson = lessons.find((l) => l.lesson_index === chat.current_lesson_index);
+    const completedLesson = lessons.find((l) => l.lesson_index === currentIndex);
     const nextLesson = lessons.find((l) => l.lesson_index === nextIndex) ?? null;
 
-    // Fetch profile for XP + streak calculation
-    const { data: profileData } = await supabase
-      .from('profiles')
-      .select('xp, streak_days, last_active_date')
-      .eq('id', user.id)
-      .single();
+    let newStreak: number;
+    let xpGained = 50;
 
-    const today = new Date().toISOString().split('T')[0];
-    const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
-    const lastActive = profileData?.last_active_date as string | undefined;
-    let newStreak = profileData?.streak_days ?? 0;
-    if (lastActive !== today) {
-      newStreak = lastActive === yesterday ? newStreak + 1 : 1;
+    try {
+      if (IS_MOCK) {
+        // Mock mode has no server — grant XP client-side against the mock store.
+        const supabase = getBrowserClient();
+        const { data: profileData } = await supabase
+          .from('profiles').select('xp, streak_days, last_active_date').eq('id', user.id).single();
+        const today = new Date().toLocaleDateString('en-CA');
+        const yesterday = new Date(Date.now() - 86400000).toLocaleDateString('en-CA');
+        const lastActive = profileData?.last_active_date as string | undefined;
+        newStreak = profileData?.streak_days ?? 0;
+        if (lastActive !== today) newStreak = lastActive === yesterday ? newStreak + 1 : 1;
+        await Promise.all([
+          supabase.from('lessons').update({ status: 'completed', completed_at: new Date().toISOString() })
+            .eq('chat_id', id).eq('lesson_index', currentIndex),
+          !isFinal
+            ? supabase.from('lessons').update({ status: 'active' }).eq('chat_id', id).eq('lesson_index', nextIndex)
+            : Promise.resolve(),
+          supabase.from('chats')
+            .update({ current_lesson_index: nextIndex, status: isFinal ? 'completed' : 'active' }).eq('id', id),
+          supabase.from('profiles')
+            .update({ xp: (profileData?.xp ?? 0) + 50, streak_days: newStreak, last_active_date: today }).eq('id', user.id),
+        ]);
+      } else {
+        // Real mode: XP/streak are server-authoritative (browser can't write them).
+        const { data: { session } } = await getBrowserClient().auth.getSession();
+        const token = session?.access_token;
+        if (!token) { setCompleting(false); return; }
+        const res = await fetch('/api/complete-lesson', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ chatId: id }),
+        });
+        if (!res.ok) { setCompleting(false); return; }
+        const data = await res.json();
+        newStreak = data.newStreak ?? 0;
+        xpGained = data.xpGained ?? 50;
+        if (data.alreadyCompleted) {
+          // Already granted earlier — just advance the UI without a celebration.
+          setChat((prev) => prev ? { ...prev, current_lesson_index: nextIndex } : prev);
+          setLessons((prev) => prev.map((l) => {
+            if (l.lesson_index === currentIndex) return { ...l, status: 'completed' };
+            if (l.lesson_index === nextIndex) return { ...l, status: 'active' };
+            return l;
+          }));
+          setCompleting(false);
+          return;
+        }
+      }
+
+      setChat((prev) => prev ? { ...prev, current_lesson_index: nextIndex } : prev);
+      setLessons((prev) => prev.map((l) => {
+        if (l.lesson_index === currentIndex) return { ...l, status: 'completed' };
+        if (l.lesson_index === nextIndex) return { ...l, status: 'active' };
+        return l;
+      }));
+
+      setCelebration({
+        lessonTitle: completedLesson?.title ?? 'Lesson',
+        xpGained,
+        newStreak: newStreak!,
+        nextLesson: nextLesson?.title ?? null,
+        isFinal,
+      });
+    } finally {
+      setCompleting(false);
     }
-
-    await Promise.all([
-      supabase.from('lessons')
-        .update({ status: 'completed', completed_at: new Date().toISOString() })
-        .eq('chat_id', id)
-        .eq('lesson_index', chat.current_lesson_index),
-      !isFinal
-        ? supabase.from('lessons').update({ status: 'active' }).eq('chat_id', id).eq('lesson_index', nextIndex)
-        : Promise.resolve(),
-      supabase.from('chats')
-        .update({ current_lesson_index: nextIndex, status: isFinal ? 'completed' : 'active' })
-        .eq('id', id),
-      supabase.from('profiles')
-        .update({ xp: (profileData?.xp ?? 0) + 50, streak_days: newStreak, last_active_date: today })
-        .eq('id', user.id),
-    ]);
-
-    setChat((prev) => prev ? { ...prev, current_lesson_index: nextIndex } : prev);
-    setLessons((prev) => prev.map((l) => {
-      if (l.lesson_index === chat.current_lesson_index) return { ...l, status: 'completed' };
-      if (l.lesson_index === nextIndex) return { ...l, status: 'active' };
-      return l;
-    }));
-
-    setCelebration({
-      lessonTitle: completedLesson?.title ?? 'Lesson',
-      xpGained: 50,
-      newStreak,
-      nextLesson: nextLesson?.title ?? null,
-      isFinal,
-    });
   };
 
   if (userLoading || pageLoading) {
@@ -561,7 +587,8 @@ export default function ChatDetail({ id }: { id: string }) {
             <div className="p-3 border-t border-[var(--border)]">
               <button
                 onClick={completeLesson}
-                className="w-full py-2.5 rounded-xl bg-[var(--color-green)] text-white text-xs font-semibold hover:opacity-90 transition-opacity flex items-center justify-center gap-1.5"
+                disabled={completing}
+                className="w-full py-2.5 rounded-xl bg-[var(--color-green)] text-white text-xs font-semibold hover:opacity-90 transition-opacity flex items-center justify-center gap-1.5 disabled:opacity-60"
               >
                 <CheckCircle size={14} />
                 {t('chat.complete_lesson')}
