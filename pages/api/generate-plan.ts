@@ -2,6 +2,10 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { supabase, getAdminClient } from '@/lib/supabase';
 import { generateAIResponse } from '@/lib/ai';
 
+// Plan generation is a large Sonnet call; the default 10s (Vercel Hobby) would
+// 504 mid-generation.
+export const config = { maxDuration: 60 };
+
 interface LessonItem { index: number; title: string; description: string; }
 interface LessonPlan { chat_title: string; lessons: LessonItem[]; }
 
@@ -103,6 +107,15 @@ Return ONLY this JSON:
     }))
   );
   if (lessonsErr) {
+    // If a concurrent call already inserted this chat's lessons, the
+    // UNIQUE(chat_id, lesson_index) constraint rejects the duplicate. Treat
+    // that as success and return whatever is already there.
+    const { data: existing } = await admin
+      .from('lessons').select('*').eq('chat_id', chatId).order('lesson_index');
+    if (existing && existing.length > 0) {
+      const { data: existingChat } = await admin.from('chats').select('*').eq('id', chatId).single();
+      return res.status(200).json({ chat: existingChat, lessons: existing });
+    }
     console.error('Lessons insert failed:', lessonsErr);
     return res.status(500).json({ error: 'Failed to save lessons' });
   }

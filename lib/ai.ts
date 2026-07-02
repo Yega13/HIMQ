@@ -7,9 +7,20 @@ import Anthropic from '@anthropic-ai/sdk';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { type ModelId } from './models';
 
+const AI_TIMEOUT_MS = 45_000;
+
 const anthropic: Anthropic | null = process.env.ANTHROPIC_API_KEY
-  ? new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+  ? new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY, timeout: AI_TIMEOUT_MS, maxRetries: 2 })
   : null;
+
+// Reject a hung provider call so we can fall back instead of blocking until
+// the serverless function times out.
+function withTimeout<T>(p: Promise<T>, ms = AI_TIMEOUT_MS): Promise<T> {
+  return Promise.race([
+    p,
+    new Promise<T>((_, reject) => setTimeout(() => reject(new Error('AI request timed out')), ms)),
+  ]);
+}
 
 const gemini: GoogleGenerativeAI | null = process.env.GEMINI_API_KEY
   ? new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
@@ -33,16 +44,32 @@ async function withClaude(messages: AIMessage[], role: AIRole, system: string): 
   return block.text;
 }
 
+// Gemini requires history to START with a 'user' turn and strictly ALTERNATE
+// user/model. Our chats open with an assistant message, so a naive map throws
+// ("First content should be with role 'user'"). Drop leading model turns and
+// merge consecutive same-role turns.
+function toGeminiHistory(messages: AIMessage[]) {
+  const mapped = messages.slice(0, -1).map((m) => ({
+    role: m.role === 'assistant' ? 'model' : 'user',
+    parts: [{ text: m.content }],
+  }));
+  while (mapped.length && mapped[0].role === 'model') mapped.shift();
+  const out: typeof mapped = [];
+  for (const turn of mapped) {
+    const last = out[out.length - 1];
+    if (last && last.role === turn.role) last.parts[0].text += '\n\n' + turn.parts[0].text;
+    else out.push(turn);
+  }
+  return out;
+}
+
 async function withGemini(messages: AIMessage[], role: AIRole, system: string): Promise<string> {
   if (!gemini) throw new Error('GEMINI_API_KEY not set');
   const modelName = role === 'plan' ? 'gemini-1.5-pro' : 'gemini-1.5-flash';
   const model = gemini.getGenerativeModel({ model: modelName, systemInstruction: system });
-  const history = messages.slice(0, -1).map((m) => ({
-    role: m.role === 'assistant' ? 'model' : 'user',
-    parts: [{ text: m.content }],
-  }));
+  const history = toGeminiHistory(messages);
   const chat = model.startChat({ history, generationConfig: { maxOutputTokens: role === 'plan' ? 2000 : 800 } });
-  const result = await chat.sendMessage(messages[messages.length - 1].content);
+  const result = await withTimeout(chat.sendMessage(messages[messages.length - 1].content));
   return result.response.text();
 }
 

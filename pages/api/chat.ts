@@ -69,13 +69,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   if (chatErr || !chat) return res.status(404).json({ error: 'Chat not found' });
 
-  // Load message history (last 20)
-  const { data: history } = await admin
+  // Load the LAST 20 messages (newest first, then restore chronological order)
+  // so the model always sees the most recent context in long chats.
+  const { data: recent } = await admin
     .from('messages')
     .select('role, content')
     .eq('chat_id', chatId)
-    .order('created_at', { ascending: true })
+    .order('created_at', { ascending: false })
     .limit(20);
+  const history = (recent ?? []).reverse();
 
   const isDiscovering = (chat.total_lessons ?? 0) === 0;
   const currentLesson = isDiscovering
@@ -101,9 +103,10 @@ QUESTION FORMAT RULES — follow exactly:
 • Do NOT add "IDK" or "Not sure" just to be safe — only add an escape option if it genuinely applies AND the other choices don't already cover it
 • Never write paragraphs. Never explain yourself. Just ask.
 
-When you have enough to build a truly personalized plan, say EXACTLY:
-"I have everything I need."
-Then: "Your personalized plan is being built now — one moment."`
+When you have enough to build a truly personalized plan, tell the student their
+plan is being built now — one short warm sentence, in the student's language.
+Then, on its own final line, output this EXACT token and nothing after it:
+<<<PLAN_READY>>>`
     : `You are May — an expert personal teacher built by Himq. Your name is May (short for May-1). If anyone asks your name, say "I'm May." Never call yourself "Himq AI" or any other name.
 
 Topic: ${chat.title}
@@ -135,7 +138,12 @@ You know this student well from your discovery conversation — make every respo
     lesson_index: chat.current_lesson_index,
   });
 
-  const reply = await generateAIResponse(aiMessages, 'chat', systemPrompt, modelId);
+  const rawReply = await generateAIResponse(aiMessages, 'chat', systemPrompt, modelId);
+
+  // Detect the machine signal that discovery is complete, then strip it so the
+  // student never sees the token. Language-independent (no prose matching).
+  const planReady = isDiscovering && rawReply.includes('<<<PLAN_READY>>>');
+  const reply = rawReply.replace(/<<<PLAN_READY>>>/g, '').trim();
 
   await admin.from('messages').insert({
     chat_id: chatId,
@@ -146,5 +154,5 @@ You know this student well from your discovery conversation — make every respo
 
   await admin.from('chats').update({ updated_at: new Date().toISOString() }).eq('id', chatId);
 
-  return res.status(200).json({ reply });
+  return res.status(200).json({ reply, planReady });
 }

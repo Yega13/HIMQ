@@ -140,7 +140,7 @@ export default function ChatDetail({ id }: { id: string }) {
       });
 
       if (!res.ok) throw new Error('Failed to get response');
-      const { reply } = await res.json();
+      const { reply, planReady } = await res.json();
 
       setMessages((prev) => [...prev, {
         id: `ai-${Date.now()}`,
@@ -149,8 +149,8 @@ export default function ChatDetail({ id }: { id: string }) {
         created_at: new Date().toISOString(),
       }]);
 
-      // If AI signals it has enough info, generate the personalized plan
-      if (lessons.length === 0 && reply.includes('I have everything I need')) {
+      // Server signals (language-independent) that discovery is done → build plan
+      if (lessons.length === 0 && planReady) {
         setGeneratingPlan(true);
         try {
           const planRes = await fetch('/api/generate-plan', {

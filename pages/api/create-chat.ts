@@ -2,6 +2,10 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { supabase, getAdminClient } from '@/lib/supabase';
 import { generateAIResponse } from '@/lib/ai';
 
+// Involves an AI call to write the opening question — give it headroom over the
+// 10s Vercel Hobby default.
+export const config = { maxDuration: 60 };
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') return res.status(405).end();
 

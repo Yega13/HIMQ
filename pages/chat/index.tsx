@@ -124,11 +124,14 @@ export default function ChatIndex() {
         await supabase.from('chats').delete().eq('id', chatId);
       } else {
         const { data: { session } } = await getBrowserClient().auth.getSession();
-        await fetch('/api/delete-chat', {
+        const res = await fetch('/api/delete-chat', {
           method: 'DELETE',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token ?? ''}` },
           body: JSON.stringify({ chatId }),
         });
+        // Only remove from the UI if the server actually deleted it — otherwise
+        // the chat silently "disappears" but still exists in the DB.
+        if (!res.ok) return;
       }
       setActiveChats((prev) => prev.filter((c) => c.id !== chatId));
     } finally {
