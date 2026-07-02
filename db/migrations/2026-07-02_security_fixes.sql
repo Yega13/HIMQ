@@ -4,6 +4,19 @@
 -- the live project. Safe to run more than once (idempotent).
 -- ============================================================
 
+-- Safety net: make sure the daily_usage table the rate limiter needs exists.
+-- CREATE TABLE IF NOT EXISTS = only creates it if it's missing; does nothing
+-- if it's already there.
+CREATE TABLE IF NOT EXISTS daily_usage (
+  id            UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id       UUID        NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  usage_date    DATE        NOT NULL DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Yerevan')::DATE,
+  message_count INTEGER     DEFAULT 0,
+  created_at    TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(user_id, usage_date)
+);
+ALTER TABLE daily_usage ENABLE ROW LEVEL SECURITY;
+
 -- ------------------------------------------------------------
 -- C1: Stop users from escalating privileges / faking XP via the
 -- self-update RLS policy. The "Users can update own profile"
@@ -14,10 +27,13 @@
 -- ------------------------------------------------------------
 CREATE OR REPLACE FUNCTION protect_profile_columns()
 RETURNS TRIGGER AS $$
+DECLARE
+  r text := COALESCE((SELECT auth.role()), '');
 BEGIN
-  -- The server-side admin client (service_role) is trusted; it is
-  -- the only path allowed to grant XP, streaks, admin, or owner.
-  IF COALESCE((SELECT auth.role()), '') = 'service_role' THEN
+  -- Allow the server admin client (service_role) AND direct DB access
+  -- (SQL editor / superuser, which has no JWT role → empty string).
+  -- Only the app's client-facing roles (authenticated / anon) are blocked.
+  IF r = '' OR r = 'service_role' THEN
     RETURN NEW;
   END IF;
 
