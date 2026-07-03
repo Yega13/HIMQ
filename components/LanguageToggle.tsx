@@ -1,5 +1,6 @@
 import { useRouter } from 'next/router';
 import { useState, useRef, useEffect } from 'react';
+import { getBrowserClient } from '@/lib/supabase';
 
 const LANGS = [
   { code: 'am', flagSrc: 'https://flagcdn.com/w40/am.png', label: 'Հայ' },
@@ -25,6 +26,17 @@ export default function LanguageToggle() {
 
   const switchTo = (code: string) => {
     setOpen(false);
+    // Persist as the user's preferred language (used for May's language), if
+    // signed in. Non-blocking — navigation happens regardless.
+    (async () => {
+      try {
+        const supabase = getBrowserClient();
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          await supabase.from('profiles').update({ preferred_language: code }).eq('id', session.user.id);
+        }
+      } catch { /* ignore */ }
+    })();
     router.replace({ pathname, query }, asPath, { locale: code });
   };
 

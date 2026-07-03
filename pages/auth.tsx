@@ -54,6 +54,12 @@ export default function Auth() {
         setIsError(true);
       } else if (data?.session) {
         // Signed in immediately (no email confirmation required) — go straight in.
+        // Record the language they signed up in as their preference.
+        if (router.locale) {
+          supabase.from('profiles')
+            .update({ preferred_language: router.locale })
+            .eq('id', data.session.user.id);
+        }
         const next = router.query.next as string | undefined;
         await router.replace(next && next.startsWith('/') ? next : '/dashboard');
       } else {

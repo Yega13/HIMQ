@@ -19,8 +19,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const { goal, lang } = req.body as { goal?: string; lang?: string };
   if (!goal?.trim()) return res.status(400).json({ error: 'goal is required' });
 
-  const language = languageName(lang);
   const admin = getAdminClient();
+
+  // May teaches in the student's SAVED preference, not the current URL locale.
+  // Fall back to the locale passed by the client, then English.
+  const { data: prof } = await admin
+    .from('profiles').select('preferred_language').eq('id', user.id).single();
+  const chatLang = prof?.preferred_language ?? lang ?? 'en';
+  const language = languageName(chatLang);
 
   // Enforce 10-active-chat limit
   const { count } = await admin
@@ -69,7 +75,7 @@ Adapt the choices to fit "${goal}" specifically. Max 4 choices. Keep Q under 12 
       user_id: user.id,
       title: goal.trim(),
       chat_type: 'learning',
-      plan: { discovering: true, lang: lang ?? null },
+      plan: { discovering: true, lang: chatLang },
       total_lessons: 0,
       current_lesson_index: 0,
       status: 'active',
