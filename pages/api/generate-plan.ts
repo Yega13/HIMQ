@@ -8,7 +8,7 @@ import { languageName } from '@/lib/utils';
 export const config = { maxDuration: 60 };
 
 interface LessonItem { index: number; title: string; description: string; }
-interface LessonPlan { chat_title: string; lessons: LessonItem[]; }
+interface LessonPlan { chat_title: string; welcome?: string; lessons: LessonItem[]; }
 
 function parsePlan(raw: string): LessonPlan {
   const cleaned = raw.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
@@ -86,6 +86,7 @@ while still teaching EVERYTHING the student needs to reach their goal. Never pad
 Return ONLY this JSON:
 {
   "chat_title": "specific descriptive title for this student's exact path",
+  "welcome": "2-3 warm sentences (in ${language}) welcoming the student to their new path: acknowledge their goal, say you built this plan for them, and invite them to start lesson 1. Speak as May, directly to the student.",
   "lessons": [
     {"index": 0, "title": "highly specific lesson title", "description": "one sentence: what this student will specifically be able to DO after this lesson"},
     ...
@@ -155,5 +156,16 @@ Return ONLY this JSON:
     .eq('chat_id', chatId)
     .order('lesson_index');
 
-  return res.status(200).json({ chat: updatedChat, lessons: lessons ?? [] });
+  // Insert May's welcome message as the first message of the teaching phase, so
+  // the student lands on a warm intro instead of an empty chat. It's stored
+  // after teaching_started_at so it shows in the teaching view (and on reload).
+  const welcomeText = plan.welcome?.trim()
+    || `Your personalized plan is ready — ${plan.lessons.length} lessons built around your goal. Open lesson 1 whenever you're ready and let's begin!`;
+  const { data: welcomeMsg } = await admin
+    .from('messages')
+    .insert({ chat_id: chatId, role: 'assistant', content: welcomeText, lesson_index: 0 })
+    .select()
+    .single();
+
+  return res.status(200).json({ chat: updatedChat, lessons: lessons ?? [], welcome: welcomeMsg ?? null });
 }

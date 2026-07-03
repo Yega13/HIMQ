@@ -166,9 +166,11 @@ export default function ChatDetail({ id }: { id: string }) {
             body: JSON.stringify({ chatId: id }),
           });
           if (planRes.ok) {
-            const { chat: updatedChat, lessons: newLessons } = await planRes.json();
+            const { chat: updatedChat, lessons: newLessons, welcome } = await planRes.json();
             setChat(updatedChat);
             setLessons(newLessons);
+            // Show May's welcome message as the first message of the teaching phase.
+            if (welcome) setMessages((prev) => [...prev, welcome]);
           }
         } finally {
           setGeneratingPlan(false);
