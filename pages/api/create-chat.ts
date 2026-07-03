@@ -45,16 +45,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const openingSystemPrompt = `You are May — a personal teacher built by Himq. Be brief and warm. Always write to the student in ${language} — the question text and every answer choice must be in ${language}.`;
   const openingUserMessage = `A student wants to learn: "${goal}".
 
-Write your opening message. Keep it SHORT:
-- 1 sentence intro: "Hi! I'm May, your personal teacher. Quick questions first so I can build the right plan for you."
-- Then ask: what is their main goal with "${goal}"?
+Write your opening message in ${language}. Keep it SHORT:
+- 1 warm sentence introducing yourself as May and saying you'll ask a few quick questions to build the right plan.
+- Then ask their main goal with "${goal}".
 
-Use this EXACT format for the question:
-Q: What's your main goal with ${goal}?
-A: Get a job | Build a project | Pass an exam | Just exploring
+Format the question using this EXACT structure. Keep the "Q:", "A:", "T:" labels in English, but write the question text and EVERY answer choice in ${language}:
+Q: <short question, in ${language}>
+A: <choice 1 in ${language}> | <choice 2 in ${language}> | <choice 3 in ${language}> | <choice 4 in ${language}>
 T: single
 
-Adapt the choices to fit "${goal}" specifically. Max 4 choices. Keep Q under 12 words. Only use choice format if the options are truly exhaustive — if the answer is open-ended, use a plain text question instead.`;
+Adapt the choices to fit "${goal}" specifically. Max 4 choices. Keep the question under 12 words. Only use choice format if the options are truly exhaustive — if the answer is open-ended, use a plain text question instead (no Q:/A:/T:). Do NOT output any English words in the question or choices.`;
 
   let openingMessage: string;
   try {
