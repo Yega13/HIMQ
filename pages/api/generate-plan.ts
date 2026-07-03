@@ -69,12 +69,18 @@ FULL DISCOVERY CONVERSATION:
 ${conversation}
 ---
 
-Build a deeply personalized plan:
-- Choose the right number of lessons (5–10) based on complexity and this student's specific needs
-- Each lesson title must be SPECIFIC to this student — reference their background, goal, confusion points
-- Skip fundamentals they clearly already know
+Build a deeply personalized plan. The #1 rule: use the FEWEST lessons possible
+while still teaching EVERYTHING the student needs to reach their goal. Never pad.
+- Find the balance: as short as possible, as complete as necessary. If the goal
+  can be achieved in 3 lessons, use 3. Only add a lesson if the goal genuinely
+  can't be reached without it. Hard range: 3–8 lessons.
+- Skip fundamentals they clearly already know (from the discovery conversation)
+- Each lesson must earn its place — one meaningful, distinct step toward the goal.
+  Merge overlapping topics rather than splitting them across lessons.
+- Each lesson title must be SPECIFIC to this student — reference their background,
+  goal, confusion points
 - Directly address their confusion points and knowledge gaps
-- Make sure completing the plan achieves their real stated goal
+- Completing the plan MUST fully achieve their real stated goal — leave no gap
 - Titles should read like: "Understanding X through the lens of Y" not generic "Introduction to X"
 
 Return ONLY this JSON:

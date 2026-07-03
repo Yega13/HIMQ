@@ -27,7 +27,7 @@ const WHAT_WE_DO = [
     iconColor: 'bg-blue-500/10 text-[var(--color-brand)]',
     cardBg: 'bg-blue-500/[0.04] border-blue-500/20 hover:border-blue-500/40',
     title: 'AI that actually teaches',
-    desc: 'You tell May — our AI — what you want to learn. It asks a few smart questions, then builds a focused 5-lesson course tailored to your level and goal. No generic YouTube rabbit holes.',
+    desc: 'You tell May — our AI — what you want to learn. It asks a few smart questions, then builds a focused, personalized course tailored to your level and goal — as short as possible while still covering everything you need. No generic YouTube rabbit holes.',
   },
   {
     icon: Globe,
@@ -62,7 +62,7 @@ const STATS = [
 const FAQS = [
   {
     q: 'What is Himq?',
-    a: 'Himq is an AI-powered learning and opportunity platform built specifically for Armenian students. You describe what you want to learn, our AI builds a personal 5-lesson course for you, and alongside that you get a live feed of scholarships, competitions, internships, and events available in Armenia.',
+    a: 'Himq is an AI-powered learning and opportunity platform built specifically for Armenian students. You describe what you want to learn, our AI builds a personal course for you, and alongside that you get a live feed of scholarships, competitions, internships, and events available in Armenia.',
   },
   {
     q: 'Is Himq free to use?',
@@ -70,7 +70,7 @@ const FAQS = [
   },
   {
     q: 'How does the AI learning plan work?',
-    a: 'When you start a new course, our AI — called May — asks you a few questions: what you already know, what your goal is, and how much time you have. It then generates a structured 5-lesson plan built around your answers. Each lesson is an interactive conversation where May explains, quizzes, and adapts to your pace.',
+    a: 'When you start a new course, our AI — called May — asks you a few questions: what you already know, what your goal is, and how much time you have. It then generates a structured plan built around your answers — kept as short as possible while still covering everything you need. Each lesson is an interactive conversation where May explains, quizzes, and adapts to your pace.',
   },
   {
     q: 'What subjects can I study on Himq?',
@@ -104,7 +104,7 @@ const FAQS = [
 
 // ── 3D Marquee items ──────────────────────────────────────────
 const CTA_DESCS = [
-  'Tell our AI what you want to learn and get a fully personalized 5-lesson plan built around your exact goal — in minutes.',
+  'Tell our AI what you want to learn and get a fully personalized plan built around your exact goal — in minutes.',
   'We collect scholarships, Olympiads, internships, and competitions open to Armenian students so you never miss a deadline.',
   'Every lesson you finish earns XP. Every day you study keeps your streak alive. Learning that actually feels like progress.',
   'Your score appears on the Himq leaderboard alongside every other learner in Armenia. How high can you climb?',
