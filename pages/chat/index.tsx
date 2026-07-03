@@ -159,7 +159,7 @@ export default function ChatIndex() {
           user_id: user.id,
           title: goal.trim(),
           chat_type: 'learning',
-          plan: { discovering: false },
+          plan: { discovering: false, approved: true },
           skill_level: skillLevel,
           total_lessons: lessons.length,
           current_lesson_index: 0,

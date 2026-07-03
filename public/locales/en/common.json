@@ -165,7 +165,12 @@
                  "complete_lesson":  "Mark Complete",
                  "back_to_chats":  "All chats",
                  "you":  "You",
-                 "ai":  "May"
+                 "ai":  "May",
+                 "review_intro":  "Here's your personalized plan — {{count}} lessons. Review it below. Start when it looks right, or tell May what to change.",
+                 "start_learning":  "Start learning",
+                 "review_changes_hint":  "Want changes? Tell May (e.g. \"make it shorter\", \"add more on X\", \"focus on projects\").",
+                 "review_changes_placeholder":  "What should May change?",
+                 "review_update":  "Update plan"
              },
     "opportunities":  {
                           "title":  "Opportunities",

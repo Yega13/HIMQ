@@ -33,7 +33,7 @@ interface Chat {
   current_lesson_index: number;
   total_lessons: number;
   status: string;
-  plan?: { teaching_started_at?: string };
+  plan?: { teaching_started_at?: string; approved?: boolean; lang?: string; welcome?: string };
 }
 
 export default function ChatDetail({ id }: { id: string }) {
@@ -64,6 +64,9 @@ export default function ChatDetail({ id }: { id: string }) {
   const [sendError, setSendError] = useState('');
   const [completing, setCompleting] = useState(false);
   const completingRef = useRef(false);
+  const [planFeedback, setPlanFeedback] = useState('');
+  const [regenerating, setRegenerating] = useState(false);
+  const [starting, setStarting] = useState(false);
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef  = useRef<HTMLTextAreaElement>(null);
@@ -166,11 +169,11 @@ export default function ChatDetail({ id }: { id: string }) {
             body: JSON.stringify({ chatId: id }),
           });
           if (planRes.ok) {
-            const { chat: updatedChat, lessons: newLessons, welcome } = await planRes.json();
+            const { chat: updatedChat, lessons: newLessons } = await planRes.json();
             setChat(updatedChat);
             setLessons(newLessons);
-            // Show May's welcome message as the first message of the teaching phase.
-            if (welcome) setMessages((prev) => [...prev, welcome]);
+            // Plan is now in REVIEW state — the review screen takes over until
+            // the student approves it (startPlan) or asks for changes.
           }
         } finally {
           setGeneratingPlan(false);
@@ -190,6 +193,51 @@ export default function ChatDetail({ id }: { id: string }) {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       sendMessage();
+    }
+  };
+
+  // Student approves the reviewed plan → start learning (posts welcome message).
+  const startPlan = async () => {
+    if (starting || !id) return;
+    setStarting(true);
+    try {
+      const { data: { session } } = await getBrowserClient().auth.getSession();
+      const res = await fetch('/api/start-plan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token ?? ''}` },
+        body: JSON.stringify({ chatId: id }),
+      });
+      if (!res.ok) { setStarting(false); return; }
+      const { chat: updatedChat, welcome } = await res.json();
+      setChat(updatedChat);
+      if (welcome) setMessages((prev) => [...prev, welcome]);
+    } finally {
+      setStarting(false);
+    }
+  };
+
+  // Student asked for changes during review → regenerate the plan with feedback.
+  const regeneratePlan = async () => {
+    const fb = planFeedback.trim();
+    if (!fb || regenerating || !id) return;
+    setRegenerating(true);
+    setGeneratingPlan(true); // reuse the full-screen "building plan" UI
+    try {
+      const { data: { session } } = await getBrowserClient().auth.getSession();
+      const res = await fetch('/api/generate-plan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token ?? ''}` },
+        body: JSON.stringify({ chatId: id, feedback: fb }),
+      });
+      if (res.ok) {
+        const { chat: updatedChat, lessons: newLessons } = await res.json();
+        setChat(updatedChat);
+        setLessons(newLessons);
+        setPlanFeedback('');
+      }
+    } finally {
+      setRegenerating(false);
+      setGeneratingPlan(false);
     }
   };
 
@@ -289,6 +337,10 @@ export default function ChatDetail({ id }: { id: string }) {
   }
 
   const isDiscovering = lessons.length === 0;
+  // A plan is "approved" once the student starts learning. Older chats (created
+  // before the review flow) are grandfathered in via teaching_started_at.
+  const planApproved = !!(chat?.plan?.approved || chat?.plan?.teaching_started_at);
+  const isReviewing = !isDiscovering && !planApproved;
   const allDone = !isDiscovering && chat ? chat.current_lesson_index >= chat.total_lessons && chat.total_lessons > 0 : false;
   const teachingCutoff = chat?.plan?.teaching_started_at;
   const visibleMessages = teachingCutoff
@@ -449,6 +501,76 @@ export default function ChatDetail({ id }: { id: string }) {
                   {answeredCount} question{answeredCount !== 1 ? 's' : ''} answered
                 </p>
               )}
+            </div>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
+  // ── Plan review screen ──────────────────────────────────────────────────────
+  if (isReviewing) {
+    return (
+      <Layout fullscreen>
+        <div className="min-h-screen flex flex-col bg-[var(--bg-primary)]">
+          <div className="px-6 pt-5">
+            <Link href="/chat" className="inline-flex items-center gap-1.5 text-xs text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors">
+              <ChevronLeft size={14} />
+              {t('chat.back_to_chats')}
+            </Link>
+          </div>
+
+          <div className="flex-1 flex flex-col items-center px-4 py-8">
+            <div className="text-center mb-6">
+              <div className="w-14 h-14 rounded-2xl bg-[var(--color-brand)] flex items-center justify-center mx-auto mb-3 shadow-md">
+                <span className="text-white text-xl font-extrabold">M</span>
+              </div>
+              <h2 className="text-xl font-bold text-[var(--text-primary)]">{chat?.title}</h2>
+              <p className="text-sm text-[var(--text-muted)] mt-1 max-w-md">
+                {t('chat.review_intro', { count: lessons.length }) as string}
+              </p>
+            </div>
+
+            <div className="w-full max-w-lg space-y-2 mb-6">
+              {lessons.map((l, i) => (
+                <div key={l.id} className="bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl px-5 py-4">
+                  <div className="flex items-start gap-3">
+                    <span className="flex-shrink-0 w-6 h-6 rounded-full bg-[var(--color-brand)]/10 text-[var(--color-brand)] text-xs font-bold flex items-center justify-center mt-0.5">{i + 1}</span>
+                    <div>
+                      <p className="text-sm font-semibold text-[var(--text-primary)]">{l.title}</p>
+                      {l.description && <p className="text-xs text-[var(--text-secondary)] mt-1 leading-relaxed">{l.description}</p>}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="w-full max-w-lg">
+              <button
+                onClick={startPlan}
+                disabled={starting}
+                className="w-full py-3.5 rounded-2xl bg-[var(--color-brand)] text-white font-semibold text-sm hover:bg-[var(--color-brand-hover)] transition-colors disabled:opacity-60 flex items-center justify-center gap-2 mb-4"
+              >
+                {starting ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <>{t('chat.start_learning')} <Send size={14} /></>}
+              </button>
+
+              <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-card)] p-4">
+                <p className="text-xs font-medium text-[var(--text-secondary)] mb-2">{t('chat.review_changes_hint')}</p>
+                <textarea
+                  value={planFeedback}
+                  onChange={(e) => setPlanFeedback(e.target.value)}
+                  placeholder={t('chat.review_changes_placeholder') as string}
+                  rows={2}
+                  className="w-full px-4 py-3 rounded-xl border border-[var(--border)] bg-[var(--bg-secondary)] text-[var(--text-primary)] text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[var(--color-brand)] transition placeholder-[var(--text-muted)] mb-3"
+                />
+                <button
+                  onClick={regeneratePlan}
+                  disabled={!planFeedback.trim() || regenerating}
+                  className="w-full py-2.5 rounded-xl border border-[var(--border-strong)] text-[var(--text-primary)] text-sm font-medium hover:border-[var(--color-brand)] transition-colors disabled:opacity-50"
+                >
+                  {t('chat.review_update')}
+                </button>
+              </div>
             </div>
           </div>
         </div>

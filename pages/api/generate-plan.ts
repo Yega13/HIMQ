@@ -28,7 +28,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const { data: { user }, error: authErr } = await supabase.auth.getUser(token);
   if (authErr || !user) return res.status(401).json({ error: 'Unauthorized' });
 
-  const { chatId } = req.body as { chatId?: string };
+  const { chatId, feedback } = req.body as { chatId?: string; feedback?: string };
   if (!chatId) return res.status(400).json({ error: 'chatId required' });
 
   const admin = getAdminClient();
@@ -41,7 +41,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     .single();
 
   if (chatErr || !chat) return res.status(404).json({ error: 'Chat not found' });
-  if ((chat.total_lessons ?? 0) > 0) return res.status(400).json({ error: 'Plan already generated' });
+  // Once the student has approved the plan and started learning, it's locked.
+  // Before that, this route can be called repeatedly to regenerate with feedback.
+  if (chat.plan?.approved) return res.status(400).json({ error: 'Plan already started' });
 
   // Load full conversation
   const { data: messages } = await admin
@@ -57,6 +59,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     .join('\n\n');
 
   const language = languageName(chat.plan?.lang);
+
+  // If the student asked for changes during plan review, show May the previous
+  // plan and their requested changes so it revises rather than starts over.
+  const prevLessons = Array.isArray(chat.plan?.lessons)
+    ? (chat.plan.lessons as { index: number; title: string }[])
+        .map((l) => `${l.index + 1}. ${l.title}`).join('\n')
+    : '';
+  const feedbackBlock = feedback?.trim()
+    ? `\n\nYOU ALREADY PROPOSED THIS PLAN:\n${prevLessons}\n\nThe student reviewed it and asked for these changes — apply them precisely while STILL fully covering the goal:\n"${feedback.trim()}"\n`
+    : '';
+
   const planSystemPrompt = `You are an expert curriculum designer. Return ONLY valid JSON — no markdown, no explanation. All human-readable text (chat_title, lesson titles and descriptions) MUST be written in ${language}.`;
   const planUserMessage = `A student just completed a discovery conversation with Himq AI.
 Based on everything revealed in this conversation, create their PERSONALIZED learning plan.
@@ -68,7 +81,7 @@ FULL DISCOVERY CONVERSATION:
 ---
 ${conversation}
 ---
-
+${feedbackBlock}
 Build a deeply personalized plan. The #1 rule: use the FEWEST lessons possible
 while still teaching EVERYTHING the student needs to reach their goal. Never pad.
 - Find the balance: as short as possible, as complete as necessary. If the goal
@@ -106,6 +119,10 @@ Return ONLY this JSON:
     return res.status(500).json({ error: 'Failed to generate plan' });
   }
 
+  // Clear any previous (unapproved) lessons — this route can regenerate on
+  // feedback, and the lesson count may change.
+  await admin.from('lessons').delete().eq('chat_id', chatId);
+
   // Insert lessons
   const { error: lessonsErr } = await admin.from('lessons').insert(
     plan.lessons.map((l) => ({
@@ -130,12 +147,14 @@ Return ONLY this JSON:
     return res.status(500).json({ error: 'Failed to save lessons' });
   }
 
-  // Update chat with plan and activate
+  // Save the plan in REVIEW state (approved: false). The student reviews it and
+  // either starts learning (via /api/start-plan) or asks for changes (which
+  // calls this route again with feedback). No teaching message yet.
   const { data: updatedChat, error: updateErr } = await admin
     .from('chats')
     .update({
       title: plan.chat_title,
-      plan: { ...plan, lang: chat.plan?.lang ?? null, teaching_started_at: new Date().toISOString() },
+      plan: { ...plan, lang: chat.plan?.lang ?? null, approved: false },
       total_lessons: plan.lessons.length,
       current_lesson_index: 0,
       status: 'active',
@@ -156,16 +175,5 @@ Return ONLY this JSON:
     .eq('chat_id', chatId)
     .order('lesson_index');
 
-  // Insert May's welcome message as the first message of the teaching phase, so
-  // the student lands on a warm intro instead of an empty chat. It's stored
-  // after teaching_started_at so it shows in the teaching view (and on reload).
-  const welcomeText = plan.welcome?.trim()
-    || `Your personalized plan is ready — ${plan.lessons.length} lessons built around your goal. Open lesson 1 whenever you're ready and let's begin!`;
-  const { data: welcomeMsg } = await admin
-    .from('messages')
-    .insert({ chat_id: chatId, role: 'assistant', content: welcomeText, lesson_index: 0 })
-    .select()
-    .single();
-
-  return res.status(200).json({ chat: updatedChat, lessons: lessons ?? [], welcome: welcomeMsg ?? null });
+  return res.status(200).json({ chat: updatedChat, lessons: lessons ?? [] });
 }

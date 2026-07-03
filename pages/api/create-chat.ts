@@ -21,11 +21,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const admin = getAdminClient();
 
-  // May teaches in the student's SAVED preference, not the current URL locale.
-  // Fall back to the locale passed by the client, then English.
+  // May teaches in the language the student is browsing the site in when they
+  // start the path (most intuitive), falling back to their saved preference.
   const { data: prof } = await admin
     .from('profiles').select('preferred_language').eq('id', user.id).single();
-  const chatLang = prof?.preferred_language ?? lang ?? 'en';
+  const chatLang = lang ?? prof?.preferred_language ?? 'en';
   const language = languageName(chatLang);
 
   // Enforce 10-active-chat limit
