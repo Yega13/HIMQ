@@ -41,3 +41,13 @@ export function truncate(str: string, length: number): string {
   if (str.length <= length) return str;
   return str.slice(0, length) + '…';
 }
+
+// Maps an app locale to a human language name for AI prompts, so May replies in
+// the language the student is using the app in.
+export function languageName(lang?: string | null): string {
+  switch (lang) {
+    case 'am': return 'Armenian (Հայերեն)';
+    case 'ru': return 'Russian (Русский)';
+    default:   return 'English';
+  }
+}

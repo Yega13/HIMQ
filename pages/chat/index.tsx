@@ -184,7 +184,7 @@ export default function ChatIndex() {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${session?.access_token ?? ''}`,
         },
-        body: JSON.stringify({ goal: goal.trim(), skill_level: skillLevel }),
+        body: JSON.stringify({ goal: goal.trim(), skill_level: skillLevel, lang: router.locale }),
       });
 
       if (!res.ok) {

@@ -115,7 +115,8 @@ export default function ChatDetail({ id }: { id: string }) {
     if (!userMsg || sending || !user || !chat) return;
 
     if (!overrideMsg) setInput('');
-    setSelectedChoices([]);
+    // Keep the chosen answer highlighted while May processes it; it's cleared
+    // once the next question arrives (below).
     setSendError('');
     setSending(true);
 
@@ -149,6 +150,8 @@ export default function ChatDetail({ id }: { id: string }) {
         content: reply,
         created_at: new Date().toISOString(),
       }]);
+      // New question is now shown → clear the previous selection.
+      setSelectedChoices([]);
 
       // Server signals (language-independent) that discovery is done → build plan
       if (lessons.length === 0 && planReady) {
@@ -367,6 +370,7 @@ export default function ChatDetail({ id }: { id: string }) {
                         <button
                           key={choice}
                           onClick={() => setSelectedChoices([choice])}
+                          disabled={sending}
                           className={cn(
                             'w-full px-5 py-3.5 rounded-2xl border text-sm font-medium text-left transition-all',
                             selectedChoices[0] === choice
@@ -390,6 +394,7 @@ export default function ChatDetail({ id }: { id: string }) {
                             onClick={() => setSelectedChoices((prev) =>
                               checked ? prev.filter((c) => c !== choice) : [...prev, choice]
                             )}
+                            disabled={sending}
                             className={cn(
                               'w-full px-5 py-3.5 rounded-2xl border text-sm font-medium text-left flex items-center gap-3 transition-all',
                               checked

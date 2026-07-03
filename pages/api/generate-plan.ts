@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { supabase, getAdminClient } from '@/lib/supabase';
 import { generateAIResponse } from '@/lib/ai';
+import { languageName } from '@/lib/utils';
 
 // Plan generation is a large Sonnet call; the default 10s (Vercel Hobby) would
 // 504 mid-generation.
@@ -55,9 +56,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     )
     .join('\n\n');
 
-  const planSystemPrompt = `You are an expert curriculum designer. Return ONLY valid JSON — no markdown, no explanation.`;
+  const language = languageName(chat.plan?.lang);
+  const planSystemPrompt = `You are an expert curriculum designer. Return ONLY valid JSON — no markdown, no explanation. All human-readable text (chat_title, lesson titles and descriptions) MUST be written in ${language}.`;
   const planUserMessage = `A student just completed a discovery conversation with Himq AI.
 Based on everything revealed in this conversation, create their PERSONALIZED learning plan.
+Write chat_title, every lesson title, and every description in ${language}.
 
 STUDENT'S ORIGINAL GOAL: "${chat.title}"
 
@@ -125,7 +128,7 @@ Return ONLY this JSON:
     .from('chats')
     .update({
       title: plan.chat_title,
-      plan: { ...plan, teaching_started_at: new Date().toISOString() },
+      plan: { ...plan, lang: chat.plan?.lang ?? null, teaching_started_at: new Date().toISOString() },
       total_lessons: plan.lessons.length,
       current_lesson_index: 0,
       status: 'active',

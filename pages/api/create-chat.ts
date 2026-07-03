@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { supabase, getAdminClient } from '@/lib/supabase';
 import { generateAIResponse } from '@/lib/ai';
+import { languageName } from '@/lib/utils';
 
 // Involves an AI call to write the opening question — give it headroom over the
 // 10s Vercel Hobby default.
@@ -15,9 +16,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const { data: { user }, error: authErr } = await supabase.auth.getUser(token);
   if (authErr || !user) return res.status(401).json({ error: 'Unauthorized' });
 
-  const { goal } = req.body as { goal?: string };
+  const { goal, lang } = req.body as { goal?: string; lang?: string };
   if (!goal?.trim()) return res.status(400).json({ error: 'goal is required' });
 
+  const language = languageName(lang);
   const admin = getAdminClient();
 
   // Enforce 10-active-chat limit
@@ -34,7 +36,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   // Generate ONLY the opening discovery question — no plan yet.
   // The plan is generated after the AI finishes the discovery conversation.
-  const openingSystemPrompt = `You are May — a personal teacher built by Himq. Be brief and warm.`;
+  const openingSystemPrompt = `You are May — a personal teacher built by Himq. Be brief and warm. Always write to the student in ${language} — the question text and every answer choice must be in ${language}.`;
   const openingUserMessage = `A student wants to learn: "${goal}".
 
 Write your opening message. Keep it SHORT:
@@ -67,7 +69,7 @@ Adapt the choices to fit "${goal}" specifically. Max 4 choices. Keep Q under 12 
       user_id: user.id,
       title: goal.trim(),
       chat_type: 'learning',
-      plan: { discovering: true },
+      plan: { discovering: true, lang: lang ?? null },
       total_lessons: 0,
       current_lesson_index: 0,
       status: 'active',

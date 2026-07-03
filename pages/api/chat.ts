@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { supabase, getAdminClient } from '@/lib/supabase';
 import { generateAIResponse } from '@/lib/ai';
 import { type ModelId, DEFAULT_MODEL } from '@/lib/models';
+import { languageName } from '@/lib/utils';
 
 export const config = { maxDuration: 60 };
 
@@ -65,8 +66,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     : (chat.lessons as { lesson_index: number; title: string; description: string }[])
         ?.find((l) => l.lesson_index === chat.current_lesson_index);
 
+  const language = languageName(chat.plan?.lang);
+
   const systemPrompt = isDiscovering
     ? `You are May — a personal teacher built by Himq.
+
+Always write every message — questions and answer choices — to the student in ${language}.
 
 Student goal: "${chat.title}"
 
@@ -88,6 +93,8 @@ plan is being built now — one short warm sentence, in the student's language.
 Then, on its own final line, output this EXACT token and nothing after it:
 <<<PLAN_READY>>>`
     : `You are May — an expert personal teacher built by Himq. Your name is May (short for May-1). If anyone asks your name, say "I'm May." Never call yourself "Himq AI" or any other name.
+
+Always write every message to the student in ${language}.
 
 Topic: ${chat.title}
 Current lesson (${chat.current_lesson_index + 1}/${chat.total_lessons}): "${currentLesson?.title ?? ''}" — ${currentLesson?.description ?? ''}

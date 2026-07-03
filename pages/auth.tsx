@@ -2,7 +2,6 @@ import { GetStaticProps } from 'next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { useTranslation } from 'next-i18next';
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mail, RefreshCw, CheckCircle, Eye, EyeOff } from 'lucide-react';
@@ -160,7 +159,7 @@ export default function Auth() {
   return (
     <div className="min-h-screen bg-[var(--bg-primary)] flex flex-col">
       <div className="flex justify-between items-center p-4">
-        <Link href="/" className="font-bold text-xl text-[var(--color-brand)]">Himq</Link>
+        <Logo height={40} />
         <div className="flex items-center gap-2">
           <LanguageToggle />
           <ThemeToggle />
