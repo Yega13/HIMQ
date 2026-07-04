@@ -67,6 +67,7 @@ export default function ChatDetail({ id }: { id: string }) {
   const [planFeedback, setPlanFeedback] = useState('');
   const [regenerating, setRegenerating] = useState(false);
   const [starting, setStarting] = useState(false);
+  const [reviewError, setReviewError] = useState('');
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef  = useRef<HTMLTextAreaElement>(null);
@@ -200,6 +201,7 @@ export default function ChatDetail({ id }: { id: string }) {
   const startPlan = async () => {
     if (starting || !id) return;
     setStarting(true);
+    setReviewError('');
     try {
       const { data: { session } } = await getBrowserClient().auth.getSession();
       const res = await fetch('/api/start-plan', {
@@ -207,7 +209,7 @@ export default function ChatDetail({ id }: { id: string }) {
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token ?? ''}` },
         body: JSON.stringify({ chatId: id }),
       });
-      if (!res.ok) { setStarting(false); return; }
+      if (!res.ok) { setReviewError(t('chat.review_error') as string); setStarting(false); return; }
       const { chat: updatedChat, welcome } = await res.json();
       setChat(updatedChat);
       if (welcome) setMessages((prev) => [...prev, welcome]);
@@ -221,6 +223,7 @@ export default function ChatDetail({ id }: { id: string }) {
     const fb = planFeedback.trim();
     if (!fb || regenerating || !id) return;
     setRegenerating(true);
+    setReviewError('');
     setGeneratingPlan(true); // reuse the full-screen "building plan" UI
     try {
       const { data: { session } } = await getBrowserClient().auth.getSession();
@@ -234,6 +237,8 @@ export default function ChatDetail({ id }: { id: string }) {
         setChat(updatedChat);
         setLessons(newLessons);
         setPlanFeedback('');
+      } else {
+        setReviewError(t('chat.review_error') as string);
       }
     } finally {
       setRegenerating(false);
@@ -553,6 +558,10 @@ export default function ChatDetail({ id }: { id: string }) {
               >
                 {starting ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <>{t('chat.start_learning')} <Send size={14} /></>}
               </button>
+
+              {reviewError && (
+                <p className="text-sm text-red-500 dark:text-red-400 text-center mb-4">{reviewError}</p>
+              )}
 
               <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-card)] p-4">
                 <p className="text-xs font-medium text-[var(--text-secondary)] mb-2">{t('chat.review_changes_hint')}</p>

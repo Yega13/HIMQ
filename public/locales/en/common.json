@@ -170,7 +170,8 @@
                  "start_learning":  "Start learning",
                  "review_changes_hint":  "Want changes? Tell May (e.g. \"make it shorter\", \"add more on X\", \"focus on projects\").",
                  "review_changes_placeholder":  "What should May change?",
-                 "review_update":  "Update plan"
+                 "review_update":  "Update plan",
+                 "review_error":  "Something went wrong. Please try again."
              },
     "opportunities":  {
                           "title":  "Opportunities",

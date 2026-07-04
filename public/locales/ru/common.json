@@ -170,7 +170,8 @@
                  "start_learning":  "Начать обучение",
                  "review_changes_hint":  "Нужны изменения? Скажи May (например: «сделай короче», «добавь про X», «сделай упор на проекты»).",
                  "review_changes_placeholder":  "Что изменить в плане?",
-                 "review_update":  "Обновить план"
+                 "review_update":  "Обновить план",
+                 "review_error":  "Что-то пошло не так. Попробуйте ещё раз."
              },
     "opportunities":  {
                           "title":  "Возможности",

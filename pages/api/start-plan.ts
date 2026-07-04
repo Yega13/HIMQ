@@ -29,17 +29,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(200).json({ chat, welcome: null });
   }
 
-  const { data: updatedChat, error: updateErr } = await admin
-    .from('chats')
-    .update({ plan: { ...chat.plan, approved: true, teaching_started_at: new Date().toISOString() } })
-    .eq('id', chatId)
-    .select()
-    .single();
-  if (updateErr) {
-    console.error('start-plan update failed:', updateErr);
-    return res.status(500).json({ error: 'Failed to start plan' });
-  }
-
+  // Insert the welcome message FIRST, then anchor teaching_started_at to the
+  // welcome's own DB created_at. This keeps the teaching-view cutoff
+  // (created_at >= teaching_started_at) on a single Postgres clock, so the
+  // welcome (and later messages) are never filtered out by app/DB clock skew.
   const welcomeText = (chat.plan?.welcome as string | undefined)?.trim()
     || `Your personalized plan is ready — ${chat.total_lessons} lessons built around your goal. Open lesson 1 whenever you're ready and let's begin!`;
   const { data: welcomeMsg } = await admin
@@ -47,6 +40,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     .insert({ chat_id: chatId, role: 'assistant', content: welcomeText, lesson_index: 0 })
     .select()
     .single();
+
+  const startedAt = (welcomeMsg?.created_at as string | undefined) ?? new Date().toISOString();
+
+  const { data: updatedChat, error: updateErr } = await admin
+    .from('chats')
+    .update({ plan: { ...chat.plan, approved: true, teaching_started_at: startedAt } })
+    .eq('id', chatId)
+    .select()
+    .single();
+  if (updateErr) {
+    console.error('start-plan update failed:', updateErr);
+    return res.status(500).json({ error: 'Failed to start plan' });
+  }
 
   return res.status(200).json({ chat: updatedChat, welcome: welcomeMsg ?? null });
 }
