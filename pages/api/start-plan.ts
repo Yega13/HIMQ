@@ -23,12 +23,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (chatErr || !chat) return res.status(404).json({ error: 'Chat not found' });
   if ((chat.total_lessons ?? 0) === 0) return res.status(400).json({ error: 'No plan to start' });
 
-  // Idempotent: if already started, just return the existing welcome.
+  // Idempotent: if already started, don't post another welcome. The client
+  // loads existing messages on open, so return null here.
   if (chat.plan?.approved) {
-    const { data: existingWelcome } = await admin
-      .from('messages').select('*').eq('chat_id', chatId).eq('role', 'assistant')
-      .order('created_at', { ascending: true }).limit(1).maybeSingle();
-    return res.status(200).json({ chat, welcome: existingWelcome ?? null });
+    return res.status(200).json({ chat, welcome: null });
   }
 
   const { data: updatedChat, error: updateErr } = await admin

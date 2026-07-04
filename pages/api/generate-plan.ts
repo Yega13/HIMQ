@@ -41,9 +41,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     .single();
 
   if (chatErr || !chat) return res.status(404).json({ error: 'Chat not found' });
-  // Once the student has approved the plan and started learning, it's locked.
-  // Before that, this route can be called repeatedly to regenerate with feedback.
-  if (chat.plan?.approved) return res.status(400).json({ error: 'Plan already started' });
+  // Once the student has started learning, the plan is locked. Before that, this
+  // route can be re-called to regenerate with feedback. (teaching_started_at
+  // covers older chats created before the approved flag existed.)
+  if (chat.plan?.approved || chat.plan?.teaching_started_at) {
+    return res.status(400).json({ error: 'Plan already started' });
+  }
 
   // Load full conversation
   const { data: messages } = await admin
