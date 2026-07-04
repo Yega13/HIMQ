@@ -183,7 +183,7 @@ export default function Opportunities({ events }: Props) {
 
   return (
     <Layout>
-      <Head><title>Opportunities — Himq</title></Head>
+      <Head><title>Opportunities — HIMQ</title></Head>
       <div className="max-w-6xl mx-auto px-4 py-8">
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
           <h1 className="text-2xl sm:text-3xl font-extrabold text-[var(--text-primary)] mb-2 tracking-tight">{t('opportunities.title')}</h1>

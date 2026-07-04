@@ -77,7 +77,7 @@ export default function RoadmapPage({ chatId }: { chatId: string }) {
 
   return (
     <Layout>
-      <Head><title>{`${chat?.title ?? 'Roadmap'} — Himq`}</title></Head>
+      <Head><title>{`${chat?.title ?? 'Roadmap'} — HIMQ`}</title></Head>
       <div className="max-w-2xl mx-auto px-4 py-8">
 
         {/* Back */}

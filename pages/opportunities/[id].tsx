@@ -155,7 +155,7 @@ export default function OpportunityDetail({ event }: { event: Event | null }) {
 
   return (
     <Layout>
-      <Head><title>{`${event.title} — Himq`}</title></Head>
+      <Head><title>{`${event.title} — HIMQ`}</title></Head>
       <div className="max-w-3xl mx-auto px-4 py-8">
         <Link
           href="/opportunities"

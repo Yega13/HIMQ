@@ -121,7 +121,7 @@ export default function Leaderboard({ profiles }: { profiles: Entry[] }) {
 
   return (
     <Layout>
-      <Head><title>{`${t('leaderboard.title')} — Himq`}</title></Head>
+      <Head><title>Leaderboard — HIMQ</title></Head>
       <div className="max-w-3xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="flex items-center gap-3 mb-1.5">

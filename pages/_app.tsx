@@ -37,10 +37,10 @@ function App({ Component, pageProps }: AppProps) {
   return (
     <>
       <Head>
-        <title>Himq — Learn, Grow, Win</title>
+        <title>HIMQ — Learn, Grow, Win</title>
         <meta name="description" content="AI-powered personal tutor for Armenian students. Build a custom learning path and discover real local scholarships, competitions, and internships." />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <meta property="og:title" content="Himq — Learn, Grow, Win" />
+        <meta property="og:title" content="HIMQ — Learn, Grow, Win" />
         <meta property="og:description" content="AI personal tutor + Armenian opportunities in one place." />
         <meta name="theme-color" content="#2578e8" />
       </Head>

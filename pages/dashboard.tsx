@@ -152,7 +152,7 @@ export default function Dashboard() {
 
   return (
     <Layout>
-      <Head><title>Dashboard — Himq</title></Head>
+      <Head><title>Dashboard — HIMQ</title></Head>
       <div className="max-w-6xl mx-auto px-4 py-8">
         {/* Header */}
         <motion.div

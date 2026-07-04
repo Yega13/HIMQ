@@ -269,7 +269,7 @@ export default function ProfilePage() {
 
   return (
     <Layout>
-      <Head><title>{`${t('profile.title')} — Himq`}</title></Head>
+      <Head><title>Profile — HIMQ</title></Head>
       <div className="max-w-4xl mx-auto px-4 py-8">
 
         {/* Header banner */}

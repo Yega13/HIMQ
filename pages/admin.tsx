@@ -94,7 +94,7 @@ export default function Admin() {
   if (access !== 'ok') {
     return (
       <Layout>
-        <Head><title>Admin — Himq</title></Head>
+        <Head><title>Admin — HIMQ</title></Head>
         <div className="max-w-sm mx-auto px-4 py-20 text-center">
           {access === 'checking' && (
             <div className="w-6 h-6 border-2 border-[var(--color-brand)] border-t-transparent rounded-full animate-spin mx-auto" />
@@ -133,7 +133,7 @@ export default function Admin() {
 
   return (
     <Layout>
-      <Head><title>Admin Panel — Himq</title></Head>
+      <Head><title>Admin Panel — HIMQ</title></Head>
 
       {/* Toast */}
       <AnimatePresence>

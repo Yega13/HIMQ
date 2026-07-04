@@ -66,7 +66,7 @@ const FAQS = [
   },
   {
     q: 'Is Himq free to use?',
-    a: 'Yes — Himq is completely free during the SSS 2026 demo period. No credit card required. After the demo, individual student accounts will stay free, and we plan to introduce a small monthly fee (3,000 AMD/month) only for institution or school accounts.',
+    a: 'Yes — HIMQ is completely free during the SSS 2026 demo period. No credit card required. After the demo, individual student accounts will stay free, and we plan to introduce a small monthly fee (3,000 AMD/month) only for institution or school accounts.',
   },
   {
     q: 'How does the AI learning plan work?',
@@ -171,7 +171,7 @@ export default function AboutPage() {
   return (
     <Layout>
       <Head>
-        <title>About Us — Himq</title>
+        <title>About Us — HIMQ</title>
         <meta name="description" content="Himq was built in June 2026 by 3 students from Armenia who wanted to fix how young people find opportunities and learn new skills." />
       </Head>
 
