@@ -35,9 +35,17 @@ export interface AIMessage { role: 'user' | 'assistant'; content: string; }
 
 async function withClaude(messages: AIMessage[], role: AIRole, system: string): Promise<string> {
   if (!anthropic) throw new Error('ANTHROPIC_API_KEY not set');
-  const model = role === 'plan' ? 'claude-sonnet-4-6' : 'claude-haiku-4-5-20251001';
+  // Sonnet 5 for both discovery/teaching chat and plan generation — much
+  // stronger at lower-resource languages (Armenian/Russian) than Haiku.
+  // Thinking disabled to keep chat latency low and avoid the hidden reasoning
+  // eating into the max_tokens budget (which would truncate the reply).
+  const model = 'claude-sonnet-5';
   const res = await anthropic.messages.create({
-    model, max_tokens: role === 'plan' ? 2000 : 800, system, messages,
+    model,
+    max_tokens: role === 'plan' ? 2000 : 800,
+    thinking: { type: 'disabled' },
+    system,
+    messages,
   });
   const block = res.content[0];
   if (block.type !== 'text') throw new Error('Unexpected Claude response type');
