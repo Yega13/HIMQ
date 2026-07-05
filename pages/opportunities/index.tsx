@@ -5,7 +5,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import Head from 'next/head';
-import { Calendar, Globe, ExternalLink, Search, Bookmark, BookmarkCheck, ArrowUp, ChevronDown, Sparkles, Heart, ArrowUpDown } from 'lucide-react';
+import { Calendar, Globe, ExternalLink, Search, Bookmark, BookmarkCheck, ArrowUp, ChevronDown, Sparkles, Heart, ArrowUpDown, Plus } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
 import { supabase, getBrowserClient, IS_MOCK } from '@/lib/supabase';
@@ -185,9 +185,18 @@ export default function Opportunities({ events }: Props) {
     <Layout>
       <Head><title>Opportunities — HIMQ</title></Head>
       <div className="max-w-6xl mx-auto px-4 py-8">
-        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-[var(--text-primary)] mb-2 tracking-tight">{t('opportunities.title')}</h1>
-          <p className="text-sm text-[var(--text-secondary)]">{t('opportunities.subtitle')}</p>
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="mb-6 flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-[var(--text-primary)] mb-2 tracking-tight">{t('opportunities.title')}</h1>
+            <p className="text-sm text-[var(--text-secondary)]">{t('opportunities.subtitle')}</p>
+          </div>
+          <Link
+            href="/owner/submit-event"
+            className="flex-shrink-0 inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[var(--color-brand)] text-white text-sm font-semibold hover:bg-[var(--color-brand-hover)] transition-colors"
+          >
+            <Plus size={16} />
+            <span className="hidden sm:inline">{t('opportunities.submit_cta')}</span>
+          </Link>
         </motion.div>
 
         {/* Search + sort */}

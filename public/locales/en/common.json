@@ -171,9 +171,15 @@
                  "review_changes_hint":  "Want changes? Tell May (e.g. \"make it shorter\", \"add more on X\", \"focus on projects\").",
                  "review_changes_placeholder":  "What should May change?",
                  "review_update":  "Update plan",
-                 "review_error":  "Something went wrong. Please try again."
+                 "review_error":  "Something went wrong. Please try again.",
+                 "getting_to_know":  "Getting to know you",
+                 "continue":  "Continue",
+                 "n_answered":  "{{count}} answered",
+                 "back_to_dashboard":  "Back to Dashboard",
+                 "continue_learning":  "Continue learning →"
              },
     "opportunities":  {
+                          "submit_cta":  "Submit opportunity",
                           "title":  "Opportunities",
                           "subtitle":  "Real opportunities for students and young professionals in Armenia.",
                           "filter_all":  "All",

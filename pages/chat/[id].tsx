@@ -397,7 +397,7 @@ export default function ChatDetail({ id }: { id: string }) {
                 <span className="text-white text-xl font-extrabold">M</span>
               </div>
               <p className="text-xs font-semibold text-[var(--color-brand)] uppercase tracking-wider">May</p>
-              <p className="text-xs text-[var(--text-muted)] mt-0.5">Getting to know you — {chat?.title}</p>
+              <p className="text-xs text-[var(--text-muted)] mt-0.5">{t('chat.getting_to_know')} — {chat?.title}</p>
             </div>
 
             {/* Question card */}
@@ -479,7 +479,7 @@ export default function ChatDetail({ id }: { id: string }) {
                     disabled={selectedChoices.length === 0 || sending}
                     className="w-full py-3.5 rounded-2xl bg-[var(--color-brand)] text-white font-semibold text-sm hover:bg-[var(--color-brand-hover)] transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                   >
-                    {sending ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <>Continue <Send size={14} /></>}
+                    {sending ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <>{t('chat.continue')} <Send size={14} /></>}
                   </button>
                 </>
               ) : (
@@ -498,13 +498,13 @@ export default function ChatDetail({ id }: { id: string }) {
                     disabled={!input.trim() || sending}
                     className="w-full py-3.5 rounded-2xl bg-[var(--color-brand)] text-white font-semibold text-sm hover:bg-[var(--color-brand-hover)] transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                   >
-                    {sending ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <>Continue <Send size={14} /></>}
+                    {sending ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <>{t('chat.continue')} <Send size={14} /></>}
                   </button>
                 </>
               )}
               {answeredCount > 0 && (
                 <p className="text-center text-[11px] text-[var(--text-muted)] mt-3">
-                  {answeredCount} question{answeredCount !== 1 ? 's' : ''} answered
+                  {t('chat.n_answered', { count: answeredCount })}
                 </p>
               )}
             </div>
@@ -649,7 +649,7 @@ export default function ChatDetail({ id }: { id: string }) {
                 }}
                 className="w-full py-3 rounded-xl bg-[var(--color-brand)] text-white font-bold text-sm hover:opacity-90 transition-opacity"
               >
-                {celebration.isFinal ? 'Back to Dashboard' : 'Continue learning →'}
+                {celebration.isFinal ? t('chat.back_to_dashboard') : t('chat.continue_learning')}
               </button>
             </motion.div>
           </motion.div>

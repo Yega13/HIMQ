@@ -3,6 +3,7 @@ import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import Head from 'next/head';
 import Link from 'next/link';
 import Layout from '@/components/Layout';
+import Blocked from '@/components/Blocked';
 import { useState, useCallback, useEffect } from 'react';
 import { CheckCircle, XCircle, Trash2, RefreshCw, Calendar, ExternalLink } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -93,41 +94,39 @@ export default function Admin() {
 
   if (access !== 'ok') {
     return (
-      <Layout>
+      <>
         <Head><title>Admin — HIMQ</title></Head>
-        <div className="max-w-sm mx-auto px-4 py-20 text-center">
-          {access === 'checking' && (
-            <div className="w-6 h-6 border-2 border-[var(--color-brand)] border-t-transparent rounded-full animate-spin mx-auto" />
-          )}
-          {access === 'anon' && (
-            <>
-              <h1 className="text-xl font-bold text-[var(--text-primary)] mb-3">Admin</h1>
-              <p className="text-sm text-[var(--text-secondary)] mb-6">Sign in with an admin account to continue.</p>
+        {access === 'checking' && (
+          <div className="min-h-screen bg-[var(--bg-primary)] flex items-center justify-center">
+            <div className="w-6 h-6 border-2 border-[var(--color-brand)] border-t-transparent rounded-full animate-spin" />
+          </div>
+        )}
+        {access === 'anon' && (
+          <Blocked
+            title="Admin"
+            message="Sign in with an admin account to continue."
+            action={
               <Link href="/auth?next=/admin" className="inline-block px-5 py-3 rounded-xl bg-[var(--color-brand)] text-white font-semibold text-sm">
                 Sign in
               </Link>
-            </>
-          )}
-          {access === 'forbidden' && (
-            <>
-              <h1 className="text-xl font-bold text-[var(--text-primary)] mb-3">Not authorized</h1>
-              <p className="text-sm text-[var(--text-secondary)]">Your account doesn&apos;t have admin access.</p>
-            </>
-          )}
-          {access === 'error' && (
-            <>
-              <h1 className="text-xl font-bold text-[var(--text-primary)] mb-3">Couldn&apos;t load</h1>
-              <p className="text-sm text-[var(--text-secondary)] mb-6">Something went wrong. Please try again.</p>
-              <button
-                onClick={() => window.location.reload()}
-                className="inline-block px-5 py-3 rounded-xl bg-[var(--color-brand)] text-white font-semibold text-sm"
-              >
+            }
+          />
+        )}
+        {access === 'forbidden' && (
+          <Blocked title="Not authorized" message="Your account doesn't have admin access." />
+        )}
+        {access === 'error' && (
+          <Blocked
+            title="Couldn't load"
+            message="Something went wrong. Please try again."
+            action={
+              <button onClick={() => window.location.reload()} className="inline-block px-5 py-3 rounded-xl bg-[var(--color-brand)] text-white font-semibold text-sm">
                 Retry
               </button>
-            </>
-          )}
-        </div>
-      </Layout>
+            }
+          />
+        )}
+      </>
     );
   }
 

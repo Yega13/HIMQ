@@ -35,6 +35,7 @@ interface Profile {
   streak_days: number;
   full_name: string | null;
   goal: string | null;
+  lessons_completed?: number;
 }
 
 interface Chat {
@@ -86,7 +87,7 @@ export default function Dashboard() {
     async function load() {
       const supabase = getBrowserClient();
       const [{ data: profileData }, { data: chatsData }] = await Promise.all([
-        supabase.from('profiles').select('xp, streak_days, full_name, goal').eq('id', user!.id).single(),
+        supabase.from('profiles').select('xp, streak_days, full_name, goal, lessons_completed').eq('id', user!.id).single(),
         supabase
           .from('chats')
           .select('id, title, current_lesson_index, total_lessons, updated_at')
@@ -133,7 +134,7 @@ export default function Dashboard() {
 
   const xp = profile?.xp ?? 0;
   const streakDays = profile?.streak_days ?? 0;
-  const lessonsCompleted = chats.reduce((sum, c) => sum + (c.current_lesson_index ?? 0), 0);
+  const lessonsCompleted = profile?.lessons_completed ?? 0;
 
   // Reward progress toward next discount milestone
   const nextMilestone = Math.max(REWARD_STEP, Math.ceil((xp + 1) / REWARD_STEP) * REWARD_STEP);
