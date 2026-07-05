@@ -40,12 +40,24 @@ async function withClaude(messages: AIMessage[], role: AIRole, system: string): 
   // Thinking disabled to keep chat latency low and avoid the hidden reasoning
   // eating into the max_tokens budget (which would truncate the reply).
   const model = 'claude-sonnet-5';
+
+  // Prompt caching: mark the last message as a cache breakpoint. The API caches
+  // everything before it (system prompt + prior conversation) and, on the next
+  // turn within ~5 min, reads that prefix at ~10% of the input price instead of
+  // re-billing it in full. Caching is transparent — if a prefix is too short or
+  // the cache expired, it simply costs the normal price; responses are identical.
+  const apiMessages: Anthropic.MessageParam[] = messages.map((m, i) =>
+    i === messages.length - 1
+      ? { role: m.role, content: [{ type: 'text' as const, text: m.content, cache_control: { type: 'ephemeral' as const } }] }
+      : { role: m.role, content: m.content }
+  );
+
   const res = await anthropic.messages.create({
     model,
     max_tokens: role === 'plan' ? 2000 : 800,
     thinking: { type: 'disabled' },
     system,
-    messages,
+    messages: apiMessages,
   });
   const block = res.content[0];
   if (block.type !== 'text') throw new Error('Unexpected Claude response type');

@@ -238,7 +238,8 @@ export default function ChatDetail({ id }: { id: string }) {
         setLessons(newLessons);
         setPlanFeedback('');
       } else {
-        setReviewError(t('chat.review_error') as string);
+        const data = await res.json().catch(() => ({}));
+        setReviewError(data.error ?? (t('chat.review_error') as string));
       }
     } finally {
       setRegenerating(false);

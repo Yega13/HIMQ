@@ -48,6 +48,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(400).json({ error: 'Plan already started' });
   }
 
+  // Rate-limit "Update plan" (feedback regenerations) to 5/day. The initial
+  // plan (no feedback) is free; only revisions count so they can't be spammed.
+  if (feedback?.trim()) {
+    const { data: quota, error: quotaErr } = await admin
+      .rpc('consume_plan_update', { p_user_id: user.id, p_limit: 5 });
+    if (quotaErr) {
+      console.error('Plan-update rate-limit RPC failed:', quotaErr);
+      return res.status(503).json({ error: 'Service temporarily unavailable. Please try again.' });
+    }
+    if (!quota?.allowed) {
+      return res.status(429).json({ error: "You've reached today's limit of 5 plan updates. Try again tomorrow." });
+    }
+  }
+
   // Load full conversation
   const { data: messages } = await admin
     .from('messages')
