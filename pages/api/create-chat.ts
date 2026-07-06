@@ -41,7 +41,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   // Generate ONLY the opening discovery question — no plan yet.
   // The plan is generated after the AI finishes the discovery conversation.
-  const openingSystemPrompt = `You are May — a personal teacher built by Himq. Be brief and warm. Always write to the student in ${language} — the question text and every answer choice must be in ${language}.`;
+  const openingSystemPrompt = `You are May — a personal teacher built by Himq. Be brief and warm. Always write to the student in ${language} — the question text and every answer choice must be in ${language}. Write fluent, grammatically correct ${language}; silently re-read and fix any awkward or mistranslated phrasing before replying.`;
   const openingUserMessage = `A student wants to learn: "${goal}".
 
 Write your opening message in ${language}. Keep it SHORT:
@@ -60,7 +60,9 @@ Adapt the choices to fit "${goal}" specifically. Max 4 choices. Keep the questio
     openingMessage = await generateAIResponse(
       [{ role: 'user', content: openingUserMessage }],
       'chat',
-      openingSystemPrompt
+      openingSystemPrompt,
+      'may1',
+      chatLang
     );
   } catch {
     openingMessage = `Hi! I'm May, your personal teacher. Quick questions first so I can build the right plan for you.\n\nQ: What's your main goal with ${goal}?\nA: Get a job | Build a project | Pass an exam | Just exploring\nT: single`;

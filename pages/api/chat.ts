@@ -71,7 +71,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const systemPrompt = isDiscovering
     ? `You are May — a personal teacher built by Himq.
 
-Always write every message — questions and answer choices — to the student in ${language}.
+Always write every message — questions and answer choices — to the student in ${language}. Write fluent, grammatically correct ${language}; silently re-read and fix any awkward or mistranslated phrasing before replying.
 
 Student goal: "${chat.title}"
 
@@ -94,7 +94,7 @@ Then, on its own final line, output this EXACT token and nothing after it:
 <<<PLAN_READY>>>`
     : `You are May — an expert personal teacher built by Himq. Your name is May (short for May-1). If anyone asks your name, say "I'm May." Never call yourself "Himq AI" or any other name.
 
-Always write every message to the student in ${language}.
+Always write every message to the student in ${language}. Write fluent, grammatically correct ${language}; silently re-read and fix any awkward or mistranslated phrasing before replying.
 
 Topic: ${chat.title}
 Current lesson (${chat.current_lesson_index + 1}/${chat.total_lessons}): "${currentLesson?.title ?? ''}" — ${currentLesson?.description ?? ''}
@@ -125,7 +125,7 @@ You know this student well from your discovery conversation — make every respo
     lesson_index: chat.current_lesson_index,
   });
 
-  const rawReply = await generateAIResponse(aiMessages, 'chat', systemPrompt, modelId);
+  const rawReply = await generateAIResponse(aiMessages, 'chat', systemPrompt, modelId, chat.plan?.lang);
 
   // Detect the machine signal that discovery is complete, then strip it so the
   // student never sees the token. Language-independent (no prose matching).

@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Layout from '@/components/Layout';
 import Blocked from '@/components/Blocked';
 import { useState, useCallback, useEffect } from 'react';
-import { CheckCircle, XCircle, Trash2, RefreshCw, Calendar, ExternalLink } from 'lucide-react';
+import { CheckCircle, XCircle, Trash2, RefreshCw, Calendar, ExternalLink, ShieldOff, LogIn, AlertTriangle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getBrowserClient } from '@/lib/supabase';
 
@@ -103,6 +103,7 @@ export default function Admin() {
         )}
         {access === 'anon' && (
           <Blocked
+            icon={<LogIn size={26} />}
             title="Admin"
             message="Sign in with an admin account to continue."
             action={
@@ -113,10 +114,15 @@ export default function Admin() {
           />
         )}
         {access === 'forbidden' && (
-          <Blocked title="Not authorized" message="Your account doesn't have admin access." />
+          <Blocked
+            icon={<ShieldOff size={26} />}
+            title="Not authorized"
+            message="Your account doesn't have admin access. If you think this is a mistake, contact the team."
+          />
         )}
         {access === 'error' && (
           <Blocked
+            icon={<AlertTriangle size={26} />}
             title="Couldn't load"
             message="Something went wrong. Please try again."
             action={

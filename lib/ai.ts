@@ -33,13 +33,16 @@ if (!anthropic && !gemini) {
 export type AIRole = 'plan' | 'chat';
 export interface AIMessage { role: 'user' | 'assistant'; content: string; }
 
-async function withClaude(messages: AIMessage[], role: AIRole, system: string): Promise<string> {
+async function withClaude(messages: AIMessage[], role: AIRole, system: string, lang?: string): Promise<string> {
   if (!anthropic) throw new Error('ANTHROPIC_API_KEY not set');
-  // Sonnet 5 for both discovery/teaching chat and plan generation — much
-  // stronger at lower-resource languages (Armenian/Russian) than Haiku.
-  // Thinking disabled to keep chat latency low and avoid the hidden reasoning
-  // eating into the max_tokens budget (which would truncate the reply).
-  const model = 'claude-sonnet-5';
+  // Model routing to balance cost and quality:
+  // - Plan generation: always Sonnet 5 (once per path, quality-critical).
+  // - Chat in English: Haiku 4.5 (plenty good, ~3x cheaper).
+  // - Chat in Armenian/Russian: Sonnet 5 (Haiku's low-resource-language quality
+  //   is poor). Default non-'en' to Sonnet to be safe on quality.
+  const model = role === 'plan'
+    ? 'claude-sonnet-5'
+    : (lang === 'en' ? 'claude-haiku-4-5' : 'claude-sonnet-5');
 
   // Prompt caching: mark the last message as a cache breakpoint. The API caches
   // everything before it (system prompt + prior conversation) and, on the next
@@ -55,7 +58,10 @@ async function withClaude(messages: AIMessage[], role: AIRole, system: string): 
   const res = await anthropic.messages.create({
     model,
     max_tokens: role === 'plan' ? 2000 : 800,
-    thinking: { type: 'disabled' },
+    // Sonnet 5 runs adaptive thinking by default; disable it to keep chat fast
+    // and stop hidden reasoning from eating the max_tokens budget. Haiku takes
+    // no thinking param.
+    ...(model === 'claude-sonnet-5' ? { thinking: { type: 'disabled' as const } } : {}),
     system,
     messages: apiMessages,
   });
@@ -97,14 +103,15 @@ export async function generateAIResponse(
   messages: AIMessage[],
   role: AIRole,
   system: string,
-  modelId: ModelId = 'may1'
+  modelId: ModelId = 'may1',
+  lang?: string
 ): Promise<string> {
   if (messages.length === 0) return 'AI is temporarily unavailable. Please try again.';
 
   if (modelId === 'may1') {
-    // May-1: Claude primary, Gemini fallback
+    // May-1: Claude primary (Haiku for EN chat, Sonnet otherwise), Gemini fallback
     if (anthropic) {
-      try { return await withClaude(messages, role, system); }
+      try { return await withClaude(messages, role, system, lang); }
       catch (e) { console.error('[May-1] Claude failed, falling back to Gemini:', e); }
     }
     if (gemini) {
@@ -118,7 +125,7 @@ export async function generateAIResponse(
       catch (e) { console.error('[Gemini] failed, falling back to May-1:', e); }
     }
     if (anthropic) {
-      try { return await withClaude(messages, role, system); }
+      try { return await withClaude(messages, role, system, lang); }
       catch (e) { console.error('[Gemini fallback] May-1 also failed:', e); }
     }
   }
