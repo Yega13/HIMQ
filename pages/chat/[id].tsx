@@ -187,7 +187,11 @@ export default function ChatDetail({ id }: { id: string }) {
       }
     } catch (err) {
       setMessages((prev) => prev.filter((m) => m.id !== tempId));
-      setInput(userMsg);
+      // Only a plain free-text send owns `input`; restore it so the student can
+      // retry. For a choice/combined send, `selectedChoices` (and any typed text
+      // in `input`) are left intact for retry — restoring the *combined* string
+      // here would double-count the choice on the next Continue click.
+      if (!overrideMsg) setInput(userMsg);
       setSendError(err instanceof Error ? err.message : 'Failed to send — please try again');
     } finally {
       setSending(false);
