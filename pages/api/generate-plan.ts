@@ -48,9 +48,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(400).json({ error: 'Plan already started' });
   }
 
-  // Rate-limit "Update plan" (feedback regenerations) to 5/day. The initial
-  // plan (no feedback) is free; only revisions count so they can't be spammed.
-  if (feedback?.trim()) {
+  // Rate-limit plan REGENERATIONS to 5/day. The first plan (total_lessons still
+  // 0) is free; any subsequent call — with or without feedback — means a plan
+  // already exists, so it's a regeneration and counts against the cap. (Gating
+  // on `feedback` alone was bypassable by re-calling with no feedback.)
+  if ((chat.total_lessons ?? 0) > 0) {
     const { data: quota, error: quotaErr } = await admin
       .rpc('consume_plan_update', { p_user_id: user.id, p_limit: 5 });
     if (quotaErr) {
