@@ -175,6 +175,8 @@
                  "getting_to_know":  "Знакомимся с тобой",
                  "continue":  "Продолжить",
                  "n_answered":  "Отвечено: {{count}}",
+                 "or_type_own":  "или напиши свой ответ",
+                 "type_your_answer":  "Напиши свой ответ…",
                  "back_to_dashboard":  "На панель",
                  "continue_learning":  "Продолжить обучение →",
                  "building_title":  "Строим твой персональный план…",

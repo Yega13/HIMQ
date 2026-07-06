@@ -158,8 +158,9 @@ export default function ChatDetail({ id }: { id: string }) {
         content: reply,
         created_at: new Date().toISOString(),
       }]);
-      // New question is now shown → clear the previous selection.
+      // New question is now shown → clear the previous selection and any typed answer.
       setSelectedChoices([]);
+      setInput('');
 
       // Server signals (language-independent) that discovery is done → build plan
       if (lessons.length === 0 && planReady) {
@@ -478,9 +479,30 @@ export default function ChatDetail({ id }: { id: string }) {
                       })}
                     </div>
                   )}
+                  {/* Never trap the student in the AI's choices — always let them
+                      answer in their own words instead of (or alongside) a pick. */}
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="flex-1 h-px bg-[var(--border)]" />
+                    <span className="text-[11px] text-[var(--text-muted)] uppercase tracking-wider">{t('chat.or_type_own')}</span>
+                    <div className="flex-1 h-px bg-[var(--border)]" />
+                  </div>
+                  <input
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        const combined = [...selectedChoices, input.trim()].filter(Boolean).join(', ');
+                        if (combined) sendMessage(combined);
+                      }
+                    }}
+                    placeholder={t('chat.type_your_answer') ?? ''}
+                    disabled={sending}
+                    className="w-full px-5 py-3.5 rounded-2xl border border-[var(--border)] bg-[var(--bg-card)] text-[var(--text-primary)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-brand)] transition placeholder-[var(--text-muted)] mb-4"
+                  />
                   <button
-                    onClick={() => sendMessage(selectedChoices.join(', '))}
-                    disabled={selectedChoices.length === 0 || sending}
+                    onClick={() => sendMessage([...selectedChoices, input.trim()].filter(Boolean).join(', '))}
+                    disabled={(selectedChoices.length === 0 && !input.trim()) || sending}
                     className="w-full py-3.5 rounded-2xl bg-[var(--color-brand)] text-white font-semibold text-sm hover:bg-[var(--color-brand-hover)] transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                   >
                     {sending ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <>{t('chat.continue')} <Send size={14} /></>}
