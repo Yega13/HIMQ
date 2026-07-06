@@ -176,7 +176,9 @@
                  "continue":  "Continue",
                  "n_answered":  "{{count}} answered",
                  "back_to_dashboard":  "Back to Dashboard",
-                 "continue_learning":  "Continue learning →"
+                 "continue_learning":  "Continue learning →",
+                 "building_title":  "Building your personalized plan…",
+                 "building_sub":  "May is designing a path based on everything you shared."
              },
     "opportunities":  {
                           "submit_cta":  "Submit opportunity",

@@ -48,7 +48,7 @@ Write your opening message in ${language}. Keep it SHORT:
 - 1 warm sentence introducing yourself as May and saying you'll ask a few quick questions to build the right plan.
 - Then ask their main goal with "${goal}".
 
-Format the question using this EXACT structure. Keep the "Q:", "A:", "T:" labels in English, but write the question text and EVERY answer choice in ${language}:
+Format the question using this EXACT structure. Put Q:, A: and T: EACH on its own separate line, and ALWAYS include the T: line. Keep the "Q:", "A:", "T:" labels in English, but write the question text and EVERY answer choice in ${language}:
 Q: <short question, in ${language}>
 A: <choice 1 in ${language}> | <choice 2 in ${language}> | <choice 3 in ${language}> | <choice 4 in ${language}>
 T: single

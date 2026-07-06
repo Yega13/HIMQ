@@ -104,12 +104,16 @@ export default function ChatDetail({ id }: { id: string }) {
   }, [messages]);
 
   function parseQuestion(content: string) {
-    const m = content.match(/^([\s\S]*?)Q:\s*(.+?)\nA:\s*(.+?)\nT:\s*(single|multiple)\s*$/m);
+    // Tolerant parse: the AI sometimes puts Q:/A:/T: inline (no newlines) or
+    // omits the T: line — especially in non-English. Accept any whitespace
+    // between labels and treat T: as optional (default single). This keeps the
+    // raw "Q:/A:" markers from ever leaking into the rendered message.
+    const m = content.match(/^([\s\S]*?)Q:\s*([\s\S]+?)\s*A:\s*([\s\S]+?)(?:\s*T:\s*(single|multiple))?\s*$/i);
     if (m) return {
       preamble: m[1].trim(),
       text: m[2].trim(),
       choices: m[3].split('|').map((c) => c.trim()).filter(Boolean),
-      type: m[4] as 'single' | 'multiple',
+      type: (m[4]?.toLowerCase() === 'multiple' ? 'multiple' : 'single') as 'single' | 'multiple',
     };
     return { preamble: '', text: content.replace(/^Q:\s*/i, '').trim(), choices: undefined, type: 'text' as const };
   }
@@ -369,8 +373,8 @@ export default function ChatDetail({ id }: { id: string }) {
             <div className="w-16 h-16 rounded-2xl bg-[var(--color-brand)] flex items-center justify-center mx-auto mb-6">
               <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
             </div>
-            <h2 className="text-xl font-bold text-[var(--text-primary)] mb-2">Building your personalized plan…</h2>
-            <p className="text-sm text-[var(--text-muted)]">May is designing a path based on everything you shared.</p>
+            <h2 className="text-xl font-bold text-[var(--text-primary)] mb-2">{t('chat.building_title')}</h2>
+            <p className="text-sm text-[var(--text-muted)]">{t('chat.building_sub')}</p>
           </motion.div>
         </div>
       </Layout>

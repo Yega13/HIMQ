@@ -176,7 +176,9 @@
                  "continue":  "Շարունակել",
                  "n_answered":  "Պատասխանված՝ {{count}}",
                  "back_to_dashboard":  "Վերադառնալ վահանակ",
-                 "continue_learning":  "Շարունակել ուսումը →"
+                 "continue_learning":  "Շարունակել ուսումը →",
+                 "building_title":  "Կառուցում ենք քո անհատական ծրագիրը…",
+                 "building_sub":  "May-ը կառուցում է ուղի՝ ելնելով այն ամենից, ինչ կիսվեցիր։"
              },
     "opportunities":  {
                           "submit_cta":  "Ավելացնել հնարավորություն",
