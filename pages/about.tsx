@@ -87,14 +87,19 @@ function FaqItem({ q, a, index }: { q: string; a: string; index: number }) {
 export default function AboutPage() {
   const { t } = useTranslation('about');
   const statLabelKeys = ['stat_founders', 'stat_launched', 'stat_start', 'stat_free'];
-  const what = t('what', { returnObjects: true }) as { title: string; desc: string }[];
-  const faqs = t('faqs', { returnObjects: true }) as { q: string; a: string }[];
-  const marquee = t('marquee', { returnObjects: true }) as string[];
-  const marqueeItems: ThreeDMarqueeItem[] = Array.from({ length: 32 }, (_, i) =>
-    i % 2 === 0
-      ? { type: 'logo' as const }
-      : { type: 'cta' as const, desc: marquee[Math.floor(i / 2) % marquee.length] }
-  );
+  // returnObjects gives back the raw key string if the namespace/key is missing;
+  // guard so a missing translation can never crash the page.
+  const asArray = <T,>(v: unknown): T[] => (Array.isArray(v) ? (v as T[]) : []);
+  const what = asArray<{ title: string; desc: string }>(t('what', { returnObjects: true }));
+  const faqs = asArray<{ q: string; a: string }>(t('faqs', { returnObjects: true }));
+  const marquee = asArray<string>(t('marquee', { returnObjects: true }));
+  const marqueeItems: ThreeDMarqueeItem[] = marquee.length === 0
+    ? [{ type: 'logo' as const }]
+    : Array.from({ length: 32 }, (_, i) =>
+        i % 2 === 0
+          ? { type: 'logo' as const }
+          : { type: 'cta' as const, desc: marquee[Math.floor(i / 2) % marquee.length] }
+      );
 
   return (
     <Layout>
