@@ -180,7 +180,10 @@
                  "back_to_dashboard":  "Back to Dashboard",
                  "continue_learning":  "Continue learning →",
                  "building_title":  "Building your personalized plan…",
-                 "building_sub":  "May is designing a path based on everything you shared."
+                 "building_sub":  "May is designing a path based on everything you shared.",
+                 "diff_easy":  "Easy",
+                 "diff_medium":  "Medium",
+                 "diff_hard":  "Hard"
              },
     "opportunities":  {
                           "submit_cta":  "Submit opportunity",

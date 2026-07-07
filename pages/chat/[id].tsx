@@ -5,7 +5,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, CheckCircle, Circle, Lock, ChevronLeft, BookOpen, Zap, Flame, ChevronDown } from 'lucide-react';
+import { Send, CheckCircle, Circle, Lock, ChevronLeft, BookOpen, Zap, Flame, ChevronDown, Sparkles } from 'lucide-react';
 import { MODELS, DEFAULT_MODEL, type ModelId } from '@/lib/models';
 import Layout from '@/components/Layout';
 import { useUser } from '@/lib/useUser';
@@ -17,6 +17,7 @@ interface Lesson {
   lesson_index: number;
   title: string;
   description: string;
+  difficulty?: number;
   status: 'locked' | 'active' | 'completed';
 }
 
@@ -33,7 +34,10 @@ interface Chat {
   current_lesson_index: number;
   total_lessons: number;
   status: string;
-  plan?: { teaching_started_at?: string; approved?: boolean; lang?: string; welcome?: string };
+  plan?: {
+    teaching_started_at?: string; approved?: boolean; lang?: string; welcome?: string;
+    lessons?: { index: number; title?: string; why?: string; difficulty?: number }[];
+  };
 }
 
 export default function ChatDetail({ id }: { id: string }) {
@@ -568,17 +572,32 @@ export default function ChatDetail({ id }: { id: string }) {
             </div>
 
             <div className="w-full max-w-lg space-y-2 mb-6">
-              {lessons.map((l, i) => (
-                <div key={l.id} className="bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl px-5 py-4">
-                  <div className="flex items-start gap-3">
-                    <span className="flex-shrink-0 w-6 h-6 rounded-full bg-[var(--color-brand)]/10 text-[var(--color-brand)] text-xs font-bold flex items-center justify-center mt-0.5">{i + 1}</span>
-                    <div>
-                      <p className="text-sm font-semibold text-[var(--text-primary)]">{l.title}</p>
-                      {l.description && <p className="text-xs text-[var(--text-secondary)] mt-1 leading-relaxed">{l.description}</p>}
+              {lessons.map((l, i) => {
+                const why = chat?.plan?.lessons?.[i]?.why;
+                const n = l.difficulty && l.difficulty >= 1 && l.difficulty <= 5 ? l.difficulty : 3;
+                const xp = [20, 35, 50, 70, 100][n - 1];
+                const dLabel = t(n <= 2 ? 'chat.diff_easy' : n === 3 ? 'chat.diff_medium' : 'chat.diff_hard');
+                return (
+                  <div key={l.id} className="bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl px-5 py-4">
+                    <div className="flex items-start gap-3">
+                      <span className="flex-shrink-0 w-6 h-6 rounded-full bg-[var(--color-brand)]/10 text-[var(--color-brand)] text-xs font-bold flex items-center justify-center mt-0.5">{i + 1}</span>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-start justify-between gap-3">
+                          <p className="text-sm font-semibold text-[var(--text-primary)]">{l.title}</p>
+                          <span className="flex-shrink-0 text-[10px] font-medium text-[var(--text-muted)] whitespace-nowrap mt-0.5">{dLabel} · +{xp} XP</span>
+                        </div>
+                        {l.description && <p className="text-xs text-[var(--text-secondary)] mt-1 leading-relaxed">{l.description}</p>}
+                        {why && (
+                          <p className="text-[11px] text-[var(--text-muted)] mt-1.5 flex items-start gap-1 leading-relaxed">
+                            <Sparkles size={11} className="flex-shrink-0 mt-0.5 text-[var(--color-brand)] opacity-70" />
+                            <span className="italic">{why}</span>
+                          </p>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             <div className="w-full max-w-lg">

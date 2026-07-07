@@ -180,7 +180,10 @@
                  "back_to_dashboard":  "На панель",
                  "continue_learning":  "Продолжить обучение →",
                  "building_title":  "Строим твой персональный план…",
-                 "building_sub":  "May создаёт путь на основе всего, что ты рассказал."
+                 "building_sub":  "May создаёт путь на основе всего, что ты рассказал.",
+                 "diff_easy":  "Легко",
+                 "diff_medium":  "Средне",
+                 "diff_hard":  "Сложно"
              },
     "opportunities":  {
                           "submit_cta":  "Добавить возможность",
