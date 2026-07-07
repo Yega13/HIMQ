@@ -47,6 +47,7 @@ export default function Navbar() {
   const NAV_LINKS = [
     { href: '/dashboard',     label: t('nav.dashboard') },
     { href: '/chat',          label: t('nav.learn') },
+    { href: '/labs',          label: t('nav.labs') },
     { href: '/opportunities', label: t('nav.opportunities') },
     { href: '/about',         label: t('nav.about') },
     { href: '/leaderboard',   label: t('nav.leaderboard') },
