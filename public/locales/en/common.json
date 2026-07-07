@@ -185,7 +185,8 @@
                  "diff_easy":  "Easy",
                  "diff_medium":  "Medium",
                  "diff_hard":  "Hard",
-                 "ready_hint":  "May thinks you're ready — mark it complete ✓"
+                 "ready_hint":  "May thinks you're ready — mark it complete ✓",
+                 "practice_in_lab":  "Practice in the Lab"
              },
     "opportunities":  {
                           "submit_cta":  "Submit opportunity",

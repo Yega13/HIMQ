@@ -11,6 +11,7 @@ import Layout from '@/components/Layout';
 import { useUser } from '@/lib/useUser';
 import { getBrowserClient, IS_MOCK } from '@/lib/supabase';
 import { cn } from '@/lib/utils';
+import { matchLab } from '@/lib/labs';
 
 interface Lesson {
   id: string;
@@ -385,6 +386,11 @@ export default function ChatDetail({ id }: { id: string }) {
   const planApproved = !!(chat?.plan?.approved || chat?.plan?.teaching_started_at);
   const isReviewing = !isDiscovering && !planApproved;
   const allDone = !isDiscovering && chat ? chat.current_lesson_index >= chat.total_lessons && chat.total_lessons > 0 : false;
+  // If the topic/current lesson matches a live Practice Lab, offer it in-lesson.
+  const currentLesson = lessons.find((l) => l.lesson_index === chat?.current_lesson_index);
+  const practiceLabId = (!isDiscovering && planApproved)
+    ? matchLab(`${chat?.title ?? ''} ${currentLesson?.title ?? ''}`)
+    : null;
   const teachingCutoff = chat?.plan?.teaching_started_at;
   const visibleMessages = teachingCutoff
     ? messages.filter((m) => m.created_at >= teachingCutoff)
@@ -818,6 +824,14 @@ export default function ChatDetail({ id }: { id: string }) {
 
           {!allDone && !isDiscovering && (
             <div className="p-3 border-t border-[var(--border)]">
+              {practiceLabId && (
+                <Link
+                  href={`/labs/${practiceLabId}`}
+                  className="w-full mb-2 py-2.5 rounded-xl border border-[var(--color-brand)] text-[var(--color-brand)] text-xs font-semibold hover:bg-[var(--color-brand)]/10 transition-colors flex items-center justify-center gap-1.5"
+                >
+                  🧪 {t('chat.practice_in_lab')}
+                </Link>
+              )}
               {readyToComplete && (
                 <p className="text-[11px] text-[var(--color-green)] font-medium text-center mb-2">{t('chat.ready_hint')}</p>
               )}
