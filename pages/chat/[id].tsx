@@ -21,6 +21,15 @@ interface Lesson {
   status: 'locked' | 'active' | 'completed';
 }
 
+// XP per lesson difficulty (1..5). MUST match the mapping in complete_lesson()
+// (db/migrations/2026-07-07_lesson_difficulty_xp.sql). The server is always
+// authoritative for the real grant; this is for display + mock mode only.
+const XP_BY_DIFFICULTY = [20, 35, 50, 70, 100];
+function xpForDifficulty(d?: number): number {
+  const n = d && d >= 1 && d <= 5 ? Math.round(d) : 3;
+  return XP_BY_DIFFICULTY[n - 1];
+}
+
 interface Message {
   id: string;
   role: 'user' | 'assistant';
@@ -274,7 +283,9 @@ export default function ChatDetail({ id }: { id: string }) {
     const nextLesson = lessons.find((l) => l.lesson_index === nextIndex) ?? null;
 
     let newStreak: number;
-    let xpGained = 50;
+    // Default/mock XP scales with the completed lesson's difficulty; real mode
+    // overwrites this with the server-authoritative value from the RPC.
+    let xpGained = xpForDifficulty(completedLesson?.difficulty);
 
     try {
       if (IS_MOCK) {
@@ -296,7 +307,7 @@ export default function ChatDetail({ id }: { id: string }) {
           supabase.from('chats')
             .update({ current_lesson_index: nextIndex, status: isFinal ? 'completed' : 'active' }).eq('id', id),
           supabase.from('profiles')
-            .update({ xp: (profileData?.xp ?? 0) + 50, streak_days: newStreak, last_active_date: today }).eq('id', user.id),
+            .update({ xp: (profileData?.xp ?? 0) + xpGained, streak_days: newStreak, last_active_date: today }).eq('id', user.id),
         ]);
       } else {
         // Real mode: XP/streak are server-authoritative (browser can't write them).
@@ -573,9 +584,11 @@ export default function ChatDetail({ id }: { id: string }) {
 
             <div className="w-full max-w-lg space-y-2 mb-6">
               {lessons.map((l, i) => {
-                const why = chat?.plan?.lessons?.[i]?.why;
+                // Match the rationale by lesson index, not array position, in case
+                // the plan JSON ever comes back out of order.
+                const why = chat?.plan?.lessons?.find((pl) => pl.index === l.lesson_index)?.why;
                 const n = l.difficulty && l.difficulty >= 1 && l.difficulty <= 5 ? l.difficulty : 3;
-                const xp = [20, 35, 50, 70, 100][n - 1];
+                const xp = xpForDifficulty(n);
                 const dLabel = t(n <= 2 ? 'chat.diff_easy' : n === 3 ? 'chat.diff_medium' : 'chat.diff_hard');
                 return (
                   <div key={l.id} className="bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl px-5 py-4">
