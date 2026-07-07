@@ -121,13 +121,16 @@ export default function ChatDetail({ id }: { id: string }) {
     // omits the T: line — especially in non-English. Accept any whitespace
     // between labels and treat T: as optional (default single). This keeps the
     // raw "Q:/A:" markers from ever leaking into the rendered message.
-    const m = content.match(/^([\s\S]*?)Q:\s*([\s\S]+?)\s*A:\s*([\s\S]+?)(?:\s*T:\s*(single|multiple))?\s*$/i);
-    if (m) return {
-      preamble: m[1].trim(),
-      text: m[2].trim(),
-      choices: m[3].split('|').map((c) => c.trim()).filter(Boolean),
-      type: (m[4]?.toLowerCase() === 'multiple' ? 'multiple' : 'single') as 'single' | 'multiple',
-    };
+    const m = content.match(/^([\s\S]*?)Q:\s*([\s\S]+?)\s*A:\s*([\s\S]+?)(?:\s*T:\s*(single|multiple|open))?\s*$/i);
+    if (m) {
+      const tRaw = m[4]?.toLowerCase();
+      return {
+        preamble: m[1].trim(),
+        text: m[2].trim(),
+        choices: m[3].split('|').map((c) => c.trim()).filter(Boolean),
+        type: (tRaw === 'multiple' ? 'multiple' : tRaw === 'open' ? 'open' : 'single') as 'single' | 'multiple' | 'open',
+      };
+    }
     return { preamble: '', text: content.replace(/^Q:\s*/i, '').trim(), choices: undefined, type: 'text' as const };
   }
 
@@ -447,8 +450,8 @@ export default function ChatDetail({ id }: { id: string }) {
             <div className="w-full max-w-lg">
               {parsed.choices ? (
                 <>
-                  {/* Single-select */}
-                  {parsed.type === 'single' && (
+                  {/* Single-select — also the picker for 'open' (suggestions) */}
+                  {(parsed.type === 'single' || parsed.type === 'open') && (
                     <div className="grid grid-cols-1 gap-2 mb-4">
                       {parsed.choices.map((choice) => (
                         <button
@@ -498,30 +501,43 @@ export default function ChatDetail({ id }: { id: string }) {
                       })}
                     </div>
                   )}
-                  {/* Never trap the student in the AI's choices — always let them
-                      answer in their own words instead of (or alongside) a pick. */}
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="flex-1 h-px bg-[var(--border)]" />
-                    <span className="text-[11px] text-[var(--text-muted)] uppercase tracking-wider">{t('chat.or_type_own')}</span>
-                    <div className="flex-1 h-px bg-[var(--border)]" />
-                  </div>
-                  <input
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        const combined = [...selectedChoices, input.trim()].filter(Boolean).join(', ');
-                        if (combined) sendMessage(combined);
-                      }
-                    }}
-                    placeholder={t('chat.type_your_answer') ?? ''}
-                    disabled={sending}
-                    className="w-full px-5 py-3.5 rounded-2xl border border-[var(--border)] bg-[var(--bg-card)] text-[var(--text-primary)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-brand)] transition placeholder-[var(--text-muted)] mb-4"
-                  />
+                  {/* Free-text box ONLY for 'open' questions, where the choices are
+                      just suggestions and the student may have their own answer.
+                      Exhaustive single/multiple questions don't get an input. */}
+                  {parsed.type === 'open' && (
+                    <>
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="flex-1 h-px bg-[var(--border)]" />
+                        <span className="text-[11px] text-[var(--text-muted)] uppercase tracking-wider">{t('chat.or_type_own')}</span>
+                        <div className="flex-1 h-px bg-[var(--border)]" />
+                      </div>
+                      <input
+                        value={input}
+                        onChange={(e) => setInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            const combined = [...selectedChoices, input.trim()].filter(Boolean).join(', ');
+                            if (combined) sendMessage(combined);
+                          }
+                        }}
+                        placeholder={t('chat.type_your_answer') ?? ''}
+                        disabled={sending}
+                        className="w-full px-5 py-3.5 rounded-2xl border border-[var(--border)] bg-[var(--bg-card)] text-[var(--text-primary)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-brand)] transition placeholder-[var(--text-muted)] mb-4"
+                      />
+                    </>
+                  )}
                   <button
-                    onClick={() => sendMessage([...selectedChoices, input.trim()].filter(Boolean).join(', '))}
-                    disabled={(selectedChoices.length === 0 && !input.trim()) || sending}
+                    onClick={() => sendMessage(
+                      parsed.type === 'open'
+                        ? [...selectedChoices, input.trim()].filter(Boolean).join(', ')
+                        : selectedChoices.join(', ')
+                    )}
+                    disabled={
+                      (parsed.type === 'open'
+                        ? (selectedChoices.length === 0 && !input.trim())
+                        : selectedChoices.length === 0) || sending
+                    }
                     className="w-full py-3.5 rounded-2xl bg-[var(--color-brand)] text-white font-semibold text-sm hover:bg-[var(--color-brand-hover)] transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                   >
                     {sending ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <>{t('chat.continue')} <Send size={14} /></>}

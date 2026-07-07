@@ -30,7 +30,11 @@ if (!anthropic && !gemini) {
   throw new Error('Configure at least one of ANTHROPIC_API_KEY or GEMINI_API_KEY');
 }
 
-export type AIRole = 'plan' | 'chat';
+// 'opening' = the very first discovery question. It's one call per path and the
+// first impression, and it must obey the student's language exactly, so we route
+// it to Sonnet (Haiku occasionally slips into another language on the richer
+// opening prompt). 'chat' = ongoing discovery/teaching turns.
+export type AIRole = 'plan' | 'chat' | 'opening';
 export interface AIMessage { role: 'user' | 'assistant'; content: string; }
 
 async function withClaude(messages: AIMessage[], role: AIRole, system: string, lang?: string): Promise<string> {
@@ -40,7 +44,7 @@ async function withClaude(messages: AIMessage[], role: AIRole, system: string, l
   // - Chat in English: Haiku 4.5 (plenty good, ~3x cheaper).
   // - Chat in Armenian/Russian: Sonnet 5 (Haiku's low-resource-language quality
   //   is poor). Default non-'en' to Sonnet to be safe on quality.
-  const model = role === 'plan'
+  const model = (role === 'plan' || role === 'opening')
     ? 'claude-sonnet-5'
     : (lang === 'en' ? 'claude-haiku-4-5' : 'claude-sonnet-5');
 

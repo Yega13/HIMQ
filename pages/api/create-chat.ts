@@ -66,16 +66,21 @@ Q: <the question, in ${language}, under 12 words>
 A: <choice 1> | <choice 2> | <choice 3> | <choice 4>
 T: single
 
+Pick the T: value by how complete the choices are:
+- "single" / "multiple" — the choices are EXHAUSTIVE (every realistic answer fits one). The student won't need to type.
+- "open" — the choices are just SUGGESTIONS and the student may have a different answer; a text box appears automatically.
+- If no clean options fit at all, DROP the A: and T: lines and ask one plain question in ${language}.
+
 Question rules:
 - Max 4 choices, each a short phrase in ${language}. Choices must be clearly distinct, never overlapping.
-- If the honest answer is open-ended (no clean set of options fits), DROP the A: and T: lines and instead ask one plain question in ${language} — the student can always type their own answer.
-- Never output any English words inside the question text or the choices.`;
+- NEVER add a catch-all choice like "Other", "Другое", "Այլ", "IDK" — the text box already covers that; use T: open instead when a freeform answer is likely.
+- Never output any English words inside the question text or the choices (keep only the Q:/A:/T: labels in English).`;
 
   let openingMessage: string;
   try {
     openingMessage = await generateAIResponse(
       [{ role: 'user', content: openingUserMessage }],
-      'chat',
+      'opening',
       openingSystemPrompt,
       'may1',
       chatLang
