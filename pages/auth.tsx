@@ -11,16 +11,15 @@ import ThemeToggle from '@/components/ThemeToggle';
 import LanguageToggle from '@/components/LanguageToggle';
 
 // Only follow same-origin relative redirects. `startsWith('/')` alone is not
-// enough: `//evil.com` and `/\evil.com` also start with '/' but browsers treat
-// them as protocol-relative absolute URLs and would navigate off-site (open
-// redirect). Reject anything that isn't a plain internal path.
+// enough for an open-redirect guard:
+//   - `//evil.com` and `/\evil.com` start with '/' but browsers treat them as
+//     protocol-relative absolute URLs and navigate off-site.
+//   - `/\t//evil.com` (a tab after the slash) is stripped by the browser to
+//     `///evil.com` before parsing — also off-site.
+// Require exactly ONE leading slash, no backslash, and no control characters.
 function safeNext(next: unknown): string {
-  return typeof next === 'string'
-    && next.startsWith('/')
-    && !next.startsWith('//')
-    && !next.startsWith('/\\')
-    ? next
-    : '/dashboard';
+  if (typeof next !== 'string') return '/dashboard';
+  return /^\/(?!\/)[^\\\x00-\x1F]*$/.test(next) ? next : '/dashboard';
 }
 
 export default function Auth() {
