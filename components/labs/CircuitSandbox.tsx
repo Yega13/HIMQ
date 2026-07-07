@@ -109,7 +109,7 @@ export default function CircuitSandbox() {
   const [sel, setSel] = useState<{ kind: 'comp' | 'wire'; id: string } | null>(null);
   const [pending, setPending] = useState<string | null>(null); // terminal key mid-wire
   const [ptr, setPtr] = useState<{ x: number; y: number } | null>(null);
-  const drag = useRef<{ id: string; ox: number; oy: number; moved: boolean } | null>(null);
+  const drag = useRef<{ id: string; ox: number; oy: number; sx: number; sy: number; moved: boolean } | null>(null);
   const svgRef = useRef<SVGSVGElement | null>(null);
   const counter = useRef(0);
 
@@ -162,13 +162,18 @@ export default function CircuitSandbox() {
   const onBodyDown = (e: React.PointerEvent, p: Placed) => {
     e.stopPropagation();
     const m = toVB(e);
-    drag.current = { id: p.id, ox: m.x - p.x, oy: m.y - p.y, moved: false };
+    drag.current = { id: p.id, ox: m.x - p.x, oy: m.y - p.y, sx: e.clientX, sy: e.clientY, moved: false };
+    // Capture on the SVG so a fast drag that leaves the canvas keeps tracking
+    // and the pointerup still fires (otherwise drag.current would get stuck).
+    svgRef.current?.setPointerCapture(e.pointerId);
   };
   const onSvgMove = (e: React.PointerEvent) => {
     const m = toVB(e);
     if (pending) { setPtr(m); return; }
     const d = drag.current;
     if (!d) return;
+    // Ignore sub-threshold jitter so a tap reliably selects instead of nudging.
+    if (!d.moved && Math.hypot(e.clientX - d.sx, e.clientY - d.sy) < 5) return;
     d.moved = true;
     setPlaced((prev) => prev.map((p) => (p.id === d.id ? { ...p, x: snap(m.x - d.ox), y: snap(m.y - d.oy) } : p)));
   };
@@ -246,7 +251,7 @@ export default function CircuitSandbox() {
                   {/* symbol + hit area (drag/select) */}
                   <g onPointerDown={(e) => onBodyDown(e, p)} className="cursor-move">
                     <rect x={p.x - 30} y={p.y - 20} width={60} height={40} fill="transparent" />
-                    <Symbol p={p} lit={lit} selected={selected} />
+                    <PartSymbol p={p} lit={lit} selected={selected} />
                   </g>
                   {/* current label */}
                   {sol.ok && p.kind !== 'source' && Math.abs(cur) > 1e-6 && (
@@ -335,7 +340,7 @@ export default function CircuitSandbox() {
   );
 }
 
-function Symbol({ p, lit, selected }: { p: Placed; lit: boolean; selected: boolean }) {
+function PartSymbol({ p, lit, selected }: { p: Placed; lit: boolean; selected: boolean }) {
   const cx = p.x, cy = p.y;
   const stroke = selected ? 'var(--color-brand)' : 'var(--text-primary)';
   if (p.kind === 'resistor') {
