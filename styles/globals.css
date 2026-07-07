@@ -107,6 +107,17 @@
 html {
   scroll-behavior: smooth;
   font-size: 17px;
+  /* Kill sideways scroll from decorative blobs / wide rows on mobile.
+     `clip` (not `hidden`) does NOT create a scroll container, so position:
+     sticky keeps working. */
+  overflow-x: clip;
+}
+
+/* Slightly smaller root on phones so dense layouts stop overflowing/cramping.
+   Tailwind's spacing is rem-based, so this proportionally tightens the whole
+   mobile layout — subtle (17px → 16px). */
+@media (max-width: 480px) {
+  html { font-size: 16px; }
 }
 
 body {
@@ -115,6 +126,14 @@ body {
   color: var(--text-primary);
   transition: background-color 0.2s ease, color 0.2s ease;
   -webkit-font-smoothing: antialiased;
+  overflow-x: clip;
+  overflow-wrap: break-word;   /* long words/URLs/emails wrap instead of overflowing */
+}
+
+/* Media never forces the page wider than the screen. (svg excluded so icons
+   keep their intrinsic size.) */
+img, video, canvas {
+  max-width: 100%;
 }
 
 /* ── Scrollbar ─────────────────────────────────────────────── */
