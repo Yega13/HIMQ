@@ -10,6 +10,19 @@ import { getBrowserClient } from '@/lib/supabase';
 import ThemeToggle from '@/components/ThemeToggle';
 import LanguageToggle from '@/components/LanguageToggle';
 
+// Only follow same-origin relative redirects. `startsWith('/')` alone is not
+// enough: `//evil.com` and `/\evil.com` also start with '/' but browsers treat
+// them as protocol-relative absolute URLs and would navigate off-site (open
+// redirect). Reject anything that isn't a plain internal path.
+function safeNext(next: unknown): string {
+  return typeof next === 'string'
+    && next.startsWith('/')
+    && !next.startsWith('//')
+    && !next.startsWith('/\\')
+    ? next
+    : '/dashboard';
+}
+
 export default function Auth() {
   const { t } = useTranslation('common');
   const router = useRouter();
@@ -30,8 +43,7 @@ export default function Auth() {
 
   // Redirect away if already signed in
   useEffect(() => {
-    const next = router.query.next as string | undefined;
-    const dest = next && next.startsWith('/') ? next : '/dashboard';
+    const dest = safeNext(router.query.next);
     getBrowserClient().auth.getUser().then(({ data: { user } }) => {
       if (user) router.replace(dest);
     });
@@ -60,8 +72,7 @@ export default function Auth() {
             .update({ preferred_language: router.locale })
             .eq('id', data.session.user.id);
         }
-        const next = router.query.next as string | undefined;
-        await router.replace(next && next.startsWith('/') ? next : '/dashboard');
+        await router.replace(safeNext(router.query.next));
       } else {
         setPendingEmail(email);
       }
@@ -71,8 +82,7 @@ export default function Auth() {
         setMessage(error.message);
         setIsError(true);
       } else {
-        const next = router.query.next as string | undefined;
-        await router.replace(next && next.startsWith('/') ? next : '/dashboard');
+        await router.replace(safeNext(router.query.next));
       }
     }
 

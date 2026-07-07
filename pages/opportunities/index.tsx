@@ -299,7 +299,7 @@ export default function Opportunities({ events }: Props) {
                           days <= 0 ? 'text-[var(--text-muted)]' : days <= 7 ? 'text-red-500' : days <= 30 ? 'text-orange-500' : 'text-[var(--text-muted)]'
                         )}>
                           <Calendar size={11} />
-                          {days > 0 ? `${days} ${t('opportunities.days_left')}` : t('opportunities.ended')}
+                          {days > 0 ? t('opportunities.days_left', { count: days }) : t('opportunities.ended')}
                         </span>
                       )}
                     </div>

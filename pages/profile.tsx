@@ -464,7 +464,7 @@ export default function ProfilePage() {
                       <p className="text-sm font-semibold text-[var(--text-primary)] truncate hover:text-[var(--color-brand)] transition-colors">{ev.title}</p>
                       <p className="text-[11px] text-[var(--text-muted)] flex items-center gap-2 mt-0.5">
                         <span className="capitalize">{ev.event_type}</span>
-                        {d !== null && d >= 0 && <span className="flex items-center gap-1"><Calendar size={10} />{d} {t('opportunities.days_left')}</span>}
+                        {d !== null && d >= 0 && <span className="flex items-center gap-1"><Calendar size={10} />{t('opportunities.days_left', { count: d })}</span>}
                       </p>
                     </Link>
                     {ev.link && (

@@ -216,7 +216,7 @@ export default function OpportunityDetail({ event }: { event: Event | null }) {
                 <Calendar size={15} />
                 <span>{new Date(event.deadline).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
                 {days !== null && (
-                  <span className="opacity-80">· {days > 0 ? `${days} ${t('opportunities.days_left')}` : t('opportunities.ended')}</span>
+                  <span className="opacity-80">· {days > 0 ? t('opportunities.days_left', { count: days }) : t('opportunities.ended')}</span>
                 )}
                 {closingSoon && <span className="px-1.5 py-0.5 rounded-full bg-red-500 text-white text-[10px] uppercase tracking-wide">{t('opportunities.closing_soon_tag')}</span>}
               </div>
