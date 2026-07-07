@@ -27,6 +27,15 @@ export const LABS: LabMeta[] = [
     topics: ['circuit', 'circuits', 'diode', 'diodes', 'led', 'resistor', 'ohm', 'current', 'voltage', 'electronic', 'electronics', 'electrical'],
   },
   {
+    id: 'sandbox',
+    title: 'Circuit Sandbox',
+    subject: 'Electrical Engineering',
+    blurb: 'Free-form breadboard — drop batteries, resistors, LEDs and switches, wire them any way you like, and watch real voltages and currents update live.',
+    status: 'live',
+    emoji: '🔌',
+    topics: ['circuit', 'circuits', 'breadboard', 'series', 'parallel', 'voltage divider', 'ohm', 'resistor', 'led', 'switch'],
+  },
+  {
     id: 'graphs',
     title: 'Graphs & Traversals',
     subject: 'Computer Science',

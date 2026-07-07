@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { ChevronLeft } from 'lucide-react';
 import Layout from '@/components/Layout';
 import CircuitLab from '@/components/labs/CircuitLab';
+import CircuitSandbox from '@/components/labs/CircuitSandbox';
 import { LABS, getLab } from '@/lib/labs';
 
 export default function LabPage({ id }: { id: string }) {
@@ -29,6 +30,8 @@ export default function LabPage({ id }: { id: string }) {
 
         {lab.status === 'live' && id === 'circuits' ? (
           <CircuitLab />
+        ) : lab.status === 'live' && id === 'sandbox' ? (
+          <CircuitSandbox />
         ) : (
           <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-secondary)] p-10 text-center">
             <div className="text-4xl mb-3">🛠️</div>
