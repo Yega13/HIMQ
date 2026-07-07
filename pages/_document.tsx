@@ -1,8 +1,12 @@
-import { Html, Head, Main, NextScript } from 'next/document';
+import NextDocument, { Html, Head, Main, NextScript, type DocumentContext } from 'next/document';
 
-export default function Document() {
+// Map our app locales to correct BCP-47 language codes for the <html lang>
+// attribute (Armenian's code is "hy", not our internal "am").
+const LANG: Record<string, string> = { en: 'en', am: 'hy', ru: 'ru' };
+
+export default function Document({ locale }: { locale?: string }) {
   return (
-    <Html lang="hy" suppressHydrationWarning>
+    <Html lang={LANG[locale ?? 'en'] ?? 'en'} suppressHydrationWarning>
       <Head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
@@ -19,3 +23,8 @@ export default function Document() {
     </Html>
   );
 }
+
+Document.getInitialProps = async (ctx: DocumentContext) => {
+  const initialProps = await NextDocument.getInitialProps(ctx);
+  return { ...initialProps, locale: ctx.locale };
+};

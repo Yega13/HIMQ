@@ -1,0 +1,13 @@
+User-agent: *
+Allow: /
+
+# Private / auth-only areas — no value to index
+Disallow: /api/
+Disallow: /admin
+Disallow: /dashboard
+Disallow: /profile
+Disallow: /chat
+Disallow: /owner
+Disallow: /roadmap
+
+Sitemap: https://himqai.com/sitemap.xml

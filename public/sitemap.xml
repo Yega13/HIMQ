@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://himqai.com/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>
+  <url><loc>https://himqai.com/about</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://himqai.com/labs</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://himqai.com/labs/circuits</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://himqai.com/labs/sandbox</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://himqai.com/opportunities</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://himqai.com/auth</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
+
+  <url><loc>https://himqai.com/ru</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://himqai.com/ru/about</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://himqai.com/ru/labs</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://himqai.com/ru/opportunities</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+
+  <url><loc>https://himqai.com/am</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://himqai.com/am/about</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://himqai.com/am/labs</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://himqai.com/am/opportunities</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+</urlset>
