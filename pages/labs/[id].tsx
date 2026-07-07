@@ -41,8 +41,12 @@ export default function LabPage({ id }: { id: string }) {
   );
 }
 
-export const getStaticPaths: GetStaticPaths = async () => ({
-  paths: LABS.map((l) => ({ params: { id: l.id } })),
+export const getStaticPaths: GetStaticPaths = async ({ locales }) => ({
+  // Emit every lab for EVERY locale — otherwise Next only prerenders the default
+  // locale (am) and /en/labs/circuits, /ru/labs/circuits 404 with fallback:false.
+  paths: (locales ?? ['en']).flatMap((locale) =>
+    LABS.map((l) => ({ params: { id: l.id }, locale }))
+  ),
   fallback: false,
 });
 
