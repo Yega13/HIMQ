@@ -183,7 +183,8 @@
                  "building_sub":  "May is designing a path based on everything you shared.",
                  "diff_easy":  "Easy",
                  "diff_medium":  "Medium",
-                 "diff_hard":  "Hard"
+                 "diff_hard":  "Hard",
+                 "ready_hint":  "May thinks you're ready — mark it complete ✓"
              },
     "opportunities":  {
                           "submit_cta":  "Submit opportunity",

@@ -77,6 +77,9 @@ export default function ChatDetail({ id }: { id: string }) {
   const [sendError, setSendError] = useState('');
   const [completing, setCompleting] = useState(false);
   const completingRef = useRef(false);
+  // May sets this when it judges the current lesson mastered → nudge the
+  // "Mark Complete" button. Reset on completion (new lesson starts fresh).
+  const [readyToComplete, setReadyToComplete] = useState(false);
   const [planFeedback, setPlanFeedback] = useState('');
   const [regenerating, setRegenerating] = useState(false);
   const [starting, setStarting] = useState(false);
@@ -166,7 +169,7 @@ export default function ChatDetail({ id }: { id: string }) {
       });
 
       if (!res.ok) throw new Error('Failed to get response');
-      const { reply, planReady } = await res.json();
+      const { reply, planReady, lessonMastered } = await res.json();
 
       setMessages((prev) => [...prev, {
         id: `ai-${Date.now()}`,
@@ -177,6 +180,8 @@ export default function ChatDetail({ id }: { id: string }) {
       // New question is now shown → clear the previous selection and any typed answer.
       setSelectedChoices([]);
       setInput('');
+      // May judged the current teaching lesson mastered → nudge Mark Complete.
+      if (lessonMastered) setReadyToComplete(true);
 
       // Server signals (language-independent) that discovery is done → build plan
       if (lessons.length === 0 && planReady) {
@@ -289,6 +294,7 @@ export default function ChatDetail({ id }: { id: string }) {
     // Default/mock XP scales with the completed lesson's difficulty; real mode
     // overwrites this with the server-authoritative value from the RPC.
     let xpGained = xpForDifficulty(completedLesson?.difficulty);
+    let introMsg: Message | null = null;
 
     try {
       if (IS_MOCK) {
@@ -326,6 +332,7 @@ export default function ChatDetail({ id }: { id: string }) {
         const data = await res.json();
         newStreak = data.newStreak ?? 0;
         xpGained = data.xpGained ?? 50;
+        introMsg = data.intro ?? null;
         if (data.alreadyCompleted) {
           // Already granted earlier — just advance the UI without a celebration.
           setChat((prev) => prev ? { ...prev, current_lesson_index: nextIndex } : prev);
@@ -345,6 +352,9 @@ export default function ChatDetail({ id }: { id: string }) {
         if (l.lesson_index === nextIndex) return { ...l, status: 'active' };
         return l;
       }));
+      // New lesson starts clean; drop the mastery nudge and show May's welcome.
+      setReadyToComplete(false);
+      if (introMsg) setMessages((prev) => [...prev, introMsg as Message]);
 
       setCelebration({
         lessonTitle: completedLesson?.title ?? 'Lesson',
@@ -808,10 +818,16 @@ export default function ChatDetail({ id }: { id: string }) {
 
           {!allDone && !isDiscovering && (
             <div className="p-3 border-t border-[var(--border)]">
+              {readyToComplete && (
+                <p className="text-[11px] text-[var(--color-green)] font-medium text-center mb-2">{t('chat.ready_hint')}</p>
+              )}
               <button
                 onClick={completeLesson}
                 disabled={completing}
-                className="w-full py-2.5 rounded-xl bg-[var(--color-green)] text-white text-xs font-semibold hover:opacity-90 transition-opacity flex items-center justify-center gap-1.5 disabled:opacity-60"
+                className={cn(
+                  'w-full py-2.5 rounded-xl bg-[var(--color-green)] text-white text-xs font-semibold hover:opacity-90 transition-opacity flex items-center justify-center gap-1.5 disabled:opacity-60',
+                  readyToComplete && 'ring-2 ring-[var(--color-green)] ring-offset-2 ring-offset-[var(--bg-primary)]'
+                )}
               >
                 <CheckCircle size={14} />
                 {t('chat.complete_lesson')}

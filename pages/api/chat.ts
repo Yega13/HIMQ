@@ -112,7 +112,7 @@ You know this student well from your discovery conversation — make every respo
 • Never introduce more than one new concept per message.
 • If they seem lost, go one level simpler — never push through confusion.
 • Stay strictly on topic: "${chat.title}"
-• When the student clearly understands the current lesson: "You've got this — click Mark Complete to unlock the next lesson."
+• When the student has GENUINELY mastered everything in THIS lesson, tell them warmly in one sentence that they're ready to move on, then output this EXACT token on its own final line and nothing after it: <<<LESSON_MASTERED>>>. Only when truly mastered — never after an ordinary answer, and at most once.
 • Never restart the discovery phase.`;
 
   const aiMessages = [
@@ -132,10 +132,15 @@ You know this student well from your discovery conversation — make every respo
 
   const rawReply = await generateAIResponse(aiMessages, 'chat', systemPrompt, modelId, chat.plan?.lang);
 
-  // Detect the machine signal that discovery is complete, then strip it so the
-  // student never sees the token. Language-independent (no prose matching).
+  // Detect the machine signals (language-independent), then strip them so the
+  // student never sees the tokens. PLAN_READY ends discovery; LESSON_MASTERED
+  // nudges the student to mark the current teaching lesson complete.
   const planReady = isDiscovering && rawReply.includes('<<<PLAN_READY>>>');
-  const reply = rawReply.replace(/<<<PLAN_READY>>>/g, '').trim();
+  const lessonMastered = !isDiscovering && rawReply.includes('<<<LESSON_MASTERED>>>');
+  const reply = rawReply
+    .replace(/<<<PLAN_READY>>>/g, '')
+    .replace(/<<<LESSON_MASTERED>>>/g, '')
+    .trim();
 
   await admin.from('messages').insert({
     chat_id: chatId,
@@ -146,5 +151,5 @@ You know this student well from your discovery conversation — make every respo
 
   await admin.from('chats').update({ updated_at: new Date().toISOString() }).eq('id', chatId);
 
-  return res.status(200).json({ reply, planReady });
+  return res.status(200).json({ reply, planReady, lessonMastered });
 }
