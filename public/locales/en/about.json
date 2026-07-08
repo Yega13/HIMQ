@@ -30,7 +30,7 @@
   "faq_title": "Frequently asked questions",
   "faqs": [
     { "q": "What is Himq?", "a": "Himq is an AI-powered learning and opportunity platform built specifically for Armenian students. You describe what you want to learn, our AI builds a personal course for you, and alongside that you get a live feed of scholarships, competitions, internships, and events available in Armenia." },
-    { "q": "Is Himq free to use?", "a": "Yes — HIMQ is completely free during the SSS 2026 demo period. No credit card required. After the demo, individual student accounts will stay free, and we plan to introduce a small monthly fee (3,000 AMD/month) only for institution or school accounts." },
+    { "q": "Is Himq free to use?", "a": "Yes — HIMQ has a free plan with no credit card required, so you can start learning right away. If you want more AI usage, paid plans (from $2.50/month) are available on our Pricing page." },
     { "q": "How does the AI learning plan work?", "a": "When you start a new course, our AI — called May — asks you a few questions: what you already know, what your goal is, and how much time you have. It then generates a structured plan built around your answers — kept as short as possible while still covering everything you need. Each lesson is an interactive conversation where May explains, quizzes, and adapts to your pace." },
     { "q": "What subjects can I study on Himq?", "a": "Anything you can describe in a sentence. Students have used Himq to study programming, mathematics, English grammar, history, design basics, biology, economics, and more. If you can name the topic, May can build a course around it." },
     { "q": "What scholarships and opportunities does Himq track?", "a": "Himq aggregates scholarships, Olympiads, hackathons, summer schools, grants, internships, and competitions that are open to students in Armenia. We focus on opportunities that are actually reachable — local deadlines, Armenian-language options, and programs that actively recruit from the South Caucasus region." },
@@ -54,7 +54,7 @@
     "Your score appears on the Himq leaderboard alongside every other learner in Armenia. How high can you climb?",
     "Miss a day and your streak resets. Stay consistent and watch your XP compound — small daily habits build big results.",
     "Your roadmap shows every lesson, your current position, and how much XP you've earned — all in one clear view.",
-    "Himq is completely free during SSS 2026. No credit card, no trial period. Just sign up and start your first lesson now.",
+    "HIMQ's free plan needs no credit card and no trial period. Just sign up and start your first lesson now.",
     "Name any subject — programming, math, history, design — and May will build a focused course tailored to your level."
   ]
 }

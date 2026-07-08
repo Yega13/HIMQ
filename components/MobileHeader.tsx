@@ -40,6 +40,7 @@ export default function MobileHeader() {
     { href: '/chat', label: t('nav.learn') },
     { href: '/labs', label: t('nav.labs') },
     { href: '/opportunities', label: t('nav.opportunities') },
+    { href: '/pricing', label: t('nav.pricing') },
     { href: '/about', label: t('nav.about') },
     { href: '/leaderboard', label: t('nav.leaderboard') },
   ];

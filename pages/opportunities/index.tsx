@@ -5,7 +5,8 @@ import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import Head from 'next/head';
-import { Calendar, Globe, ExternalLink, Search, Bookmark, BookmarkCheck, ArrowUp, ChevronDown, Sparkles, Heart, ArrowUpDown, Plus } from 'lucide-react';
+import { Calendar, Globe, ExternalLink, Bookmark, BookmarkCheck, ArrowUp, ChevronDown, Sparkles, Heart, ArrowUpDown, Plus } from 'lucide-react';
+import GooeySearch from '@/components/ui/GooeySearch';
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
 import { supabase, getBrowserClient, IS_MOCK } from '@/lib/supabase';
@@ -201,15 +202,12 @@ export default function Opportunities({ events }: Props) {
 
         {/* Search + sort */}
         <div className="flex flex-col sm:flex-row gap-3 mb-4">
-          <div className="relative flex-1">
-            <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
-            <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder={t('opportunities.search_placeholder') as string}
-              className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg-card)] text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand)] transition placeholder-[var(--text-muted)]"
-            />
-          </div>
+          <GooeySearch
+            value={query}
+            onChange={setQuery}
+            placeholder={t('opportunities.search_placeholder') as string}
+            className="flex-1"
+          />
           <div className="relative flex items-center gap-2 rounded-xl border-[1.5px] border-[var(--border-strong)] bg-[var(--bg-card)] pl-3.5 pr-9 shadow-[var(--shadow-sm)] sm:w-60 focus-within:border-[var(--color-brand)] focus-within:ring-2 focus-within:ring-[var(--color-brand)] transition">
             <ArrowUpDown size={15} className="text-[var(--text-muted)] shrink-0" />
             <span className="text-xs font-semibold text-[var(--text-muted)] whitespace-nowrap">{t('opportunities.sort_label')}:</span>

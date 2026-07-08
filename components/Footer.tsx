@@ -6,34 +6,52 @@ const NAV_LINKS = [
   { href: '/', label: 'Home' },
   { href: '/about', label: 'About' },
   { href: '/opportunities', label: 'Opportunities' },
+  { href: '/labs', label: 'Labs' },
   { href: '/dashboard', label: 'Dashboard' },
-  { href: '/profile', label: 'Profile' },
+];
+
+const COMPANY_LINKS = [
+  { href: '/pricing', label: 'Pricing' },
+  { href: '/faq', label: 'FAQ' },
+  { href: '/privacy', label: 'Privacy & Security' },
+  { href: '/terms', label: 'Terms' },
 ];
 
 export default function Footer() {
   const { t } = useTranslation('common');
   return (
     <footer className="border-t border-[var(--border)] bg-[var(--bg-secondary)] mt-16">
-      <div className="max-w-7xl mx-auto px-4 py-10 grid grid-cols-1 sm:grid-cols-3 gap-8">
+      <div className="max-w-7xl mx-auto px-4 py-10 grid grid-cols-2 lg:grid-cols-4 gap-8">
 
         {/* Brand — logo and tagline share the same left edge */}
-        <div className="flex flex-col items-start">
+        <div className="flex flex-col items-start col-span-2 lg:col-span-1">
           <Logo height={28} className="mb-3" />
           <p className="text-sm text-[var(--text-secondary)] leading-relaxed max-w-xs">
             {t('footer.tagline')}
           </p>
         </div>
 
-        {/* Links */}
+        {/* Navigate */}
         <div>
           <p className="text-[11px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-3">{t('footer.navigate')}</p>
           <ul className="space-y-2">
             {NAV_LINKS.map((l) => (
               <li key={l.href}>
-                <Link
-                  href={l.href}
-                  className="text-sm text-[var(--text-secondary)] hover:text-[var(--color-brand)] transition-colors"
-                >
+                <Link href={l.href} className="text-sm text-[var(--text-secondary)] hover:text-[var(--color-brand)] transition-colors">
+                  {l.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* Company / legal */}
+        <div>
+          <p className="text-[11px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-3">Company</p>
+          <ul className="space-y-2">
+            {COMPANY_LINKS.map((l) => (
+              <li key={l.href}>
+                <Link href={l.href} className="text-sm text-[var(--text-secondary)] hover:text-[var(--color-brand)] transition-colors">
                   {l.label}
                 </Link>
               </li>
