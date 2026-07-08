@@ -40,7 +40,7 @@ export default function LabsIndex() {
         {/* Blueprint grid backdrop */}
         <div aria-hidden className="lb-grid pointer-events-none absolute inset-x-0 top-0 h-[520px]" />
 
-        <div className="relative max-w-5xl mx-auto px-4 pt-28 pb-20">
+        <div className="relative max-w-5xl mx-auto px-4 pt-6 md:pt-28 pb-20">
           {/* Header */}
           <div className="flex items-center gap-2.5 mb-4">
             <span className="lb-dot w-2 h-2 rounded-full bg-[var(--color-green)] shadow-[0_0_10px_var(--color-green)]" />

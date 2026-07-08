@@ -15,7 +15,7 @@ export default function LabPage({ id }: { id: string }) {
   return (
     <Layout>
       <Head><title>{lab.title} · HIMQ</title></Head>
-      <div className="max-w-5xl mx-auto px-4 pt-24 pb-20">
+      <div className="max-w-5xl mx-auto px-4 pt-6 md:pt-24 pb-20">
         <Link href="/labs" className="inline-flex items-center gap-1.5 text-xs text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors mb-5">
           <ChevronLeft size={14} /> All labs
         </Link>

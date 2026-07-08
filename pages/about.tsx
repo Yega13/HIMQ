@@ -18,7 +18,9 @@ const EASE = 'easeOut' as const;
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 28 },
   whileInView: { opacity: 1, y: 0 },
-  viewport: { once: true, margin: '-60px' as const },
+  // `amount` is far more reliable than a negative margin on mobile viewports,
+  // where the old '-60px' could leave in-view content stuck at opacity 0.
+  viewport: { once: true, amount: 0.15 as const },
   transition: { duration: 0.55, delay, ease: EASE },
 });
 
@@ -203,15 +205,17 @@ export default function AboutPage() {
                 </div>
               </div>
 
-              <motion.h2 {...fadeUp()} className="text-2xl sm:text-3xl font-extrabold text-[var(--text-on-deep)] mb-6 leading-snug">
+              {/* Critical content — rendered unconditionally (no scroll-reveal)
+                  so it can never get stuck invisible on mobile. */}
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-[var(--text-on-deep)] mb-6 leading-snug">
                 {t('story_title')}
-              </motion.h2>
+              </h2>
 
-              <div className="space-y-4 text-[var(--text-on-deep)]/75 leading-relaxed text-base">
-                <motion.p {...fadeUp(0.07)}>{t('story_p1')}</motion.p>
-                <motion.p {...fadeUp(0.12)}>{t('story_p2')}</motion.p>
-                <motion.p {...fadeUp(0.17)}>{t('story_p3')}</motion.p>
-                <motion.p {...fadeUp(0.22)}>{t('story_p4')}</motion.p>
+              <div className="space-y-4 text-[var(--text-on-deep)]/80 leading-relaxed text-base">
+                <p>{t('story_p1')}</p>
+                <p>{t('story_p2')}</p>
+                <p>{t('story_p3')}</p>
+                <p>{t('story_p4')}</p>
               </div>
             </div>
 
@@ -349,7 +353,11 @@ export default function AboutPage() {
           </Link>
         </motion.div>
 
-        <ThreeDMarquee items={marqueeItems} />
+        {/* Decorative 3D marquee — desktop only; on phones the giant tilted
+            cards overflow and look broken, so we drop them and keep the CTA. */}
+        <div className="hidden md:block">
+          <ThreeDMarquee items={marqueeItems} />
+        </div>
       </section>
     </Layout>
   );

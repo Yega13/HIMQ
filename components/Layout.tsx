@@ -1,5 +1,6 @@
 import { ReactNode } from 'react';
 import Navbar from './Navbar';
+import MobileHeader from './MobileHeader';
 import BottomNav from './BottomNav';
 import Footer from './Footer';
 
@@ -13,7 +14,9 @@ export default function Layout({ children, hideFooter = false, fullscreen = fals
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      <main className={`flex-1 ${fullscreen ? 'md:pt-16' : 'pb-20 md:pb-0 md:pt-20'}`}>
+      {/* Fullscreen pages (chat) provide their own mobile top bar. */}
+      {!fullscreen && <MobileHeader />}
+      <main className={`flex-1 ${fullscreen ? 'md:pt-16' : 'pt-14 pb-20 md:pt-20 md:pb-0'}`}>
         {children}
       </main>
       {!hideFooter && !fullscreen && <Footer />}

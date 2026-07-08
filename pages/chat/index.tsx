@@ -222,7 +222,7 @@ export default function ChatIndex() {
       >
         <div className="grid lg:grid-cols-[340px_1fr] gap-6">
           {/* ── Sidebar: your paths ─────────────────────────── */}
-          <aside className="order-2 lg:order-1">
+          <aside className="order-2 lg:order-1 min-w-0">
             <div className="lg:sticky lg:top-6">
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-xs font-bold uppercase tracking-wider text-[var(--text-muted)]">
@@ -296,7 +296,7 @@ export default function ChatIndex() {
           </aside>
 
           {/* ── Main: create a path ─────────────────────────── */}
-          <main className="order-1 lg:order-2">
+          <main className="order-1 lg:order-2 min-w-0">
             <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="mb-7">
               <h1 className="text-2xl sm:text-3xl font-extrabold text-[var(--text-primary)] mb-2 tracking-tight">
                 {t('learn.title')}
