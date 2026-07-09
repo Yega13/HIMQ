@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'next-i18next';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, X } from 'lucide-react';
 import Logo from './Logo';
 import ThemeToggle from './ThemeToggle';
@@ -58,10 +59,19 @@ export default function MobileHeader() {
         </button>
       </header>
 
-      {open && (
+      <AnimatePresence>
+        {open && (
         <div className="md:hidden fixed inset-0 z-[70]">
-          <div className="absolute inset-0 bg-black/50" onClick={() => setOpen(false)} />
-          <div className="absolute top-0 right-0 h-full w-72 max-w-[85%] bg-[var(--bg-secondary)] border-l border-[var(--border)] shadow-2xl flex flex-col p-5">
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="absolute inset-0 bg-black/50" onClick={() => setOpen(false)}
+          />
+          <motion.div
+            initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
+            transition={{ type: 'tween', duration: 0.28, ease: [0.4, 0, 0.2, 1] }}
+            className="absolute top-0 right-0 h-full w-72 max-w-[85%] bg-[var(--bg-secondary)] border-l border-[var(--border)] shadow-2xl flex flex-col p-5"
+          >
             <div className="flex items-center justify-between mb-5">
               <Logo height={24} />
               <button onClick={() => setOpen(false)} aria-label="Close menu" className="p-2 -mr-2 text-[var(--text-primary)]">
@@ -103,9 +113,10 @@ export default function MobileHeader() {
                 {initial}
               </Link>
             </div>
-          </div>
+          </motion.div>
         </div>
-      )}
+        )}
+      </AnimatePresence>
     </>
   );
 }

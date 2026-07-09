@@ -60,7 +60,7 @@ export default function Footer() {
         </div>
 
         {/* Contact */}
-        <div>
+        <div className="col-span-2 lg:col-span-1">
           <p className="text-[11px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-3">{t('footer.contact')}</p>
           <a
             href="mailto:himqaiteam@gmail.com"
@@ -72,10 +72,17 @@ export default function Footer() {
         </div>
       </div>
 
-      <div className="border-t border-[var(--border)] py-4">
-        <p className="text-center text-xs text-[var(--text-muted)]">
-          {t('footer.copyright', { year: new Date().getFullYear() })}
-        </p>
+      <div className="border-t border-[var(--border)] py-5 px-4">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
+          <p className="text-xs text-[var(--text-muted)] text-center sm:text-left">
+            {t('footer.copyright', { year: new Date().getFullYear() })}
+          </p>
+          <div className="flex items-center gap-4">
+            <Link href="/privacy" className="text-xs text-[var(--text-muted)] hover:text-[var(--color-brand)] transition-colors">Privacy</Link>
+            <Link href="/terms" className="text-xs text-[var(--text-muted)] hover:text-[var(--color-brand)] transition-colors">Terms</Link>
+            <Link href="/faq" className="text-xs text-[var(--text-muted)] hover:text-[var(--color-brand)] transition-colors">FAQ</Link>
+          </div>
+        </div>
       </div>
     </footer>
   );

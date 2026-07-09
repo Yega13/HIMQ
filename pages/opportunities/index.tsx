@@ -5,8 +5,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import Head from 'next/head';
-import { Calendar, Globe, ExternalLink, Bookmark, BookmarkCheck, ArrowUp, ChevronDown, Sparkles, Heart, ArrowUpDown, Plus } from 'lucide-react';
-import GooeySearch from '@/components/ui/GooeySearch';
+import { Calendar, Globe, ExternalLink, Search, Bookmark, BookmarkCheck, ArrowUp, ChevronDown, Sparkles, Heart, ArrowUpDown, Plus } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
 import { supabase, getBrowserClient, IS_MOCK } from '@/lib/supabase';
@@ -202,19 +201,22 @@ export default function Opportunities({ events }: Props) {
 
         {/* Search + sort */}
         <div className="flex flex-col sm:flex-row gap-3 mb-4">
-          <GooeySearch
-            value={query}
-            onChange={setQuery}
-            placeholder={t('opportunities.search_placeholder') as string}
-            className="flex-1"
-          />
-          <div className="relative flex items-center gap-2 rounded-xl border-[1.5px] border-[var(--border-strong)] bg-[var(--bg-card)] pl-3.5 pr-9 shadow-[var(--shadow-sm)] sm:w-60 focus-within:border-[var(--color-brand)] focus-within:ring-2 focus-within:ring-[var(--color-brand)] transition">
+          <div className="relative flex-1">
+            <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-muted)] pointer-events-none" />
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder={t('opportunities.search_placeholder') as string}
+              className="w-full h-12 pl-12 pr-4 rounded-2xl border border-[var(--border)] bg-[var(--bg-card)] text-sm text-[var(--text-primary)] shadow-[var(--shadow-sm)] focus:outline-none focus:border-[var(--color-brand)] focus:ring-2 focus:ring-[var(--color-brand)]/30 transition placeholder-[var(--text-muted)]"
+            />
+          </div>
+          <div className="relative flex items-center gap-2 h-12 rounded-2xl border border-[var(--border)] bg-[var(--bg-card)] pl-3.5 pr-9 shadow-[var(--shadow-sm)] sm:w-60 focus-within:border-[var(--color-brand)] focus-within:ring-2 focus-within:ring-[var(--color-brand)]/30 transition">
             <ArrowUpDown size={15} className="text-[var(--text-muted)] shrink-0" />
             <span className="text-xs font-semibold text-[var(--text-muted)] whitespace-nowrap">{t('opportunities.sort_label')}:</span>
             <select
               value={sort}
               onChange={(e) => setSort(e.target.value)}
-              className="flex-1 appearance-none bg-transparent py-2.5 text-sm font-semibold text-[var(--text-primary)] focus:outline-none cursor-pointer"
+              className="flex-1 h-full appearance-none bg-transparent text-sm font-semibold text-[var(--text-primary)] focus:outline-none cursor-pointer"
             >
               <option value="deadline">{t('opportunities.sort_deadline')}</option>
               <option value="popular">{t('opportunities.sort_popular')}</option>

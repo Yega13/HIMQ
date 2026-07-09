@@ -31,7 +31,7 @@ import {
 const fadeUp = {
   initial: { opacity: 0, y: 22 },
   whileInView: { opacity: 1, y: 0 },
-  viewport: { once: true, margin: '-60px' },
+  viewport: { once: true, amount: 0.15 },
 };
 
 // Hero staggered text reveal
@@ -187,7 +187,7 @@ export default function Home() {
               key={s.key}
               initial={{ opacity: 0, y: 18 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
+              viewport={{ once: true, amount: 0.15 }}
               transition={{ delay: i * 0.06, duration: 0.4 }}
               className="group flex items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--bg-card)] px-4 py-4 shadow-[var(--shadow-sm)] hover:border-[var(--color-brand)] hover:shadow-[var(--shadow-md)] transition-all"
             >
@@ -218,7 +218,7 @@ export default function Home() {
                 key={step.titleKey}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
+                viewport={{ once: true, amount: 0.15 }}
                 transition={{ delay: i * 0.1, duration: 0.4 }}
                 className="relative rounded-2xl bg-[var(--bg-card)] border border-[var(--border)] p-5 md:p-6 shadow-[var(--shadow-sm)]"
               >
@@ -282,7 +282,7 @@ export default function Home() {
                   key={r.titleKey}
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
+                  viewport={{ once: true, amount: 0.15 }}
                   transition={{ delay: i * 0.1, duration: 0.4 }}
                   className="rounded-2xl bg-white/[0.04] border border-white/10 p-6 backdrop-blur-sm"
                 >
@@ -309,7 +309,7 @@ export default function Home() {
           <motion.div
             initial={{ opacity: 0, x: -24 }}
             whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
+            viewport={{ once: true, amount: 0.15 }}
             transition={{ duration: 0.5 }}
             className="relative order-2 md:order-1"
           >
@@ -332,7 +332,7 @@ export default function Home() {
           <motion.div
             initial={{ opacity: 0, x: 24 }}
             whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
+            viewport={{ once: true, amount: 0.15 }}
             transition={{ duration: 0.5 }}
             className="order-1 md:order-2"
           >
@@ -366,7 +366,7 @@ export default function Home() {
         <motion.div
           initial={{ opacity: 0, scale: 0.97 }}
           whileInView={{ opacity: 1, scale: 1 }}
-          viewport={{ once: true }}
+          viewport={{ once: true, amount: 0.15 }}
           transition={{ duration: 0.45 }}
           className="rounded-3xl bg-gradient-to-br from-[var(--color-brand)] to-[var(--color-brand-hover)] p-10 sm:p-14 text-center text-white relative overflow-hidden"
         >
