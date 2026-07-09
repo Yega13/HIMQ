@@ -98,7 +98,7 @@ export default function Home() {
           <div className="absolute top-10 right-0 w-[26rem] h-[26rem] rounded-full bg-violet-400/10 blur-3xl" />
         </div>
 
-        <div className="max-w-7xl mx-auto px-4 pt-16 pb-14 md:pt-20">
+        <div className="max-w-7xl mx-auto px-4 pt-8 pb-12 md:pt-20 md:pb-14">
           <div className="grid md:grid-cols-2 items-center gap-12">
             <motion.div variants={heroContainer} initial="initial" animate="animate" className="text-center md:text-left">
               <motion.span
@@ -157,7 +157,7 @@ export default function Home() {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.55 }}
-            className="mt-14 grid grid-cols-1 sm:grid-cols-3 gap-3"
+            className="mt-10 md:mt-14 grid grid-cols-1 sm:grid-cols-3 gap-3"
           >
             {VALUES.map((v) => (
               <div
@@ -175,7 +175,7 @@ export default function Home() {
       </section>
 
       {/* ─── What you can learn ───────────────────────────────── */}
-      <section className="max-w-7xl mx-auto px-4 py-16">
+      <section className="max-w-7xl mx-auto px-4 py-12 md:py-16">
         <motion.div {...fadeUp} transition={{ duration: 0.45 }} className="text-center max-w-2xl mx-auto mb-10">
           <h2 className="text-3xl font-extrabold text-[var(--text-primary)] mb-3">{t('home.learn_title')}</h2>
           <p className="text-[var(--text-secondary)] text-base">{t('home.learn_subtitle')}</p>
@@ -202,9 +202,9 @@ export default function Home() {
       </section>
 
       {/* ─── How the AI works ─────────────────────────────────── */}
-      <section className="bg-[var(--bg-subtle)] border-y border-[var(--border)] py-16">
+      <section className="bg-[var(--bg-subtle)] border-y border-[var(--border)] py-12 md:py-16">
         <div className="max-w-6xl mx-auto px-4">
-          <motion.div {...fadeUp} transition={{ duration: 0.45 }} className="text-center max-w-2xl mx-auto mb-12">
+          <motion.div {...fadeUp} transition={{ duration: 0.45 }} className="text-center max-w-2xl mx-auto mb-8 md:mb-12">
             <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[var(--color-brand)] mb-3">
               <BrainCircuit size={15} /> AI
             </span>
@@ -220,12 +220,12 @@ export default function Home() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1, duration: 0.4 }}
-                className="relative rounded-2xl bg-[var(--bg-card)] border border-[var(--border)] p-6 shadow-[var(--shadow-sm)]"
+                className="relative rounded-2xl bg-[var(--bg-card)] border border-[var(--border)] p-5 md:p-6 shadow-[var(--shadow-sm)]"
               >
-                <span className="absolute top-5 right-5 text-5xl font-black text-[var(--text-primary)]/[0.04] leading-none select-none">
+                <span className="absolute top-4 right-5 text-4xl md:text-5xl font-black text-[var(--text-primary)]/[0.05] leading-none select-none">
                   {i + 1}
                 </span>
-                <div className={`flex items-center justify-center w-12 h-12 rounded-xl ${step.bg} text-white mb-4 shadow-[var(--shadow-sm)]`}>
+                <div className={`flex items-center justify-center w-11 h-11 md:w-12 md:h-12 rounded-xl ${step.bg} text-white mb-3.5 md:mb-4 shadow-[var(--shadow-sm)]`}>
                   <step.icon size={22} />
                 </div>
                 <h3 className="font-bold text-[var(--text-primary)] mb-1.5">{t(step.titleKey)}</h3>
@@ -237,7 +237,7 @@ export default function Home() {
       </section>
 
       {/* ─── Events / Opportunities (interactive) ─────────────── */}
-      <section className="max-w-6xl mx-auto px-4 py-16">
+      <section className="max-w-6xl mx-auto px-4 py-12 md:py-16">
         <div className="grid lg:grid-cols-2 gap-10 items-center">
           <motion.div {...fadeUp} transition={{ duration: 0.45 }}>
             <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[var(--color-brand)] mb-3">
@@ -262,7 +262,7 @@ export default function Home() {
       </section>
 
       {/* ─── Rewards (XP) — deep navy band ────────────────────── */}
-      <section className="bg-[var(--bg-deep)] py-16 relative overflow-hidden">
+      <section className="bg-[var(--bg-deep)] py-12 md:py-16 relative overflow-hidden">
         <div className="pointer-events-none absolute -top-20 right-10 w-80 h-80 rounded-full bg-[var(--color-gold)]/10 blur-3xl" />
         <div className="pointer-events-none absolute bottom-0 -left-16 w-72 h-72 rounded-full bg-[var(--color-brand)]/10 blur-3xl" />
         <div className="max-w-6xl mx-auto px-4 relative">
@@ -304,7 +304,7 @@ export default function Home() {
       </section>
 
       {/* ─── About / mission (with image) ─────────────────────── */}
-      <section className="max-w-6xl mx-auto px-4 py-20">
+      <section className="max-w-6xl mx-auto px-4 py-14 md:py-20">
         <div className="grid md:grid-cols-2 gap-10 items-center">
           <motion.div
             initial={{ opacity: 0, x: -24 }}
@@ -343,7 +343,7 @@ export default function Home() {
       </section>
 
       {/* ─── Image banner ─────────────────────────────────────── */}
-      <section className="max-w-7xl mx-auto px-4 pb-16">
+      <section className="max-w-7xl mx-auto px-4 pb-12 md:pb-16">
         <motion.div {...fadeUp} transition={{ duration: 0.5 }} className="relative rounded-3xl overflow-hidden shadow-[var(--shadow-lg)]">
           <Image
             src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=1600&q=80"
@@ -362,7 +362,7 @@ export default function Home() {
       </section>
 
       {/* ─── Final CTA ────────────────────────────────────────── */}
-      <section className="max-w-7xl mx-auto px-4 pb-20">
+      <section className="max-w-7xl mx-auto px-4 pb-16 md:pb-20">
         <motion.div
           initial={{ opacity: 0, scale: 0.97 }}
           whileInView={{ opacity: 1, scale: 1 }}
