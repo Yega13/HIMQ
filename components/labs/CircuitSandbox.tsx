@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from 'react';
+import { cn } from '@/lib/utils';
 import { solveDC, type Comp } from '@/lib/circuit/solver';
 
 // ── Free-form circuit sandbox ───────────────────────────────────────────────
@@ -187,110 +188,145 @@ export default function CircuitSandbox() {
   const selPart = sel?.kind === 'comp' ? placed.find((p) => p.id === sel.id) : null;
   const mA = (a: number) => (Math.abs(a) >= 999 ? '∞' : (a * 1000).toFixed(1));
 
+  // Global circuit state → drives the flowing-wire animation + the meter.
+  const totalI = sol.ok ? placed.reduce((m, p) => Math.max(m, Math.abs(sol.currents[p.id] ?? 0)), 0) : 0;
+  const overI = totalI > 0.03;
+  const flowing = sol.ok && totalI > 0.0003;
+  const flowCol = overI ? '#ef4444' : 'var(--color-green)';
+  const flowDur = Math.max(0.35, 0.95 - Math.min(0.6, totalI * 12));
+  const litLed = placed.some((p) => p.kind === 'led' && Math.abs(sol.currents[p.id] ?? 0) > 0.0008);
+
+  let statusKind: 'idle' | 'good' | 'warn' | 'bad' = 'idle';
+  let statusMsg = sol.reason ?? 'Drop in a battery, a resistor and an LED — then wire them into a loop.';
+  if (sol.ok) {
+    if (overI) { statusKind = 'bad'; statusMsg = 'Very high current — add (or increase) a resistor before something burns out.'; }
+    else if (flowing) { statusKind = 'good'; statusMsg = litLed ? 'Lit up! Current is flowing through your circuit.' : 'Current is flowing through your circuit.'; }
+    else { statusKind = 'warn'; statusMsg = 'Loop is complete, but no current — check the battery voltage, the resistor, or the LED polarity.'; }
+  }
+
   return (
-    <div className="w-full" style={{ ['--cl-led' as string]: '#ff5a4d', ['--cl-copper' as string]: '#c8804a' }}>
-      {/* Palette */}
-      <div className="flex flex-wrap items-center gap-2 mb-3">
-        {(Object.keys(KIND_META) as Kind[]).map((k) => (
-          <button key={k} onClick={() => addPart(k)}
-            className="px-3 py-2 rounded-xl border border-[var(--border)] bg-[var(--bg-card)] text-[13px] font-semibold text-[var(--text-primary)] hover:border-[var(--color-brand)] transition-colors flex items-center gap-1.5">
-            <span>{KIND_META[k].emoji}</span> {KIND_META[k].label}
-          </button>
-        ))}
-        <div className="flex-1" />
-        <button onClick={clearAll} className="px-3 py-2 rounded-xl border border-[var(--border)] text-[13px] font-semibold text-[var(--text-muted)] hover:border-red-400 hover:text-red-500 transition-colors">Clear</button>
-      </div>
+    <div className="w-full" style={{ ['--cl-led' as string]: '#ff5a4d', ['--cl-copper' as string]: '#c8804a', ['--cl-live' as string]: '#f59e0b' }}>
+      <style>{`
+        @keyframes cs-flow { to { stroke-dashoffset: -16; } }
+        .cs-flow { stroke-dasharray: 7 9; animation: cs-flow var(--cs-dur, .8s) linear infinite; }
+        @media (prefers-reduced-motion: reduce) { .cs-flow { animation: none; } }
+      `}</style>
 
-      <div className="grid lg:grid-cols-[1fr_248px] gap-4 items-start">
-        {/* Canvas */}
-        <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-secondary)] overflow-hidden">
-          <svg
-            ref={svgRef} viewBox={`0 0 ${VB_W} ${VB_H}`} className="w-full touch-none block"
-            style={{ aspectRatio: `${VB_W} / ${VB_H}` }}
-            onPointerMove={onSvgMove} onPointerUp={onSvgUp} onClick={onSvgClick}
-          >
-            <defs>
-              <pattern id="cs-grid" width={CELL} height={CELL} patternUnits="userSpaceOnUse">
-                <circle cx={CELL / 2} cy={CELL / 2} r={1} fill="var(--border-strong)" opacity={0.5} />
-              </pattern>
-            </defs>
-            <rect width={VB_W} height={VB_H} fill="url(#cs-grid)" />
+      <div className="grid lg:grid-cols-[1fr_252px] gap-4 items-start">
+        {/* The bench */}
+        <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-card)] p-3 sm:p-4">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-[11px] uppercase tracking-wider text-[var(--text-muted)] font-bold">The bench</h3>
+            <button onClick={clearAll} className="text-[12px] font-semibold text-[var(--text-muted)] hover:text-red-500 transition-colors">Clear</button>
+          </div>
 
-            {/* wires */}
-            {wires.map((w) => {
-              const [fid, fs] = w.from.split(':'); const [tid, ts] = w.to.split(':');
-              const fp = placed.find((p) => p.id === fid); const tp = placed.find((p) => p.id === tid);
-              if (!fp || !tp) return null;
-              const a = termPos(fp)[fs as TermSide]; const b = termPos(tp)[ts as TermSide];
-              const on = sol.ok && sel?.id !== w.id;
-              return (
-                <line key={w.id} x1={a.x} y1={a.y} x2={b.x} y2={b.y}
-                  stroke={sel?.kind === 'wire' && sel.id === w.id ? 'var(--color-brand)' : 'var(--cl-copper)'}
-                  strokeWidth={sel?.kind === 'wire' && sel.id === w.id ? 5 : 3.5} strokeLinecap="round"
-                  className="cursor-pointer" onClick={(e) => { e.stopPropagation(); setSel({ kind: 'wire', id: w.id }); }} opacity={on ? 1 : 0.85} />
-              );
-            })}
+          <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-secondary)] overflow-hidden">
+            <svg
+              ref={svgRef} viewBox={`0 0 ${VB_W} ${VB_H}`} className="w-full touch-none block"
+              style={{ aspectRatio: `${VB_W} / ${VB_H}` }}
+              onPointerMove={onSvgMove} onPointerUp={onSvgUp} onClick={onSvgClick}
+            >
+              <defs>
+                <pattern id="cs-grid" width={CELL} height={CELL} patternUnits="userSpaceOnUse">
+                  <circle cx={CELL / 2} cy={CELL / 2} r={1} fill="var(--border-strong)" opacity={0.45} />
+                </pattern>
+              </defs>
+              <rect width={VB_W} height={VB_H} fill="url(#cs-grid)" />
 
-            {/* in-progress wire */}
-            {pending && ptr && (() => {
-              const [pid, ps] = pending.split(':'); const pp = placed.find((p) => p.id === pid);
-              if (!pp) return null; const a = termPos(pp)[ps as TermSide];
-              return <line x1={a.x} y1={a.y} x2={ptr.x} y2={ptr.y} stroke="var(--color-brand)" strokeWidth={2.5} strokeDasharray="5 4" strokeLinecap="round" />;
-            })()}
-
-            {/* components */}
-            {placed.map((p) => {
-              const t = termPos(p);
-              const selected = sel?.kind === 'comp' && sel.id === p.id;
-              const cur = sol.currents[p.id] ?? 0;
-              const lit = p.kind === 'led' && sol.ok && Math.abs(cur) > 0.0008;
-              return (
-                <g key={p.id}>
-                  {/* connecting body line */}
-                  <line x1={t.a.x} y1={t.a.y} x2={t.b.x} y2={t.b.y} stroke="var(--cl-copper)" strokeWidth={2.5} />
-                  {/* symbol + hit area (drag/select) */}
-                  <g onPointerDown={(e) => onBodyDown(e, p)} className="cursor-move">
-                    <rect x={p.x - 30} y={p.y - 20} width={60} height={40} fill="transparent" />
-                    <PartSymbol p={p} lit={lit} selected={selected} />
+              {/* wires — copper base + animated current overlay when energized */}
+              {wires.map((w) => {
+                const [fid, fs] = w.from.split(':'); const [tid, ts] = w.to.split(':');
+                const fp = placed.find((p) => p.id === fid); const tp = placed.find((p) => p.id === tid);
+                if (!fp || !tp) return null;
+                const a = termPos(fp)[fs as TermSide]; const b = termPos(tp)[ts as TermSide];
+                const wsel = sel?.kind === 'wire' && sel.id === w.id;
+                return (
+                  <g key={w.id} className="cursor-pointer" onClick={(e) => { e.stopPropagation(); setSel({ kind: 'wire', id: w.id }); }}>
+                    <line x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke="transparent" strokeWidth={16} />
+                    <line x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke={wsel ? 'var(--color-brand)' : 'var(--cl-copper)'} strokeWidth={wsel ? 5 : 3.5} strokeLinecap="round" />
+                    {flowing && !wsel && (
+                      <line x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke={flowCol} strokeWidth={3.5} strokeLinecap="round" className="cs-flow" style={{ ['--cs-dur' as string]: `${flowDur}s` }} />
+                    )}
                   </g>
-                  {/* current label */}
-                  {sol.ok && p.kind !== 'source' && Math.abs(cur) > 1e-6 && (
-                    <text x={p.x} y={p.y - 26} textAnchor="middle" fontSize={11} fontFamily="monospace"
-                      fill="var(--text-muted)">{mA(cur)} mA</text>
-                  )}
-                  {/* terminals */}
-                  {(['a', 'b'] as TermSide[]).map((side) => {
-                    const pos = t[side];
-                    const isGround = sol.ok && sol.nodeOf.get(termKey(p.id, side)) === 0;
-                    return (
-                      <circle key={side} cx={pos.x} cy={pos.y} r={6}
-                        fill={pending === termKey(p.id, side) ? 'var(--color-brand)' : isGround ? 'var(--text-muted)' : 'var(--bg-card)'}
-                        stroke={p.kind === 'source' ? (side === 'a' ? '#ef4444' : 'var(--text-muted)') : 'var(--color-brand)'}
-                        strokeWidth={2} className="cursor-crosshair"
-                        onPointerDown={(e) => onTermDown(e, termKey(p.id, side))} />
-                    );
-                  })}
-                  {p.kind === 'source' && (
-                    <text x={t.a.x} y={t.a.y - 12} textAnchor="middle" fontSize={13} fontWeight={800} fill="#ef4444" fontFamily="monospace">+</text>
-                  )}
-                </g>
-              );
-            })}
-          </svg>
+                );
+              })}
+
+              {/* in-progress wire */}
+              {pending && ptr && (() => {
+                const [pid, ps] = pending.split(':'); const pp = placed.find((p) => p.id === pid);
+                if (!pp) return null; const a = termPos(pp)[ps as TermSide];
+                return <line x1={a.x} y1={a.y} x2={ptr.x} y2={ptr.y} stroke="var(--color-brand)" strokeWidth={2.5} strokeDasharray="5 4" strokeLinecap="round" />;
+              })()}
+
+              {/* components */}
+              {placed.map((p) => {
+                const t = termPos(p);
+                const selected = sel?.kind === 'comp' && sel.id === p.id;
+                const cur = sol.currents[p.id] ?? 0;
+                const carries = flowing && Math.abs(cur) > 0.0003;
+                const lit = p.kind === 'led' && sol.ok && Math.abs(cur) > 0.0008;
+                return (
+                  <g key={p.id}>
+                    {/* connecting body line (copper + flow overlay) */}
+                    <line x1={t.a.x} y1={t.a.y} x2={t.b.x} y2={t.b.y} stroke="var(--cl-copper)" strokeWidth={3} strokeLinecap="round" />
+                    {carries && <line x1={t.a.x} y1={t.a.y} x2={t.b.x} y2={t.b.y} stroke={flowCol} strokeWidth={3} strokeLinecap="round" className="cs-flow" style={{ ['--cs-dur' as string]: `${flowDur}s` }} />}
+                    {/* symbol + hit area (drag/select) */}
+                    <g onPointerDown={(e) => onBodyDown(e, p)} className="cursor-move">
+                      <rect x={p.x - 30} y={p.y - 20} width={60} height={40} fill="transparent" />
+                      <PartSymbol p={p} lit={lit} current={Math.abs(cur)} selected={selected} />
+                    </g>
+                    {/* current label */}
+                    {sol.ok && p.kind !== 'source' && Math.abs(cur) > 1e-6 && (
+                      <text x={p.x} y={p.y - 27} textAnchor="middle" fontSize={11} fontFamily="monospace" fill="var(--text-muted)">{mA(cur)} mA</text>
+                    )}
+                    {/* terminals */}
+                    {(['a', 'b'] as TermSide[]).map((side) => {
+                      const pos = t[side];
+                      const isGround = sol.ok && sol.nodeOf.get(termKey(p.id, side)) === 0;
+                      return (
+                        <circle key={side} cx={pos.x} cy={pos.y} r={6.5}
+                          fill={pending === termKey(p.id, side) ? 'var(--color-brand)' : isGround ? 'var(--text-muted)' : 'var(--bg-card)'}
+                          stroke={p.kind === 'source' ? (side === 'a' ? '#ef4444' : 'var(--text-muted)') : 'var(--color-brand)'}
+                          strokeWidth={2.5} className="cursor-crosshair"
+                          onPointerDown={(e) => onTermDown(e, termKey(p.id, side))} />
+                      );
+                    })}
+                    {p.kind === 'source' && (
+                      <text x={t.a.x} y={t.a.y - 13} textAnchor="middle" fontSize={14} fontWeight={800} fill="#ef4444" fontFamily="monospace">+</text>
+                    )}
+                  </g>
+                );
+              })}
+            </svg>
+          </div>
+
+          {/* Tray / palette */}
+          <p className="text-xs text-[var(--text-muted)] mt-3 mb-2">Tap a part to drop it in, then drag to move. Click a terminal, then another, to wire them.</p>
+          <div className="flex flex-wrap gap-2">
+            {(Object.keys(KIND_META) as Kind[]).map((k) => (
+              <button key={k} onClick={() => addPart(k)}
+                className="px-3 py-2 rounded-xl border border-[var(--border)] bg-[var(--bg-secondary)] text-[13px] font-semibold text-[var(--text-primary)] hover:border-[var(--color-brand)] transition-colors flex items-center gap-1.5">
+                <span>{KIND_META[k].emoji}</span> {KIND_META[k].label}
+              </button>
+            ))}
+          </div>
         </div>
 
-        {/* Inspector / readout */}
+        {/* Meter + inspector */}
         <div className="grid gap-3">
           <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-card)] p-4">
-            <h3 className="text-[11px] uppercase tracking-wider text-[var(--text-muted)] font-bold mb-2.5">Readout</h3>
-            {!sol.ok ? (
-              <p className="text-[13px] text-[var(--text-secondary)]">{sol.reason ?? 'Build a circuit to see it come alive.'}</p>
-            ) : (
-              <p className="text-[13px] text-[var(--color-green)]">● Solved — {placed.length} parts, {wires.length} wires.</p>
-            )}
-            <p className="text-[11px] text-[var(--text-muted)] mt-2 leading-relaxed">
-              Tap a part to add it, drag to move. Click a terminal then another to wire them — or line two terminals up on the same dot.
-            </p>
+            <h3 className="text-[11px] uppercase tracking-wider text-[var(--text-muted)] font-bold mb-3">Live readout</h3>
+            <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-secondary)] px-3.5 py-3">
+              <div className="text-[11px] uppercase text-[var(--text-muted)] font-semibold">Circuit current</div>
+              <div className="font-mono text-[22px] font-semibold tabular-nums text-[var(--text-primary)] mt-0.5">
+                {sol.ok ? mA(totalI) : '—'}<span className="text-xs text-[var(--text-muted)] font-normal"> mA</span>
+              </div>
+            </div>
+            <div className="mt-3 flex gap-2.5 items-start text-[13px]">
+              <span className={cn('flex-none mt-1 w-2.5 h-2.5 rounded-full',
+                statusKind === 'good' ? 'bg-[var(--color-green)]' : statusKind === 'bad' ? 'bg-red-500' : statusKind === 'warn' ? 'bg-[var(--cl-live)]' : 'bg-[var(--text-muted)]')} />
+              <span className="text-[var(--text-secondary)]">{statusMsg}</span>
+            </div>
           </div>
 
           {selPart && (
@@ -340,7 +376,7 @@ export default function CircuitSandbox() {
   );
 }
 
-function PartSymbol({ p, lit, selected }: { p: Placed; lit: boolean; selected: boolean }) {
+function PartSymbol({ p, lit, current, selected }: { p: Placed; lit: boolean; current: number; selected: boolean }) {
   const cx = p.x, cy = p.y;
   const stroke = selected ? 'var(--color-brand)' : 'var(--text-primary)';
   if (p.kind === 'resistor') {
@@ -352,11 +388,12 @@ function PartSymbol({ p, lit, selected }: { p: Placed; lit: boolean; selected: b
   if (p.kind === 'switch') {
     return <g stroke={stroke} strokeWidth={2.5} strokeLinecap="round"><line x1={cx - 16} y1={cy} x2={cx + (p.closed ? 16 : 10)} y2={cy - (p.closed ? 0 : 12)} /><circle cx={cx - 16} cy={cy} r={2.5} fill={stroke} /><circle cx={cx + 16} cy={cy} r={2.5} fill={stroke} /></g>;
   }
-  // led
+  // led — glow scales with current
   const dir = p.flipped ? -1 : 1;
+  const glow = Math.min(18, 5 + current * 900);
   return (
     <g stroke={lit ? 'var(--cl-led)' : stroke} strokeWidth={2.5} strokeLinejoin="round"
-      style={lit ? { filter: 'drop-shadow(0 0 6px var(--cl-led))' } : undefined}>
+      style={lit ? { filter: `drop-shadow(0 0 ${glow.toFixed(0)}px var(--cl-led))` } : undefined}>
       <polygon points={`${cx - 12 * dir},${cy - 12} ${cx - 12 * dir},${cy + 12} ${cx + 12 * dir},${cy}`} fill={lit ? 'var(--cl-led)' : 'none'} fillOpacity={lit ? 0.3 : 0} />
       <line x1={cx + 12 * dir} y1={cy - 12} x2={cx + 12 * dir} y2={cy + 12} />
     </g>
