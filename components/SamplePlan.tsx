@@ -3,7 +3,7 @@ import { useTranslation } from 'next-i18next';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, ArrowRight, Wand2, Loader2 } from 'lucide-react';
+import { Sparkles, ArrowRight, Loader2 } from 'lucide-react';
 
 // Logged-out "try it": type a goal, watch May stream a real short plan — no
 // account. Talks to /api/sample-plan (IP-rate-limited, streamed).
@@ -76,16 +76,7 @@ export default function SamplePlan() {
   const started = loading || plan.length > 0 || !!error;
 
   return (
-    <section className="max-w-3xl mx-auto px-4">
-      <div className="relative rounded-3xl border border-[var(--border)] bg-[var(--bg-card)] p-6 sm:p-8 shadow-[var(--shadow-lg)] overflow-hidden">
-        <div className="pointer-events-none absolute -top-16 -right-10 w-56 h-56 rounded-full bg-[var(--color-brand)]/10 blur-3xl" />
-        <div className="relative">
-          <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[var(--color-brand)] mb-2">
-            <Wand2 size={14} /> {t('sample.badge')}
-          </span>
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-[var(--text-primary)] mb-1.5">{t('sample.title')}</h2>
-          <p className="text-[var(--text-secondary)] text-sm sm:text-base mb-5">{t('sample.subtitle')}</p>
-
+    <div className="max-w-2xl mx-auto mb-12">
           <form
             onSubmit={(e) => { e.preventDefault(); run(goal); }}
             className="flex flex-col sm:flex-row gap-2.5"
@@ -176,8 +167,6 @@ export default function SamplePlan() {
               </motion.div>
             )}
           </AnimatePresence>
-        </div>
-      </div>
-    </section>
+    </div>
   );
 }

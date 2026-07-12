@@ -175,18 +175,17 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ─── Try it (logged-out sample plan) ──────────────────── */}
-      <div className="-mt-2 mb-4 md:mb-8">
-        <SamplePlan />
-      </div>
-
-      {/* ─── What you can learn ───────────────────────────────── */}
+      {/* ─── What you can learn + live "try it" ───────────────── */}
       <section className="max-w-7xl mx-auto px-4 py-12 md:py-16">
-        <motion.div {...fadeUp} transition={{ duration: 0.45 }} className="text-center max-w-2xl mx-auto mb-10">
+        <motion.div {...fadeUp} transition={{ duration: 0.45 }} className="text-center max-w-2xl mx-auto mb-8">
           <h2 className="text-3xl font-extrabold text-[var(--text-primary)] mb-3">{t('home.learn_title')}</h2>
           <p className="text-[var(--text-secondary)] text-base">{t('home.learn_subtitle')}</p>
         </motion.div>
 
+        {/* Live sample plan — type a goal, watch May build it (no account) */}
+        <SamplePlan />
+
+        <p className="text-center text-sm font-medium text-[var(--text-muted)] mb-6">{t('home.learn_or_browse')}</p>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
           {SUBJECTS.map((s, i) => (
             <motion.div
