@@ -177,7 +177,7 @@ export default function Home() {
 
       {/* ─── Learn practically anything + live "try it" ───────── */}
       <section className="max-w-6xl mx-auto px-4 py-14 md:py-20">
-        <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-start">
+        <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
           {/* Left — heading + live sample plan (type a goal, watch May build it) */}
           <motion.div {...fadeUp} transition={{ duration: 0.45 }}>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-[var(--text-primary)] mb-3">{t('home.learn_title')}</h2>
