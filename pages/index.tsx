@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import Layout from '@/components/Layout';
+import SamplePlan from '@/components/SamplePlan';
 import { motion } from 'framer-motion';
 import {
   Sparkles,
@@ -173,6 +174,11 @@ export default function Home() {
           </motion.div>
         </div>
       </section>
+
+      {/* ─── Try it (logged-out sample plan) ──────────────────── */}
+      <div className="-mt-2 mb-4 md:mb-8">
+        <SamplePlan />
+      </div>
 
       {/* ─── What you can learn ───────────────────────────────── */}
       <section className="max-w-7xl mx-auto px-4 py-12 md:py-16">

@@ -84,6 +84,21 @@
                  "feature_opp_title":  "Real Opportunities",
                  "feature_opp_desc":  "Discover scholarships, competitions, internships, and grants — all in one place."
              },
+    "sample":  {
+                 "badge":  "Try it free",
+                 "title":  "See your learning plan in seconds",
+                 "subtitle":  "Type anything you want to learn — no account needed.",
+                 "placeholder":  "e.g. learn Python for a job",
+                 "button":  "Build my plan",
+                 "building":  "Building your plan…",
+                 "your_plan":  "Your plan",
+                 "cta":  "Sign up to save this path & start learning",
+                 "disclaimer":  "A live AI preview. Sign up to get the full personalized plan.",
+                 "error":  "Something went wrong — please try again.",
+                 "ex1":  "Learn Python",
+                 "ex2":  "IELTS 7.0",
+                 "ex3":  "Guitar basics"
+             },
     "auth":  {
                  "sign_in":  "Sign In",
                  "sign_up":  "Sign Up",
