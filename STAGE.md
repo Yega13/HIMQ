@@ -68,7 +68,7 @@ Interactive, hands-on **sandboxes** embedded in learning (e.g. a **circuit lab**
 - Real Armenian **scholarships, competitions, internships, courses, grants, fellowships, meetups** — in one browsable, filterable place.
 - **Owners submit** opportunities → **admin-moderated** before they're public (nothing self-publishes).
 - Students can **save** opportunities.
-- *(In progress — the killer loop: finish a learning path → see matching opportunities for that skill.)*
+- **The loop (live):** every learning path's **roadmap** and its **"Course Complete!"** screen surface **real opportunities matched to that skill** — "you learned X → here are Armenian opportunities for X." Honest empty state when nothing matches.
 
 ---
 
@@ -142,4 +142,5 @@ On the landing page, anyone can **type a goal and watch May build a real plan li
 ## 15. Changelog (append every feature)
 
 - **2026-07-13** — Live streaming AI chat; real weekly/monthly leaderboard; Google OAuth; logged-out "try it" with animated timeline; security + performance hardening pass; landing-page redesign.
+- **2026-07-13 (later)** — Lessons ↔ opportunities loop live (roadmap + course-complete); honest try-it CTA & opportunity empty states; Labs page "decode" (EncryptedText) header amplifying its terminal identity.
 - *(add new entries here as we ship)*
