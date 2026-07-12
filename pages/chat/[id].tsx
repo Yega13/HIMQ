@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Send, CheckCircle, Circle, Lock, ChevronLeft, BookOpen, Zap, Flame, ChevronDown, Sparkles } from 'lucide-react';
 import { MODELS, DEFAULT_MODEL, type ModelId } from '@/lib/models';
 import Layout from '@/components/Layout';
+import RelatedOpportunities from '@/components/RelatedOpportunities';
 import { useUser } from '@/lib/useUser';
 import { getBrowserClient, IS_MOCK } from '@/lib/supabase';
 import { cn } from '@/lib/utils';
@@ -946,20 +947,28 @@ export default function ChatDetail({ id }: { id: string }) {
           {/* Messages */}
           <div className="flex-1 overflow-y-auto px-4 py-6 space-y-4">
             {allDone && (
-              <div className="max-w-sm mx-auto text-center py-10">
-                <div className="w-16 h-16 rounded-2xl bg-green-100 dark:bg-green-900/30 flex items-center justify-center mx-auto mb-4">
-                  <CheckCircle size={32} className="text-[var(--color-green)]" />
+              <div className="max-w-md mx-auto py-10">
+                <div className="text-center">
+                  <div className="w-16 h-16 rounded-2xl bg-green-100 dark:bg-green-900/30 flex items-center justify-center mx-auto mb-4">
+                    <CheckCircle size={32} className="text-[var(--color-green)]" />
+                  </div>
+                  <h3 className="font-bold text-[var(--text-primary)] text-lg mb-2">Course Complete!</h3>
+                  <p className="text-sm text-[var(--text-secondary)]">
+                    You finished all {chat?.total_lessons} lessons. Great work!
+                  </p>
+                  <Link
+                    href="/dashboard"
+                    className="inline-block mt-4 px-5 py-2.5 rounded-xl bg-[var(--color-brand)] text-white text-sm font-semibold"
+                  >
+                    Back to Dashboard
+                  </Link>
                 </div>
-                <h3 className="font-bold text-[var(--text-primary)] text-lg mb-2">Course Complete!</h3>
-                <p className="text-sm text-[var(--text-secondary)]">
-                  You finished all {chat?.total_lessons} lessons. Great work!
-                </p>
-                <Link
-                  href="/dashboard"
-                  className="inline-block mt-4 px-5 py-2.5 rounded-xl bg-[var(--color-brand)] text-white text-sm font-semibold"
-                >
-                  Back to Dashboard
-                </Link>
+                {chat && (
+                  <RelatedOpportunities
+                    topic={`${chat.title} ${lessons.map((l) => l.title).join(' ')}`}
+                    className="mt-10"
+                  />
+                )}
               </div>
             )}
 
