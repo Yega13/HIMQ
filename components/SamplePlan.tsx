@@ -76,7 +76,7 @@ export default function SamplePlan() {
   const started = loading || plan.length > 0 || !!error;
 
   return (
-    <div className="max-w-2xl mx-auto mb-12">
+    <div className="w-full">
           <form
             onSubmit={(e) => { e.preventDefault(); run(goal); }}
             className="flex flex-col sm:flex-row gap-2.5"

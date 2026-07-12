@@ -175,18 +175,20 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ─── What you can learn + live "try it" ───────────────── */}
-      <section className="max-w-7xl mx-auto px-4 py-12 md:py-16">
-        <motion.div {...fadeUp} transition={{ duration: 0.45 }} className="text-center max-w-2xl mx-auto mb-8">
-          <h2 className="text-3xl font-extrabold text-[var(--text-primary)] mb-3">{t('home.learn_title')}</h2>
-          <p className="text-[var(--text-secondary)] text-base">{t('home.learn_subtitle')}</p>
-        </motion.div>
+      {/* ─── Learn practically anything + live "try it" ───────── */}
+      <section className="max-w-6xl mx-auto px-4 py-14 md:py-20">
+        <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-start">
+          {/* Left — heading + live sample plan (type a goal, watch May build it) */}
+          <motion.div {...fadeUp} transition={{ duration: 0.45 }}>
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-[var(--text-primary)] mb-3">{t('home.learn_title')}</h2>
+            <p className="text-[var(--text-secondary)] text-base mb-6">{t('home.learn_subtitle')}</p>
+            <SamplePlan />
+          </motion.div>
 
-        {/* Live sample plan — type a goal, watch May build it (no account) */}
-        <SamplePlan />
-
-        <p className="text-center text-sm font-medium text-[var(--text-muted)] mb-6">{t('home.learn_or_browse')}</p>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
+          {/* Right — browse popular subjects */}
+          <div className="md:pt-1">
+            <p className="text-sm font-semibold text-[var(--text-muted)] mb-4">{t('home.learn_or_browse')}</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {SUBJECTS.map((s, i) => (
             <motion.div
               key={s.key}
@@ -202,8 +204,10 @@ export default function Home() {
               <span className="font-semibold text-sm sm:text-base text-[var(--text-primary)]">{t(s.key)}</span>
             </motion.div>
           ))}
+            </div>
+            <p className="text-sm text-[var(--text-muted)] mt-5">{t('home.learn_hint')}</p>
+          </div>
         </div>
-        <p className="text-center text-sm text-[var(--text-muted)] mt-6">{t('home.learn_hint')}</p>
       </section>
 
       {/* ─── How the AI works ─────────────────────────────────── */}
