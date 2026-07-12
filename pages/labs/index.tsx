@@ -4,6 +4,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import Layout from '@/components/Layout';
+import { EncryptedText } from '@/components/ui/encrypted-text';
 import { LABS } from '@/lib/labs';
 import { cn } from '@/lib/utils';
 
@@ -44,12 +45,21 @@ export default function LabsIndex() {
           {/* Header */}
           <div className="flex items-center gap-2.5 mb-4">
             <span className="lb-dot w-2 h-2 rounded-full bg-[var(--color-green)] shadow-[0_0_10px_var(--color-green)]" />
-            <span className="font-mono text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--text-muted)]">
-              Practice Labs
-            </span>
+            <EncryptedText
+              text="PRACTICE_LABS"
+              className="font-mono text-[11px] font-semibold uppercase tracking-[0.22em]"
+              encryptedClassName="text-[var(--text-muted)]"
+              revealedClassName="text-[var(--color-green)]"
+              revealDelayMs={38}
+            />
           </div>
-          <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-[var(--text-primary)] max-w-2xl text-balance">
-            Learn by breaking things.
+          <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight max-w-2xl text-balance">
+            <EncryptedText
+              text="Learn by breaking things."
+              encryptedClassName="text-[var(--text-muted)]"
+              revealedClassName="text-[var(--text-primary)]"
+              revealDelayMs={45}
+            />
           </h1>
           <p className="text-[var(--text-secondary)] mt-4 max-w-xl text-[15px] leading-relaxed">
             Hands-on sandboxes that behave like the real world — no hardware, no setup.
