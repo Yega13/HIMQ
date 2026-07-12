@@ -59,7 +59,11 @@ async function withClaude(messages: AIMessage[], role: AIRole, system: string, l
       : { role: m.role, content: m.content }
   );
 
-  const res = await anthropic.messages.create({
+  // Wrap in withTimeout too (not just the SDK's own timeout): with maxRetries a
+  // hung Claude call could otherwise burn ~45s×retries and 504 the 60s route
+  // BEFORE the Gemini fallback ever runs. This bounds the whole attempt so the
+  // fallback still has time.
+  const res = await withTimeout(anthropic.messages.create({
     model,
     max_tokens: role === 'plan' ? 2000 : 800,
     // Sonnet 5 runs adaptive thinking by default; disable it to keep chat fast
@@ -68,7 +72,7 @@ async function withClaude(messages: AIMessage[], role: AIRole, system: string, l
     ...(model === 'claude-sonnet-5' ? { thinking: { type: 'disabled' as const } } : {}),
     system,
     messages: apiMessages,
-  });
+  }));
   const block = res.content[0];
   if (block.type !== 'text') throw new Error('Unexpected Claude response type');
   return block.text;
@@ -101,6 +105,94 @@ async function withGemini(messages: AIMessage[], role: AIRole, system: string): 
   const chat = model.startChat({ history, generationConfig: { maxOutputTokens: role === 'plan' ? 2000 : 800 } });
   const result = await withTimeout(chat.sendMessage(messages[messages.length - 1].content));
   return result.response.text();
+}
+
+// ── Streaming variants ──────────────────────────────────────────────────────
+// Same model routing as the blocking path, but emit text deltas via onDelta as
+// they arrive so the UI can render the reply progressively.
+
+async function streamClaude(
+  messages: AIMessage[], role: AIRole, system: string,
+  onDelta: (t: string) => void, lang?: string,
+): Promise<string> {
+  if (!anthropic) throw new Error('ANTHROPIC_API_KEY not set');
+  const model = (role === 'plan' || role === 'opening')
+    ? 'claude-sonnet-5'
+    : (lang === 'en' ? 'claude-haiku-4-5' : 'claude-sonnet-5');
+
+  const apiMessages: Anthropic.MessageParam[] = messages.map((m, i) =>
+    i === messages.length - 1
+      ? { role: m.role, content: [{ type: 'text' as const, text: m.content, cache_control: { type: 'ephemeral' as const } }] }
+      : { role: m.role, content: m.content }
+  );
+
+  const stream = anthropic.messages.stream({
+    model,
+    max_tokens: role === 'plan' ? 2000 : 800,
+    ...(model === 'claude-sonnet-5' ? { thinking: { type: 'disabled' as const } } : {}),
+    system,
+    messages: apiMessages,
+  });
+
+  let full = '';
+  for await (const event of stream) {
+    if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
+      full += event.delta.text;
+      onDelta(event.delta.text);
+    }
+  }
+  return full;
+}
+
+async function streamGemini(
+  messages: AIMessage[], role: AIRole, system: string,
+  onDelta: (t: string) => void,
+): Promise<string> {
+  if (!gemini) throw new Error('GEMINI_API_KEY not set');
+  const modelName = role === 'plan' ? 'gemini-1.5-pro' : 'gemini-1.5-flash';
+  const model = gemini.getGenerativeModel({ model: modelName, systemInstruction: system });
+  const history = toGeminiHistory(messages);
+  const chat = model.startChat({ history, generationConfig: { maxOutputTokens: role === 'plan' ? 2000 : 800 } });
+  const result = await chat.sendMessageStream(messages[messages.length - 1].content);
+  let full = '';
+  for await (const chunk of result.stream) {
+    const t = chunk.text();
+    if (t) { full += t; onDelta(t); }
+  }
+  return full;
+}
+
+// Streams the reply, mirroring generateAIResponse's provider order and fallback.
+// Critically: it only falls back to the other provider if the first one fails
+// BEFORE emitting any token — a mid-stream failure re-throws so we never splice
+// two partial responses together.
+export async function streamAIResponse(
+  messages: AIMessage[],
+  role: AIRole,
+  system: string,
+  onDelta: (t: string) => void,
+  modelId: ModelId = 'may1',
+  lang?: string,
+): Promise<string> {
+  const unavailable = 'AI is temporarily unavailable. Please try again in a moment.';
+  if (messages.length === 0) { onDelta(unavailable); return unavailable; }
+
+  let started = false;
+  const guard = (t: string) => { started = true; onDelta(t); };
+
+  const order: ('claude' | 'gemini')[] = modelId === 'may1' ? ['claude', 'gemini'] : ['gemini', 'claude'];
+  for (const provider of order) {
+    if (provider === 'claude' && anthropic) {
+      try { return await streamClaude(messages, role, system, guard, lang); }
+      catch (e) { console.error('[stream] Claude failed:', e); if (started) throw e; }
+    }
+    if (provider === 'gemini' && gemini) {
+      try { return await streamGemini(messages, role, system, guard); }
+      catch (e) { console.error('[stream] Gemini failed:', e); if (started) throw e; }
+    }
+  }
+  onDelta(unavailable);
+  return unavailable;
 }
 
 export async function generateAIResponse(

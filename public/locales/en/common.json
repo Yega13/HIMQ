@@ -91,6 +91,7 @@
                  "password":  "Password",
                  "full_name":  "Full name",
                  "or_continue_with":  "or continue with",
+                 "continue_google":  "Continue with Google",
                  "already_have_account":  "Already have an account?",
                  "no_account":  "Don\u0027t have an account?"
              },

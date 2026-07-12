@@ -261,8 +261,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ─── Rewards (XP) — deep navy band ────────────────────── */}
-      <section className="bg-[var(--bg-deep)] py-12 md:py-16 relative overflow-hidden">
+      {/* ─── Rewards (XP) — theme-adaptive accent band ────────── */}
+      <section className="bg-[var(--bg-subtle)] py-12 md:py-16 relative overflow-hidden">
         <div className="pointer-events-none absolute -top-20 right-10 w-80 h-80 rounded-full bg-[var(--color-gold)]/10 blur-3xl" />
         <div className="pointer-events-none absolute bottom-0 -left-16 w-72 h-72 rounded-full bg-[var(--color-brand)]/10 blur-3xl" />
         <div className="max-w-6xl mx-auto px-4 relative">
@@ -270,8 +270,8 @@ export default function Home() {
             <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[var(--color-gold)] mb-3">
               <Award size={15} /> XP
             </span>
-            <h2 className="text-3xl font-extrabold text-[var(--text-on-deep)] mb-3">{t('home.rewards_title')}</h2>
-            <p className="text-[var(--text-on-deep)]/70 text-base">{t('home.rewards_subtitle')}</p>
+            <h2 className="text-3xl font-extrabold text-[var(--text-primary)] mb-3">{t('home.rewards_title')}</h2>
+            <p className="text-[var(--text-secondary)] text-base">{t('home.rewards_subtitle')}</p>
           </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
@@ -284,7 +284,7 @@ export default function Home() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, amount: 0.15 }}
                   transition={{ delay: i * 0.1, duration: 0.4 }}
-                  className="rounded-2xl bg-white/[0.04] border border-white/10 p-6 backdrop-blur-sm"
+                  className="rounded-2xl bg-[var(--bg-card)] border border-[var(--border)] p-6 shadow-[var(--shadow-sm)]"
                 >
                   <div
                     className={`flex items-center justify-center w-12 h-12 rounded-xl mb-4 ${
@@ -293,13 +293,13 @@ export default function Home() {
                   >
                     <r.icon size={22} />
                   </div>
-                  <h3 className="font-bold text-[var(--text-on-deep)] mb-1.5">{t(r.titleKey)}</h3>
-                  <p className="text-sm text-[var(--text-on-deep)]/65 leading-relaxed">{t(r.descKey)}</p>
+                  <h3 className="font-bold text-[var(--text-primary)] mb-1.5">{t(r.titleKey)}</h3>
+                  <p className="text-sm text-[var(--text-secondary)] leading-relaxed">{t(r.descKey)}</p>
                 </motion.div>
               );
             })}
           </div>
-          <p className="text-center text-sm text-[var(--text-on-deep)]/50 mt-8">{t('home.rewards_note')}</p>
+          <p className="text-center text-sm text-[var(--text-muted)] mt-8">{t('home.rewards_note')}</p>
         </div>
       </section>
 

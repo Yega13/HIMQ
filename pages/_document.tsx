@@ -8,12 +8,16 @@ export default function Document({ locale }: { locale?: string }) {
   return (
     <Html lang={LANG[locale ?? 'en'] ?? 'en'} suppressHydrationWarning>
       <Head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
-          rel="stylesheet"
+        {/* Set the theme class BEFORE first paint so dark-mode users don't get
+            a white flash on every navigation. Mirrors ThemeToggle's logic. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "(function(){try{var t=localStorage.getItem('theme');var d=t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme: dark)').matches);if(d){document.documentElement.classList.add('dark');}}catch(e){}})();",
+          }}
         />
+        {/* Inter is now self-hosted via next/font (see _app.tsx) — no external
+            font stylesheet to render-block on. */}
         <meta name="theme-color" content="#2578e8" />
 
         {/* Favicons — SVG for modern browsers, PNG/ICO fallbacks, apple-touch for iOS */}

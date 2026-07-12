@@ -1,25 +1,25 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { supabase, getAdminClient } from '@/lib/supabase';
-import { generateAIResponse } from '@/lib/ai';
+import { getAdminClient } from '@/lib/supabase';
+import { requireUser, boundedText } from '@/lib/apiAuth';
+import { streamAIResponse } from '@/lib/ai';
 import { type ModelId, DEFAULT_MODEL } from '@/lib/models';
 import { languageName } from '@/lib/utils';
 
 export const config = { maxDuration: 60 };
 
 const DAILY_LIMIT = 50;
+const MAX_MESSAGE = 8000;
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') return res.status(405).end();
 
-  const token = req.headers.authorization?.replace('Bearer ', '');
-  if (!token) return res.status(401).json({ error: 'Missing token' });
-
-  const { data: { user }, error: authErr } = await supabase.auth.getUser(token);
-  if (authErr || !user) return res.status(401).json({ error: 'Unauthorized' });
+  const user = await requireUser(req, res);
+  if (!user) return;
 
   const { chatId, message, model } = req.body as { chatId?: string; message?: string; model?: ModelId };
-  if (!chatId || !message?.trim()) {
-    return res.status(400).json({ error: 'chatId and message are required' });
+  const trimmedMessage = boundedText(message, MAX_MESSAGE);
+  if (!chatId || !trimmedMessage) {
+    return res.status(400).json({ error: 'chatId and a message under 8000 characters are required' });
   }
   const modelId: ModelId = model ?? DEFAULT_MODEL;
 
@@ -120,24 +120,64 @@ You know this student well from your discovery conversation — make every respo
       role: m.role as 'user' | 'assistant',
       content: m.content,
     })),
-    { role: 'user' as const, content: message.trim() },
+    { role: 'user' as const, content: trimmedMessage },
   ];
 
   await admin.from('messages').insert({
     chat_id: chatId,
     role: 'user',
-    content: message.trim(),
+    content: trimmedMessage,
     lesson_index: chat.current_lesson_index,
   });
 
-  const rawReply = await generateAIResponse(aiMessages, 'chat', systemPrompt, modelId, chat.plan?.lang);
+  // ── Stream the reply (Server-Sent Events) ────────────────────────────────
+  // All the fail-able checks (auth, rate limit, ownership) are already done
+  // above and returned normal JSON errors. From here we commit to a 200 SSE
+  // stream: `data: {"delta":"…"}` events as text arrives, then a final
+  // `data: {"done":true, reply, planReady, lessonMastered}` event.
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream; charset=utf-8',
+    'Cache-Control': 'no-cache, no-transform',
+    Connection: 'keep-alive',
+    'X-Accel-Buffering': 'no',
+  });
+  const send = (obj: unknown) => res.write(`data: ${JSON.stringify(obj)}\n\n`);
 
-  // Detect the machine signals (language-independent), then strip them so the
-  // student never sees the tokens. PLAN_READY ends discovery; LESSON_MASTERED
-  // nudges the student to mark the current teaching lesson complete.
-  const planReady = isDiscovering && rawReply.includes('<<<PLAN_READY>>>');
-  const lessonMastered = !isDiscovering && rawReply.includes('<<<LESSON_MASTERED>>>');
-  const reply = rawReply
+  // The model emits control tokens (<<<PLAN_READY>>> / <<<LESSON_MASTERED>>>)
+  // on the final line. Never leak them — or a partial prefix mid-stream — to
+  // the client. `visibleSoFar` returns the safe-to-show prefix of the raw text.
+  const visibleSoFar = (full: string): string => {
+    let s = full.replace(/<<<PLAN_READY>>>/g, '').replace(/<<<LESSON_MASTERED>>>/g, '');
+    const open = s.lastIndexOf('<<<');
+    if (open !== -1 && !s.slice(open).includes('>>>')) {
+      s = s.slice(0, open);            // an in-progress token → hold it back
+    } else {
+      const m = s.match(/<{1,2}$/);    // a trailing '<' / '<<' that might grow into '<<<'
+      if (m) s = s.slice(0, s.length - m[0].length);
+    }
+    return s;
+  };
+
+  let raw = '';
+  let sentLen = 0;
+  const onDelta = (text: string) => {
+    raw += text;
+    const vis = visibleSoFar(raw);
+    if (vis.length > sentLen) {
+      send({ delta: vis.slice(sentLen) });
+      sentLen = vis.length;
+    }
+  };
+
+  try {
+    raw = await streamAIResponse(aiMessages, 'chat', systemPrompt, onDelta, modelId, chat.plan?.lang);
+  } catch (err) {
+    console.error('Chat stream failed:', err);
+  }
+
+  const planReady = isDiscovering && raw.includes('<<<PLAN_READY>>>');
+  const lessonMastered = !isDiscovering && raw.includes('<<<LESSON_MASTERED>>>');
+  const reply = raw
     .replace(/<<<PLAN_READY>>>/g, '')
     .replace(/<<<LESSON_MASTERED>>>/g, '')
     .trim();
@@ -148,8 +188,10 @@ You know this student well from your discovery conversation — make every respo
     content: reply,
     lesson_index: chat.current_lesson_index,
   });
-
   await admin.from('chats').update({ updated_at: new Date().toISOString() }).eq('id', chatId);
 
-  return res.status(200).json({ reply, planReady, lessonMastered });
+  // Final event carries the canonical (trimmed, token-free) reply so the client
+  // can reconcile the streamed text exactly with what was persisted.
+  send({ done: true, reply, planReady, lessonMastered });
+  res.end();
 }

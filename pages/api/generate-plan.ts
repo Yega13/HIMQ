@@ -1,11 +1,14 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { supabase, getAdminClient } from '@/lib/supabase';
+import { getAdminClient } from '@/lib/supabase';
+import { requireUser } from '@/lib/apiAuth';
 import { generateAIResponse } from '@/lib/ai';
 import { languageName } from '@/lib/utils';
 
 // Plan generation is a large Sonnet call; the default 10s (Vercel Hobby) would
 // 504 mid-generation.
 export const config = { maxDuration: 60 };
+
+const MAX_FEEDBACK = 2000;
 
 interface LessonItem { index: number; title: string; description: string; difficulty?: number; why?: string; }
 interface LessonPlan { chat_title: string; welcome?: string; lessons: LessonItem[]; }
@@ -29,14 +32,14 @@ function parsePlan(raw: string): LessonPlan {
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') return res.status(405).end();
 
-  const token = req.headers.authorization?.replace('Bearer ', '');
-  if (!token) return res.status(401).json({ error: 'Missing token' });
-
-  const { data: { user }, error: authErr } = await supabase.auth.getUser(token);
-  if (authErr || !user) return res.status(401).json({ error: 'Unauthorized' });
+  const user = await requireUser(req, res);
+  if (!user) return;
 
   const { chatId, feedback } = req.body as { chatId?: string; feedback?: string };
   if (!chatId) return res.status(400).json({ error: 'chatId required' });
+  if (typeof feedback === 'string' && feedback.length > MAX_FEEDBACK) {
+    return res.status(400).json({ error: 'Feedback is too long (max 2000 characters).' });
+  }
 
   const admin = getAdminClient();
 

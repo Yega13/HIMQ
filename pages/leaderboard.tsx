@@ -54,7 +54,7 @@ function initial(name: string | null) {
   return (name ?? 'A').trim().charAt(0).toUpperCase() || 'A';
 }
 
-export default function Leaderboard({ profiles }: { profiles: Entry[] }) {
+export default function Leaderboard({ profiles, totalLearners }: { profiles: Entry[]; totalLearners: number }) {
   const { t } = useTranslation('common');
   const [currentUserId, setCurrentUserId] = useState<string | null | undefined>(undefined);
   const [period, setPeriod] = useState<Period>('all');
@@ -91,7 +91,6 @@ export default function Leaderboard({ profiles }: { profiles: Entry[] }) {
   const podium = ranked.slice(0, 3);
   const listShown = expanded ? ranked : ranked.slice(0, INITIAL_COUNT);
 
-  const totalLearners = profiles.length;
   const myXpTotal = meRow?.entry.xp ?? 0;
   const myTier = tierFor(myXpTotal);
   const tierIdx = TIERS.findIndex((tt) => tt.id === myTier.id);
@@ -359,27 +358,61 @@ function RankRow({ r, me, period, t, innerRef }: { r: Ranked; me: boolean; perio
   );
 }
 
-export const getServerSideProps: GetServerSideProps = async ({ locale }) => {
-  const { data } = await supabase
-    .from('profiles')
-    .select('*')
-    .order('xp', { ascending: false })
-    .limit(50);
+// Row shape from the leaderboard_period RPC (and the profiles select).
+interface PeriodRow {
+  id: string;
+  full_name: string | null;
+  xp: number | null;
+  streak_days: number | null;
+  lessons_completed: number | null;
+  period_xp?: number | null;
+}
 
-  const profiles: Entry[] = (data ?? []).map((p: Record<string, unknown>) => ({
-    id: p.id as string,
-    full_name: (p.full_name as string) ?? null,
-    xp: (p.xp as number) ?? 0,
-    streak_days: (p.streak_days as number) ?? 0,
-    lessons_completed: (p.lessons_completed as number) ?? 0,
-    weekly_xp: (p.weekly_xp as number) ?? null,
-    monthly_xp: (p.monthly_xp as number) ?? null,
-    previous_rank: (p.previous_rank as number) ?? null,
-  }));
+export const getServerSideProps: GetServerSideProps = async ({ locale }) => {
+  const now = Date.now();
+  const weekAgo = new Date(now - 7 * 24 * 60 * 60 * 1000).toISOString();
+  const monthAgo = new Date(now - 30 * 24 * 60 * 60 * 1000).toISOString();
+
+  // All-time top 50, real weekly/monthly top 50 (by lessons completed in the
+  // window), and the true total learner count — in parallel.
+  const [allRes, weekRes, monthRes, countRes] = await Promise.all([
+    supabase.from('profiles').select('id, full_name, xp, streak_days, lessons_completed')
+      .order('xp', { ascending: false }).limit(50),
+    supabase.rpc('leaderboard_period', { p_since: weekAgo }),
+    supabase.rpc('leaderboard_period', { p_since: monthAgo }),
+    supabase.from('profiles').select('id', { count: 'exact', head: true }),
+  ]);
+
+  // Union all three boards so a weekly/monthly leader outside the all-time top
+  // 50 still shows up with the correct period XP.
+  const map = new Map<string, Entry>();
+  const ensure = (r: PeriodRow): Entry => {
+    let e = map.get(r.id);
+    if (!e) {
+      e = {
+        id: r.id,
+        full_name: r.full_name ?? null,
+        xp: r.xp ?? 0,
+        streak_days: r.streak_days ?? 0,
+        lessons_completed: r.lessons_completed ?? 0,
+        weekly_xp: 0,
+        monthly_xp: 0,
+        previous_rank: null,
+      };
+      map.set(r.id, e);
+    }
+    return e;
+  };
+  (allRes.data as PeriodRow[] | null ?? []).forEach(ensure);
+  (weekRes.data as PeriodRow[] | null ?? []).forEach((r) => { ensure(r).weekly_xp = Number(r.period_xp) || 0; });
+  (monthRes.data as PeriodRow[] | null ?? []).forEach((r) => { ensure(r).monthly_xp = Number(r.period_xp) || 0; });
+
+  const profiles = Array.from(map.values());
 
   return {
     props: {
       profiles,
+      totalLearners: countRes.count ?? profiles.length,
       ...(await serverSideTranslations(locale ?? 'am', ['common'])),
     },
   };

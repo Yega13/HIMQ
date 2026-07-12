@@ -3,8 +3,19 @@ import type { AppProps } from 'next/app';
 import { useRouter } from 'next/router';
 import { appWithTranslation } from 'next-i18next';
 import Head from 'next/head';
+import { Inter } from 'next/font/google';
 import { getBrowserClient } from '@/lib/supabase';
 import '@/styles/globals.css';
+
+// Self-hosted Inter (Latin + Cyrillic for RU) via next/font — replaces the
+// render-blocking Google Fonts <link>. Armenian has no Inter subset and falls
+// back to the system sans, exactly as before. Exposed as --font-inter, wired
+// into Tailwind's `font-sans`.
+const inter = Inter({
+  subsets: ['latin', 'latin-ext', 'cyrillic'],
+  display: 'swap',
+  variable: '--font-inter',
+});
 
 const SITE_URL = 'https://himqai.com';
 const OG_LOCALE: Record<string, string> = { en: 'en_US', am: 'hy_AM', ru: 'ru_RU' };
@@ -49,7 +60,7 @@ function App({ Component, pageProps }: AppProps) {
   }, [router.events]);
 
   return (
-    <>
+    <div className={`${inter.variable} font-sans`}>
       <Head>
         <title>HIMQ — Learn, Grow, Win</title>
         <meta name="description" content="AI-powered personal tutor for Armenian students. Build a custom learning path and discover real local scholarships, competitions, and internships." />
@@ -97,7 +108,7 @@ function App({ Component, pageProps }: AppProps) {
         </div>
       )}
       <Component {...pageProps} />
-    </>
+    </div>
   );
 }
 

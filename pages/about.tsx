@@ -3,6 +3,7 @@ import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { useTranslation } from 'next-i18next';
 import Head from 'next/head';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -11,7 +12,14 @@ import {
   Users, Rocket, Clock, BadgeCheck,
 } from 'lucide-react';
 import Layout from '@/components/Layout';
-import { ThreeDMarquee, type ThreeDMarqueeItem } from '@/components/ui/3d-marquee';
+import type { ThreeDMarqueeItem } from '@/components/ui/3d-marquee';
+
+// Heavy, purely-decorative below-the-fold visual — code-split it out of the
+// initial bundle so it doesn't block the rest of the About page.
+const ThreeDMarquee = dynamic(
+  () => import('@/components/ui/3d-marquee').then((m) => m.ThreeDMarquee),
+  { ssr: false },
+);
 
 const EASE = 'easeOut' as const;
 

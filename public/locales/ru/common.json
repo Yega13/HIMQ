@@ -91,6 +91,7 @@
                  "password":  "Пароль",
                  "full_name":  "Полное имя",
                  "or_continue_with":  "или продолжить с",
+                 "continue_google":  "Продолжить с Google",
                  "already_have_account":  "Уже есть аккаунт?",
                  "no_account":  "Нет аккаунта?"
              },

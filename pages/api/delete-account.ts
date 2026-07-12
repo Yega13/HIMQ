@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { supabase, getAdminClient } from '@/lib/supabase';
+import { getAdminClient } from '@/lib/supabase';
+import { requireUser } from '@/lib/apiAuth';
 
 // Permanently deletes the signed-in user's account.
 //
@@ -12,13 +13,10 @@ import { supabase, getAdminClient } from '@/lib/supabase';
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') return res.status(405).end();
 
-  const token = req.headers.authorization?.replace('Bearer ', '');
-  if (!token) return res.status(401).json({ error: 'Missing token' });
-
   // Verify the caller with their own access token so a user can only ever
   // delete their own account.
-  const { data: { user }, error: authErr } = await supabase.auth.getUser(token);
-  if (authErr || !user) return res.status(401).json({ error: 'Unauthorized' });
+  const user = await requireUser(req, res);
+  if (!user) return;
 
   const admin = getAdminClient();
   const { error } = await admin.auth.admin.deleteUser(user.id);

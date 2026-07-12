@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { supabase, getAdminClient } from '@/lib/supabase';
+import { getAdminClient } from '@/lib/supabase';
+import { requireUser } from '@/lib/apiAuth';
 
 // Valid event_type values per the events CHECK constraint in schema.sql.
 const EVENT_TYPES = new Set([
@@ -18,11 +19,8 @@ const MAX_SHORT = 300;
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') return res.status(405).end();
 
-  const token = req.headers.authorization?.replace('Bearer ', '');
-  if (!token) return res.status(401).json({ error: 'Missing token' });
-
-  const { data: { user }, error: authErr } = await supabase.auth.getUser(token);
-  if (authErr || !user) return res.status(401).json({ error: 'Unauthorized' });
+  const user = await requireUser(req, res);
+  if (!user) return;
 
   const { title, event_type, organizer, deadline, description, link } = req.body as {
     title?: string; event_type?: string; organizer?: string;
@@ -38,6 +36,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (title.length > MAX_TITLE || description.length > MAX_TEXT
       || organizer.length > MAX_SHORT || (link?.length ?? 0) > MAX_SHORT) {
     return res.status(400).json({ error: 'One or more fields are too long.' });
+  }
+  // Only allow real web links. Without this, a stored `javascript:` / `data:`
+  // URI would render as a clickable anchor on the admin + public pages.
+  if (link?.trim() && !/^https?:\/\//i.test(link.trim())) {
+    return res.status(400).json({ error: 'Link must start with http:// or https://' });
   }
   // Validate the deadline is a real date before it hits a TIMESTAMPTZ column
   // (otherwise a bad string 500s instead of a clean 400).

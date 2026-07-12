@@ -114,13 +114,15 @@ export default function ProfilePage() {
         setBio(data.bio ?? '');
         setGoal(data.goal ?? '');
         setSkillLevel(data.skill_level ?? 'beginner');
+        // Rank = 1 + number of users with strictly more XP. A single COUNT
+        // head-query instead of transferring up to 1000 rows to findIndex.
+        supabase
+          .from('profiles')
+          .select('id', { count: 'exact', head: true })
+          .gt('xp', data.xp ?? 0)
+          .then(({ count }) => setRank((count ?? 0) + 1));
       }
       setPageLoading(false);
-    });
-    supabase.from('profiles').select('id, xp').order('xp', { ascending: false }).limit(1000).then(({ data }) => {
-      const list = (data ?? []) as { id: string }[];
-      const idx = list.findIndex((r) => r.id === user.id);
-      setRank(idx >= 0 ? idx + 1 : null);
     });
   }, [user]);
 

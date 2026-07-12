@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { supabase, getAdminClient } from '@/lib/supabase';
+import { getAdminClient } from '@/lib/supabase';
+import { requireUser } from '@/lib/apiAuth';
 
 // Called when the student approves their reviewed plan. Locks the plan
 // (approved: true), marks the teaching phase start, and posts May's welcome
@@ -7,11 +8,8 @@ import { supabase, getAdminClient } from '@/lib/supabase';
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') return res.status(405).end();
 
-  const token = req.headers.authorization?.replace('Bearer ', '');
-  if (!token) return res.status(401).json({ error: 'Missing token' });
-
-  const { data: { user }, error: authErr } = await supabase.auth.getUser(token);
-  if (authErr || !user) return res.status(401).json({ error: 'Unauthorized' });
+  const user = await requireUser(req, res);
+  if (!user) return;
 
   const { chatId } = req.body as { chatId?: string };
   if (!chatId) return res.status(400).json({ error: 'chatId required' });

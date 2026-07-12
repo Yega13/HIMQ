@@ -91,6 +91,7 @@
                  "password":  "Գաղտնաբառ",
                  "full_name":  "Անուն Ազգանուն",
                  "or_continue_with":  "կամ շարունակել",
+                 "continue_google":  "Շարունակել Google-ով",
                  "already_have_account":  "Արդեն ունե՞ս հաշիվ",
                  "no_account":  "Հաշիվ չունե՞ս"
              },

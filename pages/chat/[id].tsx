@@ -1,7 +1,7 @@
 import { GetServerSideProps } from 'next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { useTranslation } from 'next-i18next';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -50,6 +50,25 @@ interface Chat {
   };
 }
 
+// Pure parser (module scope so it's stable across renders / usable in useMemo).
+// Tolerant: the AI sometimes puts Q:/A:/T: inline (no newlines) or omits the
+// T: line — especially in non-English. Accept any whitespace between labels and
+// treat T: as optional (default single). Keeps raw "Q:/A:" markers from ever
+// leaking into the rendered message.
+function parseQuestion(content: string) {
+  const m = content.match(/^([\s\S]*?)Q:\s*([\s\S]+?)\s*A:\s*([\s\S]+?)(?:\s*T:\s*(single|multiple|open))?\s*$/i);
+  if (m) {
+    const tRaw = m[4]?.toLowerCase();
+    return {
+      preamble: m[1].trim(),
+      text: m[2].trim(),
+      choices: m[3].split('|').map((c) => c.trim()).filter(Boolean),
+      type: (tRaw === 'multiple' ? 'multiple' : tRaw === 'open' ? 'open' : 'single') as 'single' | 'multiple' | 'open',
+    };
+  }
+  return { preamble: '', text: content.replace(/^Q:\s*/i, '').trim(), choices: undefined, type: 'text' as const };
+}
+
 export default function ChatDetail({ id }: { id: string }) {
   const { t } = useTranslation('common');
   const router = useRouter();
@@ -76,6 +95,8 @@ export default function ChatDetail({ id }: { id: string }) {
   const [celebration, setCelebration] = useState<CelebrationData | null>(null);
   const [selectedChoices, setSelectedChoices] = useState<string[]>([]);
   const [sendError, setSendError] = useState('');
+  // Id of the assistant message currently being streamed in (null when idle).
+  const [streamingId, setStreamingId] = useState<string | null>(null);
   const [completing, setCompleting] = useState(false);
   const completingRef = useRef(false);
   // May sets this when it judges the current lesson mastered → nudge the
@@ -120,24 +141,6 @@ export default function ChatDetail({ id }: { id: string }) {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  function parseQuestion(content: string) {
-    // Tolerant parse: the AI sometimes puts Q:/A:/T: inline (no newlines) or
-    // omits the T: line — especially in non-English. Accept any whitespace
-    // between labels and treat T: as optional (default single). This keeps the
-    // raw "Q:/A:" markers from ever leaking into the rendered message.
-    const m = content.match(/^([\s\S]*?)Q:\s*([\s\S]+?)\s*A:\s*([\s\S]+?)(?:\s*T:\s*(single|multiple|open))?\s*$/i);
-    if (m) {
-      const tRaw = m[4]?.toLowerCase();
-      return {
-        preamble: m[1].trim(),
-        text: m[2].trim(),
-        choices: m[3].split('|').map((c) => c.trim()).filter(Boolean),
-        type: (tRaw === 'multiple' ? 'multiple' : tRaw === 'open' ? 'open' : 'single') as 'single' | 'multiple' | 'open',
-      };
-    }
-    return { preamble: '', text: content.replace(/^Q:\s*/i, '').trim(), choices: undefined, type: 'text' as const };
-  }
-
   const sendMessage = async (overrideMsg?: string) => {
     const userMsg = (overrideMsg ?? input).trim();
     if (!userMsg || sending || !user || !chat) return;
@@ -156,6 +159,10 @@ export default function ChatDetail({ id }: { id: string }) {
       created_at: new Date().toISOString(),
     }]);
 
+    // Once the assistant reply starts streaming in, a later failure must NOT
+    // roll back the user's message (the server already processed it).
+    let streamStarted = false;
+
     try {
       const supabase = getBrowserClient();
       const { data: { session } } = await supabase.auth.getSession();
@@ -169,15 +176,69 @@ export default function ChatDetail({ id }: { id: string }) {
         body: JSON.stringify({ chatId: id, message: userMsg, model: selectedModel }),
       });
 
-      if (!res.ok) throw new Error('Failed to get response');
-      const { reply, planReady, lessonMastered } = await res.json();
+      // Errors (auth / rate limit / ownership) come back as normal JSON before
+      // the stream starts.
+      if (!res.ok || !res.body) {
+        let msg = 'Failed to get response';
+        try { const j = await res.json(); if (j?.error) msg = j.error; } catch { /* ignore */ }
+        throw new Error(msg);
+      }
 
-      setMessages((prev) => [...prev, {
-        id: `ai-${Date.now()}`,
-        role: 'assistant',
-        content: reply,
-        created_at: new Date().toISOString(),
-      }]);
+      // Consume the SSE stream, appending text deltas to a single assistant
+      // message that grows live.
+      let aiId: string | null = null;
+      const ensureMsg = () => {
+        if (aiId) return;
+        aiId = `ai-${Date.now()}`;
+        streamStarted = true;
+        setMessages((prev) => [...prev, {
+          id: aiId!, role: 'assistant', content: '', created_at: new Date().toISOString(),
+        }]);
+        setStreamingId(aiId);
+      };
+
+      let planReady = false;
+      let lessonMastered = false;
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      // eslint-disable-next-line no-constant-condition
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const parts = buffer.split('\n\n');
+        buffer = parts.pop() ?? '';
+        for (const part of parts) {
+          const line = part.trim();
+          if (!line.startsWith('data:')) continue;
+          const payload = line.slice(5).trim();
+          if (!payload) continue;
+          let evt: { delta?: string; done?: boolean; reply?: string; planReady?: boolean; lessonMastered?: boolean };
+          try { evt = JSON.parse(payload); } catch { continue; }
+
+          if (typeof evt.delta === 'string' && evt.delta) {
+            ensureMsg();
+            const d = evt.delta;   // capture: `evt` is reused by the next loop iteration
+            const mid = aiId;
+            setMessages((prev) => prev.map((m) => m.id === mid ? { ...m, content: m.content + d } : m));
+          }
+          if (evt.done) {
+            planReady = !!evt.planReady;
+            lessonMastered = !!evt.lessonMastered;
+            // Reconcile with the canonical persisted reply (fixes any stray
+            // whitespace/token artifacts from the live stream).
+            if (typeof evt.reply === 'string') {
+              ensureMsg();
+              const finalReply = evt.reply;
+              setMessages((prev) => prev.map((m) => m.id === aiId ? { ...m, content: finalReply } : m));
+            }
+          }
+        }
+      }
+      setStreamingId(null);
+
       // New question is now shown → clear the previous selection and any typed answer.
       setSelectedChoices([]);
       setInput('');
@@ -208,14 +269,20 @@ export default function ChatDetail({ id }: { id: string }) {
         }
       }
     } catch (err) {
-      setMessages((prev) => prev.filter((m) => m.id !== tempId));
-      // Only a plain free-text send owns `input`; restore it so the student can
-      // retry. For a choice/combined send, `selectedChoices` (and any typed text
-      // in `input`) are left intact for retry — restoring the *combined* string
-      // here would double-count the choice on the next Continue click.
-      if (!overrideMsg) setInput(userMsg);
+      // Only roll back if the reply never started streaming. If it did, the
+      // server already processed the turn — keep both messages; a reload
+      // reconciles with what was persisted.
+      if (!streamStarted) {
+        setMessages((prev) => prev.filter((m) => m.id !== tempId));
+        // Only a plain free-text send owns `input`; restore it so the student can
+        // retry. For a choice/combined send, `selectedChoices` (and any typed text
+        // in `input`) are left intact for retry — restoring the *combined* string
+        // here would double-count the choice on the next Continue click.
+        if (!overrideMsg) setInput(userMsg);
+      }
       setSendError(err instanceof Error ? err.message : 'Failed to send — please try again');
     } finally {
+      setStreamingId(null);
       setSending(false);
       inputRef.current?.focus();
     }
@@ -370,6 +437,21 @@ export default function ChatDetail({ id }: { id: string }) {
     }
   };
 
+  // Derived message views — memoized (and kept above every early return, per
+  // rules-of-hooks) so a keystroke in the input doesn't re-filter/re-parse the
+  // whole message list each render.
+  const teachingCutoff = chat?.plan?.teaching_started_at;
+  const visibleMessages = useMemo(
+    () => (teachingCutoff ? messages.filter((m) => m.created_at >= teachingCutoff) : messages),
+    [messages, teachingCutoff],
+  );
+  const rawQuestion = useMemo(
+    () => [...messages].reverse().find((m) => m.role === 'assistant')?.content ?? '',
+    [messages],
+  );
+  const parsed = useMemo(() => parseQuestion(rawQuestion), [rawQuestion]);
+  const answeredCount = useMemo(() => messages.filter((m) => m.role === 'user').length, [messages]);
+
   if (userLoading || pageLoading) {
     return (
       <Layout fullscreen>
@@ -391,14 +473,6 @@ export default function ChatDetail({ id }: { id: string }) {
   const practiceLabId = (!isDiscovering && planApproved)
     ? matchLab(`${chat?.title ?? ''} ${currentLesson?.title ?? ''}`)
     : null;
-  const teachingCutoff = chat?.plan?.teaching_started_at;
-  const visibleMessages = teachingCutoff
-    ? messages.filter((m) => m.created_at >= teachingCutoff)
-    : messages;
-  const rawQuestion = [...messages].reverse().find((m) => m.role === 'assistant')?.content ?? '';
-  const parsed = parseQuestion(rawQuestion);
-  const answeredCount = messages.filter((m) => m.role === 'user').length;
-
   // ── Plan-generating full-screen state ──────────────────────────────────────
   if (generatingPlan) {
     return (
@@ -913,7 +987,7 @@ export default function ChatDetail({ id }: { id: string }) {
               </div>
             ))}
 
-            {sending && (
+            {sending && !streamingId && (
               <div className="flex justify-start">
                 <div className="bg-[var(--bg-card)] border border-[var(--border)] px-4 py-3 rounded-2xl rounded-tl-sm">
                   <div className="flex gap-1 items-center h-4">
