@@ -99,7 +99,7 @@ export default function Home() {
           <div className="absolute top-10 right-0 w-[26rem] h-[26rem] rounded-full bg-violet-400/10 blur-3xl" />
         </div>
 
-        <div className="max-w-7xl mx-auto px-4 pt-8 pb-12 md:pt-20 md:pb-14">
+        <div className="max-w-7xl mx-auto px-4 pt-8 pb-12 md:pt-16 md:pb-10">
           <div className="grid md:grid-cols-2 items-center gap-12">
             <motion.div variants={heroContainer} initial="initial" animate="animate" className="text-center md:text-left">
               <motion.span
@@ -176,7 +176,7 @@ export default function Home() {
       </section>
 
       {/* ─── Learn practically anything + live "try it" ───────── */}
-      <section className="max-w-6xl mx-auto px-4 py-14 md:py-20">
+      <section className="max-w-6xl mx-auto px-4 py-14 md:py-12">
         <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
           {/* Left — heading + live sample plan (type a goal, watch May build it) */}
           <motion.div {...fadeUp} transition={{ duration: 0.45 }}>
@@ -211,7 +211,7 @@ export default function Home() {
       </section>
 
       {/* ─── How the AI works ─────────────────────────────────── */}
-      <section className="bg-[var(--bg-subtle)] border-y border-[var(--border)] py-12 md:py-16">
+      <section className="bg-[var(--bg-subtle)] border-y border-[var(--border)] py-12 md:py-10">
         <div className="max-w-6xl mx-auto px-4">
           <motion.div {...fadeUp} transition={{ duration: 0.45 }} className="text-center max-w-2xl mx-auto mb-8 md:mb-12">
             <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[var(--color-brand)] mb-3">
@@ -246,7 +246,7 @@ export default function Home() {
       </section>
 
       {/* ─── Events / Opportunities (interactive) ─────────────── */}
-      <section className="max-w-6xl mx-auto px-4 py-12 md:py-16">
+      <section className="max-w-6xl mx-auto px-4 py-12 md:py-10">
         <div className="grid lg:grid-cols-2 gap-10 items-center">
           <motion.div {...fadeUp} transition={{ duration: 0.45 }}>
             <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[var(--color-brand)] mb-3">
@@ -271,7 +271,7 @@ export default function Home() {
       </section>
 
       {/* ─── Rewards (XP) — theme-adaptive accent band ────────── */}
-      <section className="bg-[var(--bg-subtle)] py-12 md:py-16 relative overflow-hidden">
+      <section className="bg-[var(--bg-subtle)] py-12 md:py-10 relative overflow-hidden">
         <div className="pointer-events-none absolute -top-20 right-10 w-80 h-80 rounded-full bg-[var(--color-gold)]/10 blur-3xl" />
         <div className="pointer-events-none absolute bottom-0 -left-16 w-72 h-72 rounded-full bg-[var(--color-brand)]/10 blur-3xl" />
         <div className="max-w-6xl mx-auto px-4 relative">
@@ -313,7 +313,7 @@ export default function Home() {
       </section>
 
       {/* ─── About / mission (with image) ─────────────────────── */}
-      <section className="max-w-6xl mx-auto px-4 py-14 md:py-20">
+      <section className="max-w-6xl mx-auto px-4 py-14 md:py-12">
         <div className="grid md:grid-cols-2 gap-10 items-center">
           <motion.div
             initial={{ opacity: 0, x: -24 }}
@@ -352,7 +352,7 @@ export default function Home() {
       </section>
 
       {/* ─── Image banner ─────────────────────────────────────── */}
-      <section className="max-w-7xl mx-auto px-4 pb-12 md:pb-16">
+      <section className="max-w-7xl mx-auto px-4 pb-12 md:pb-10">
         <motion.div {...fadeUp} transition={{ duration: 0.5 }} className="relative rounded-3xl overflow-hidden shadow-[var(--shadow-lg)]">
           <Image
             src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=1600&q=80"
@@ -371,7 +371,7 @@ export default function Home() {
       </section>
 
       {/* ─── Final CTA ────────────────────────────────────────── */}
-      <section className="max-w-7xl mx-auto px-4 pb-16 md:pb-20">
+      <section className="max-w-7xl mx-auto px-4 pb-16 md:pb-12">
         <motion.div
           initial={{ opacity: 0, scale: 0.97 }}
           whileInView={{ opacity: 1, scale: 1 }}
