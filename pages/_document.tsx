@@ -20,6 +20,10 @@ export default function Document({ locale }: { locale?: string }) {
             font stylesheet to render-block on. */}
         <meta name="theme-color" content="#2578e8" />
 
+        {/* Google Search Console domain-ownership verification (enables custom
+            OAuth-consent branding + Search Console). */}
+        <meta name="google-site-verification" content="evrKSjJrxvdlxIDkp7T2w8D_ze3ZCWPS0byMJVaEFmQ" />
+
         {/* Favicons — SVG for modern browsers, PNG/ICO fallbacks, apple-touch for iOS */}
         <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=3" />
         <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png?v=3" />
