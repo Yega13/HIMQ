@@ -8,6 +8,7 @@ import Head from 'next/head';
 import { CheckCircle, Lock, ArrowRight, ChevronLeft } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
+import RelatedOpportunities from '@/components/RelatedOpportunities';
 import { useUser } from '@/lib/useUser';
 import { getBrowserClient } from '@/lib/supabase';
 import { cn } from '@/lib/utils';
@@ -223,6 +224,11 @@ export default function RoadmapPage({ chatId }: { chatId: string }) {
               <ArrowRight size={16} />
             </Link>
           )
+        )}
+
+        {/* Lessons ↔ opportunities loop: real opportunities for this skill */}
+        {!discovering && chat && (
+          <RelatedOpportunities topic={`${chat.title} ${lessons.map((l) => l.title).join(' ')}`} />
         )}
       </div>
     </Layout>

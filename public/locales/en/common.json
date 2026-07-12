@@ -351,6 +351,10 @@
       "all_done_title": "All done!",
       "all_done_desc": "You earned +{{xp}} XP.",
       "back_to_dashboard": "Back to dashboard",
+      "opps_title": "Opportunities for this skill",
+      "opps_subtitle": "Real Armenian opportunities matched to what you're learning.",
+      "opps_all": "Browse all opportunities",
+      "opps_none": "Explore opportunities that fit your goals",
       "lesson": "Lesson {{n}}",
       "completed": "Completed",
       "in_progress": "In progress"

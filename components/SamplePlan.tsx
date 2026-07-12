@@ -4,6 +4,7 @@ import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, ArrowRight, Loader2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 // Logged-out "try it": type a goal, watch May stream a real short plan — no
 // account. Talks to /api/sample-plan (IP-rate-limited, streamed).
@@ -75,6 +76,14 @@ export default function SamplePlan() {
     .filter(Boolean);
   const started = loading || plan.length > 0 || !!error;
 
+  // Timeline steps: real (lit) lessons, padded with dim placeholders while the
+  // plan is still generating so the reader sees steps light up one by one.
+  const placeholderCount = loading ? Math.max(1, 5 - lessons.length) : 0;
+  const steps = [
+    ...lessons.map((l) => ({ text: l, lit: true })),
+    ...Array.from({ length: placeholderCount }, () => ({ text: '', lit: false })),
+  ];
+
   return (
     <div className="w-full">
           <form
@@ -126,32 +135,67 @@ export default function SamplePlan() {
                   <p className="text-sm text-red-500 dark:text-red-400">{error}</p>
                 ) : (
                   <>
-                    <p className="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)] mb-3">
-                      {t('sample.your_plan')}
-                    </p>
-                    <div className="space-y-2">
-                      {lessons.map((l, i) => (
-                        <motion.div
-                          key={i}
-                          initial={{ opacity: 0, x: -8 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          className="flex items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--bg-secondary)] px-4 py-3"
-                        >
-                          <span className="flex items-center justify-center w-6 h-6 rounded-lg bg-[var(--color-brand-soft)] text-[var(--color-brand)] text-xs font-bold shrink-0">
-                            {i + 1}
+                    <p className="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)] mb-4 flex items-center gap-2">
+                      {loading ? (
+                        <>
+                          <Sparkles size={13} className="text-[var(--color-brand)]" />
+                          {t('sample.building')}
+                          <span className="inline-flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-brand)] animate-bounce" style={{ animationDelay: '0ms' }} />
+                            <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-brand)] animate-bounce" style={{ animationDelay: '150ms' }} />
+                            <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-brand)] animate-bounce" style={{ animationDelay: '300ms' }} />
                           </span>
-                          <span className="text-sm text-[var(--text-primary)]">{l}</span>
-                        </motion.div>
-                      ))}
-                      {loading && (
-                        <div className="flex items-center gap-2 text-[var(--text-muted)] text-sm px-1 py-1">
-                          <Loader2 size={14} className="animate-spin" /> {t('sample.building')}
-                        </div>
+                        </>
+                      ) : (
+                        t('sample.your_plan')
                       )}
+                    </p>
+
+                    {/* Timeline — dots light up as each lesson arrives */}
+                    <div className="relative">
+                      {steps.map((step, i) => {
+                        const forming = loading && !step.lit && i === lessons.length;
+                        const isLast = i === steps.length - 1;
+                        return (
+                          <div key={i} className="flex gap-3">
+                            <div className="flex flex-col items-center">
+                              <motion.span
+                                initial={false}
+                                animate={{ scale: step.lit ? 1 : 0.9 }}
+                                transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+                                className={cn(
+                                  'flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold shrink-0',
+                                  step.lit
+                                    ? 'bg-[var(--color-brand)] text-white shadow-[var(--shadow-sm)]'
+                                    : cn('border-2 text-transparent', forming ? 'border-[var(--color-brand)] animate-pulse' : 'border-[var(--border-strong)]'),
+                                )}
+                              >
+                                {i + 1}
+                              </motion.span>
+                              {!isLast && (
+                                <span className={cn('w-0.5 flex-1 my-1 rounded', step.lit ? 'bg-[var(--color-brand)]/30' : 'bg-[var(--border)]')} />
+                              )}
+                            </div>
+                            <div className="flex-1 pb-4 pt-0.5 min-h-[2rem]">
+                              {step.text ? (
+                                <motion.p
+                                  initial={{ opacity: 0, x: -6 }}
+                                  animate={{ opacity: 1, x: 0 }}
+                                  className="text-sm text-[var(--text-primary)] leading-snug"
+                                >
+                                  {step.text}
+                                </motion.p>
+                              ) : (
+                                <span className="block h-3.5 rounded bg-[var(--bg-subtle)] animate-pulse" style={{ width: `${72 - i * 9}%` }} />
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
 
                     {done && !loading && lessons.length > 0 && (
-                      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-5">
+                      <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="mt-3">
                         <Link
                           href="/auth"
                           className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-[var(--color-brand)] text-white font-bold text-sm hover:bg-[var(--color-brand-hover)] transition-colors shadow-[var(--shadow-md)]"
