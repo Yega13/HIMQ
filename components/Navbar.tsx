@@ -6,13 +6,12 @@ import { motion } from 'framer-motion';
 import ThemeToggle from './ThemeToggle';
 import LanguageToggle from './LanguageToggle';
 import Logo from './Logo';
+import ProfileMenu from './ProfileMenu';
 import { cn } from '@/lib/utils';
-import { getBrowserClient } from '@/lib/supabase';
 
 export default function Navbar() {
   const { t } = useTranslation('common');
   const { pathname } = useRouter();
-  const [userInitial, setUserInitial] = useState('?');
   const [visible, setVisible] = useState(true);
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
 
@@ -31,16 +30,6 @@ export default function Navbar() {
     };
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  useEffect(() => {
-    const supabase = getBrowserClient();
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user) {
-        const name = user.user_metadata?.full_name as string | undefined;
-        setUserInitial(name ? name[0].toUpperCase() : user.email?.[0].toUpperCase() ?? '?');
-      }
-    });
   }, []);
 
   // All core navigation grouped together (Leaderboard now lives here too).
@@ -110,12 +99,7 @@ export default function Navbar() {
             <div className="w-px h-6 bg-[var(--border-strong)]" />
             <LanguageToggle />
             <ThemeToggle />
-            <Link
-              href="/profile"
-              className="w-8 h-8 rounded-full bg-[var(--color-logo)] flex items-center justify-center text-white text-sm font-semibold"
-            >
-              {userInitial}
-            </Link>
+            <ProfileMenu />
           </div>
         </div>
       </div>
