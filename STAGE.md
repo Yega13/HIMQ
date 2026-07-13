@@ -144,4 +144,5 @@ On the landing page, anyone can **type a goal and watch May build a real plan li
 - **2026-07-13** — Live streaming AI chat; real weekly/monthly leaderboard; Google OAuth; logged-out "try it" with animated timeline; security + performance hardening pass; landing-page redesign.
 - **2026-07-13 (later)** — Lessons ↔ opportunities loop live (roadmap + course-complete); honest try-it CTA & opportunity empty states; Labs page "decode" (EncryptedText) header amplifying its terminal identity.
 - **2026-07-13 (later 2)** — Animated desktop account menu (avatar morphs into name/email + Profile + Sign out); opportunity matcher ignores year-numbers to cut false matches.
+- **2026-07-13 (later 3)** — Pricing cards get a theme-aware cursor-following spotlight glow (CardSpotlight).
 - *(add new entries here as we ship)*
