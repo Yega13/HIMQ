@@ -4,6 +4,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { Check, Sparkles } from 'lucide-react';
 import Layout from '@/components/Layout';
+import { CardSpotlight } from '@/components/ui/card-spotlight';
 import { cn } from '@/lib/utils';
 
 interface Tier {
@@ -60,10 +61,10 @@ export default function Pricing() {
 
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {TIERS.map((tier) => (
-            <div
+            <CardSpotlight
               key={tier.id}
               className={cn(
-                'relative flex flex-col rounded-2xl border p-6',
+                'flex flex-col rounded-2xl border p-6',
                 tier.popular
                   ? 'border-[var(--color-brand)] bg-[var(--bg-card)] shadow-[0_20px_50px_-24px_var(--color-brand)]'
                   : 'border-[var(--border)] bg-[var(--bg-card)]'
@@ -102,7 +103,7 @@ export default function Pricing() {
               >
                 {tier.id === 'free' ? 'Get started' : 'Choose ' + tier.name}
               </Link>
-            </div>
+            </CardSpotlight>
           ))}
         </div>
 
