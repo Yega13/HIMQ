@@ -35,7 +35,6 @@ function App({ Component, pageProps }: AppProps) {
     document.documentElement.lang = map[router.locale ?? 'en'] ?? 'en';
   }, [router.locale]);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     const supabase = getBrowserClient();
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
@@ -44,6 +43,8 @@ function App({ Component, pageProps }: AppProps) {
       }
     });
     return () => subscription.unsubscribe();
+    // Subscribe to auth changes once on mount (router.push is stable here).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
