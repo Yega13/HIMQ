@@ -123,6 +123,8 @@ while still teaching EVERYTHING the student needs to reach their goal. Never pad
   goal, confusion points
 - Directly address their confusion points and knowledge gaps
 - Completing the plan MUST fully achieve their real stated goal — leave no gap
+- ORDER matters: sequence the lessons as a real progression where each one builds on the previous (prerequisites first) and sets up the next — no forward references, no jumping ahead of what they've learned
+- Aim the plan at a concrete outcome: by the final lesson the student should be able to DO the real thing they came for, not just "know about" it
 - Titles should read like: "Understanding X through the lens of Y" not generic "Introduction to X"
 
 For EACH lesson also set:
