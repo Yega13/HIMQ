@@ -27,8 +27,6 @@ export function CardSpotlight({
   };
 
   const background = useMotionTemplate`radial-gradient(${radius}px circle at ${mouseX}px ${mouseY}px, color-mix(in srgb, var(--color-brand) 16%, transparent), transparent 78%)`;
-  // The dot-matrix layer only appears where the cursor is, via a radial mask.
-  const dotMask = useMotionTemplate`radial-gradient(${radius * 0.6}px circle at ${mouseX}px ${mouseY}px, black, transparent 72%)`;
 
   return (
     <div
@@ -38,24 +36,10 @@ export function CardSpotlight({
       className={cn('relative', className)}
     >
       {children}
-      {/* Soft glow */}
       <motion.div
         aria-hidden
         className="pointer-events-none absolute inset-0 rounded-2xl transition-opacity duration-300"
         style={{ background, opacity: hovered ? 1 : 0 }}
-      />
-      {/* Pixel/dot matrix, revealed only under the cursor */}
-      <motion.div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 rounded-2xl transition-opacity duration-300"
-        style={{
-          opacity: hovered ? 1 : 0,
-          backgroundImage:
-            'radial-gradient(color-mix(in srgb, var(--color-brand) 60%, transparent) 1px, transparent 1.5px)',
-          backgroundSize: '8px 8px',
-          WebkitMaskImage: dotMask,
-          maskImage: dotMask,
-        }}
       />
     </div>
   );
