@@ -20,11 +20,13 @@ const STOP = new Set([
 
 export function keywords(topic: string): string[] {
   // Keep letters/digits across Latin, Cyrillic (RU) and Armenian; drop the rest.
+  // Also drop pure numbers (e.g. a year like "2026") — they match every event
+  // and create false "matches".
   const words = topic
     .toLowerCase()
     .replace(/[^a-z0-9Ѐ-ӿԱ-֏\s]/gi, ' ')
     .split(/\s+/)
-    .filter((w) => w.length > 3 && !STOP.has(w));
+    .filter((w) => w.length > 3 && !STOP.has(w) && !/^\d+$/.test(w));
   return Array.from(new Set(words));
 }
 

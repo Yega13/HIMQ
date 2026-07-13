@@ -50,7 +50,7 @@ export default function LabsIndex() {
               className="font-mono text-[11px] font-semibold uppercase tracking-[0.22em]"
               encryptedClassName="text-[var(--text-muted)]"
               revealedClassName="text-[var(--color-green)]"
-              revealDelayMs={38}
+              revealDelayMs={70}
             />
           </div>
           <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight max-w-2xl text-balance">
@@ -58,7 +58,7 @@ export default function LabsIndex() {
               text="Learn by breaking things."
               encryptedClassName="text-[var(--text-muted)]"
               revealedClassName="text-[var(--text-primary)]"
-              revealDelayMs={45}
+              revealDelayMs={85}
             />
           </h1>
           <p className="text-[var(--text-secondary)] mt-4 max-w-xl text-[15px] leading-relaxed">
