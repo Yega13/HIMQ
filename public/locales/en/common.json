@@ -146,6 +146,23 @@
                       "explore_desc": "Find scholarships, courses and events near you.",
                       "set_goal": "Set your first goal"
                   },
+    "exams":  {
+                  "entry_title":  "Preparing for an exam?",
+                  "entry_sub":  "Get a targeted, deadline-paced prep plan — IELTS, SAT, the Unified Exams and more.",
+                  "eyebrow":  "Exam Prep",
+                  "title":  "Prep for the exam that matters.",
+                  "subtitle":  "Pick your exam, set a target and a date — May builds a section-by-section plan with real practice, paced to your exam day.",
+                  "cat_armenian":  "Armenian state exams",
+                  "cat_english":  "English proficiency",
+                  "cat_university":  "University admissions",
+                  "prepare":  "Prepare",
+                  "soon":  "Soon",
+                  "setup_date":  "Exam date",
+                  "setup_date_hint":  "optional",
+                  "start":  "Start prep",
+                  "starting":  "Building your plan…",
+                  "error":  "Couldn't start prep — please try again."
+              },
     "learn":  {
                   "title":  "What do you want to master?",
                   "subtitle":  "Pick a topic or describe your goal — your AI teacher builds a clear, step-by-step plan.",

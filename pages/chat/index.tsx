@@ -304,6 +304,28 @@ export default function ChatIndex() {
               <p className="text-[var(--text-secondary)]">{t('learn.subtitle')}</p>
             </motion.div>
 
+            {/* Exam prep entry — nested under Learn */}
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.03 }}
+              className="mb-6"
+            >
+              <Link
+                href="/chat/exams"
+                className="group flex items-center gap-3 rounded-2xl border border-[var(--border)] bg-[var(--bg-card)] px-4 py-3.5 hover:border-[var(--color-brand)] hover:shadow-[var(--shadow-md)] transition-all"
+              >
+                <span className="flex items-center justify-center w-10 h-10 rounded-xl bg-[var(--color-brand-soft)] text-[var(--color-brand)] shrink-0">
+                  <GraduationCap size={20} />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-bold text-[var(--text-primary)]">{t('exams.entry_title')}</p>
+                  <p className="text-xs text-[var(--text-secondary)]">{t('exams.entry_sub')}</p>
+                </div>
+                <ArrowRight size={18} className="text-[var(--text-muted)] group-hover:text-[var(--color-brand)] group-hover:translate-x-0.5 transition-all shrink-0" />
+              </Link>
+            </motion.div>
+
             {/* Category selection */}
             <motion.div
               initial={{ opacity: 0, y: 16 }}
