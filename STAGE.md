@@ -46,6 +46,8 @@ Live at **himqai.com**. Languages: **English · Русский · Հայերen**
 - **Truly personalized** — references your background, skips what you already know.
 - **Teaches in your language** — full EN / RU / AM.
 
+**Exam Prep (nested under Learn → `/chat/exams`).** A curated exam gallery — **Armenian Unified State Exams (Math, Armenian), IELTS, TOEFL, SAT** (GRE soon). Pick an exam, set a **target score + exam date**, and May builds a **section-by-section, deadline-paced** prep path (real exam structure, not guesses) through the same learning engine. This is a sharp, high-demand wedge for Armenian students and nobody AI-preps the Unified Exams.
+
 ---
 
 ## 5. Gamification (retention)
@@ -145,4 +147,5 @@ On the landing page, anyone can **type a goal and watch May build a real plan li
 - **2026-07-13 (later)** — Lessons ↔ opportunities loop live (roadmap + course-complete); honest try-it CTA & opportunity empty states; Labs page "decode" (EncryptedText) header amplifying its terminal identity.
 - **2026-07-13 (later 2)** — Animated desktop account menu (avatar morphs into name/email + Profile + Sign out); opportunity matcher ignores year-numbers to cut false matches.
 - **2026-07-13 (later 3)** — Pricing cards get a theme-aware cursor-following spotlight glow (CardSpotlight).
+- **2026-07-14** — Prompt tuning (May teaches more, asks fewer questions; plans build in order toward an outcome); tests + CI (vitest, 38 tests, GitHub Actions); control-token buffer extracted + tested; **Exam Prep** section (/chat/exams: IELTS/TOEFL/SAT/Unified, target+date → section-mapped path).
 - *(add new entries here as we ship)*
