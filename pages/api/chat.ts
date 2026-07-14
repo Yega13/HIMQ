@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { getAdminClient } from '@/lib/supabase';
 import { requireUser, boundedText } from '@/lib/apiAuth';
 import { streamAIResponse } from '@/lib/ai';
+import { visibleSoFar, interpretReply } from '@/lib/controlTokens';
 import { type ModelId, DEFAULT_MODEL } from '@/lib/models';
 import { languageName } from '@/lib/utils';
 
@@ -145,21 +146,9 @@ You are TEACHING now. Your job is to explain and show — not to interrogate. Yo
   });
   const send = (obj: unknown) => res.write(`data: ${JSON.stringify(obj)}\n\n`);
 
-  // The model emits control tokens (<<<PLAN_READY>>> / <<<LESSON_MASTERED>>>)
-  // on the final line. Never leak them — or a partial prefix mid-stream — to
-  // the client. `visibleSoFar` returns the safe-to-show prefix of the raw text.
-  const visibleSoFar = (full: string): string => {
-    let s = full.replace(/<<<PLAN_READY>>>/g, '').replace(/<<<LESSON_MASTERED>>>/g, '');
-    const open = s.lastIndexOf('<<<');
-    if (open !== -1 && !s.slice(open).includes('>>>')) {
-      s = s.slice(0, open);            // an in-progress token → hold it back
-    } else {
-      const m = s.match(/<{1,2}$/);    // a trailing '<' / '<<' that might grow into '<<<'
-      if (m) s = s.slice(0, s.length - m[0].length);
-    }
-    return s;
-  };
-
+  // The model emits control tokens (<<<PLAN_READY>>> / <<<LESSON_MASTERED>>>) on
+  // its final line. `visibleSoFar` returns the safe-to-show prefix — complete
+  // tokens removed and any in-progress prefix held back — so they never leak.
   let raw = '';
   let sentLen = 0;
   const onDelta = (text: string) => {
@@ -177,12 +166,7 @@ You are TEACHING now. Your job is to explain and show — not to interrogate. Yo
     console.error('Chat stream failed:', err);
   }
 
-  const planReady = isDiscovering && raw.includes('<<<PLAN_READY>>>');
-  const lessonMastered = !isDiscovering && raw.includes('<<<LESSON_MASTERED>>>');
-  const reply = raw
-    .replace(/<<<PLAN_READY>>>/g, '')
-    .replace(/<<<LESSON_MASTERED>>>/g, '')
-    .trim();
+  const { reply, planReady, lessonMastered } = interpretReply(raw, isDiscovering);
 
   await admin.from('messages').insert({
     chat_id: chatId,
