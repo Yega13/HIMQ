@@ -73,9 +73,9 @@ export const EXAMS: ExamMeta[] = [
     emoji: '🗽',
     blurb: 'The US-oriented English proficiency test, scored 0–120 across four sections.',
     sections: ['Reading', 'Listening', 'Speaking', 'Writing'],
-    scoreLabel: 'Target total score (0–120)',
-    scoreHint: 'Total of the 4 sections (each scored 0–30)',
-    scorePlaceholder: '100',
+    scoreLabel: 'Target overall score (1–6)',
+    scoreHint: 'New 2026 format: 4 sections each 1–6, overall = their average (a 0–120 comparable score is also given during the transition).',
+    scorePlaceholder: '5.0',
     status: 'live',
   },
   {
