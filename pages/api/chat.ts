@@ -91,7 +91,9 @@ QUESTION FORMAT RULES — follow exactly:
      A: Suggestion1 | Suggestion2 | Suggestion3
      T: open
   3) FULLY open — no good options → plain free-text question (no Q:/A:/T:)
-• NEVER add a catch-all choice like "Other", "Другое", "Այլ", "IDK", or "Not sure" — the text box already covers that. Use T: open instead when a freeform answer is likely.
+• Use EXHAUSTIVE (T: single / multiple) ONLY when the options genuinely cover EVERY student. If someone could realistically answer "I haven't taken it yet", "I'm not sure", or would want to give their OWN number/level (e.g. a current exam score, an exact level, or specifics) — the options are NOT exhaustive, so use T: open so a text box appears alongside your suggestions. When in doubt, prefer T: open.
+• Questions about a current score/level/experience almost always need T: open — never trap a student in score buckets they can't honestly pick.
+• NEVER add a catch-all choice like "Other", "Другое", "Այլ", "IDK", or "Not sure" — the text box (T: open) already covers that.
 • Never write paragraphs. Never explain yourself. Just ask.
 
 When you have enough to build a truly personalized plan, tell the student their

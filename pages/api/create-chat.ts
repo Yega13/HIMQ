@@ -84,8 +84,9 @@ A: <choice 1> | <choice 2> | <choice 3> | <choice 4>
 T: single
 
 Pick the T: value by how complete the choices are:
-- "single" / "multiple" — the choices are EXHAUSTIVE (every realistic answer fits one). The student won't need to type.
+- "single" / "multiple" — the choices are EXHAUSTIVE (every realistic answer fits one, INCLUDING someone with no experience). The student won't need to type.
 - "open" — the choices are just SUGGESTIONS and the student may have a different answer; a text box appears automatically.
+- If the question asks their current score / level / experience, or they could realistically answer "I haven't taken it" or "I'm not sure", the choices are NOT exhaustive → use T: open so they can type. Never trap them in score buckets they can't honestly pick.
 - If no clean options fit at all, DROP the A: and T: lines and ask one plain question in ${language}.
 
 Question rules:
