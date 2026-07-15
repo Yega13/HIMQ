@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { getAdminClient } from '@/lib/supabase';
 import { requireUser, boundedText } from '@/lib/apiAuth';
 import { generateAIResponse } from '@/lib/ai';
+import { getExam } from '@/lib/exams';
 import { languageName } from '@/lib/utils';
 
 // Involves an AI call to write the opening question — give it headroom over the
@@ -19,9 +20,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const user = await requireUser(req, res);
   if (!user) return;
 
-  const { goal, lang } = req.body as { goal?: string; lang?: string };
+  const { goal, lang, exam } = req.body as { goal?: string; lang?: string; exam?: string };
   const trimmedGoal = boundedText(goal, MAX_GOAL);
   if (!trimmedGoal) return res.status(400).json({ error: 'A goal under 500 characters is required' });
+  // Only persist a recognised exam id (marks the path as exam-prep in the UI).
+  const examId = exam && getExam(exam) ? exam : undefined;
 
   const admin = getAdminClient();
 
@@ -92,7 +95,8 @@ Pick the T: value by how complete the choices are:
 Question rules:
 - Max 4 choices, each a short phrase in ${language}. Choices must be clearly distinct, never overlapping.
 - NEVER add a catch-all choice like "Other", "Другое", "Այլ", "IDK" — the text box already covers that; use T: open instead when a freeform answer is likely.
-- Never output any English words inside the question text or the choices (keep only the Q:/A:/T: labels in English).`;
+- Never output any English words inside the question text or the choices (keep only the Q:/A:/T: labels in English).
+- PLAIN TEXT only — no markdown in the question or the choices. Never use ** or * (they render as literal asterisks).`;
 
   let openingMessage: string;
   try {
@@ -115,7 +119,7 @@ Question rules:
       user_id: user.id,
       title: trimmedGoal,
       chat_type: 'learning',
-      plan: { discovering: true, lang: chatLang },
+      plan: { discovering: true, lang: chatLang, ...(examId ? { exam: examId } : {}) },
       total_lessons: 0,
       current_lesson_index: 0,
       status: 'active',

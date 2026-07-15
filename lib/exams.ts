@@ -71,7 +71,7 @@ export const EXAMS: ExamMeta[] = [
     fullName: 'Test of English as a Foreign Language (iBT)',
     category: 'english',
     emoji: '🗽',
-    blurb: 'The US-oriented English proficiency test, scored 0–120 across four sections.',
+    blurb: 'The US-oriented English proficiency test — four sections, scored 1–6 overall in the new 2026 format.',
     sections: ['Reading', 'Listening', 'Speaking', 'Writing'],
     scoreLabel: 'Target overall score (1–6)',
     scoreHint: 'New 2026 format: 4 sections each 1–6, overall = their average (a 0–120 comparable score is also given during the transition).',

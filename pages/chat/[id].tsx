@@ -56,18 +56,23 @@ interface Chat {
 // T: line — especially in non-English. Accept any whitespace between labels and
 // treat T: as optional (default single). Keeps raw "Q:/A:" markers from ever
 // leaking into the rendered message.
+// Strip stray markdown emphasis (** / *) — the discovery Q&A view is natural
+// language (no code), so removing asterisks is safe and keeps them from showing
+// up literally in questions/choices.
+const stripMd = (s: string) => s.replace(/\*+/g, '').trim();
+
 function parseQuestion(content: string) {
   const m = content.match(/^([\s\S]*?)Q:\s*([\s\S]+?)\s*A:\s*([\s\S]+?)(?:\s*T:\s*(single|multiple|open))?\s*$/i);
   if (m) {
     const tRaw = m[4]?.toLowerCase();
     return {
-      preamble: m[1].trim(),
-      text: m[2].trim(),
-      choices: m[3].split('|').map((c) => c.trim()).filter(Boolean),
+      preamble: stripMd(m[1]),
+      text: stripMd(m[2]),
+      choices: m[3].split('|').map((c) => stripMd(c)).filter(Boolean),
       type: (tRaw === 'multiple' ? 'multiple' : tRaw === 'open' ? 'open' : 'single') as 'single' | 'multiple' | 'open',
     };
   }
-  return { preamble: '', text: content.replace(/^Q:\s*/i, '').trim(), choices: undefined, type: 'text' as const };
+  return { preamble: '', text: stripMd(content.replace(/^Q:\s*/i, '')), choices: undefined, type: 'text' as const };
 }
 
 export default function ChatDetail({ id }: { id: string }) {

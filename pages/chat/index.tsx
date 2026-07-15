@@ -26,6 +26,7 @@ import Layout from '@/components/Layout';
 import { useUser } from '@/lib/useUser';
 import { getBrowserClient, IS_MOCK } from '@/lib/supabase';
 import { buildLessonPlan } from '@/lib/mockClient';
+import { getExam } from '@/lib/exams';
 import { cn } from '@/lib/utils';
 
 interface ActiveChat {
@@ -34,6 +35,7 @@ interface ActiveChat {
   current_lesson_index: number;
   total_lessons: number;
   updated_at: string;
+  exam?: string | null;
 }
 
 const CATEGORIES = [
@@ -93,13 +95,14 @@ export default function ChatIndex() {
     if (!user) return;
     getBrowserClient()
       .from('chats')
-      .select('id, title, current_lesson_index, total_lessons, updated_at')
+      .select('id, title, current_lesson_index, total_lessons, updated_at, plan')
       .eq('user_id', user.id)
       .eq('status', 'active')
       .order('updated_at', { ascending: false })
       .limit(20)
       .then(({ data }) => {
-        setActiveChats((data ?? []) as ActiveChat[]);
+        const rows = (data ?? []) as (ActiveChat & { plan?: { exam?: string } })[];
+        setActiveChats(rows.map((c) => ({ ...c, exam: c.plan?.exam ?? null })));
         setChatsLoaded(true);
       });
   }, [user]);
@@ -249,12 +252,23 @@ export default function ChatIndex() {
                   {activeChats.map((chat) => {
                     const total = lessonTotal(chat);
                     const pctVal = Math.min(100, Math.round((chat.current_lesson_index / total) * 100));
+                    const exam = chat.exam ? getExam(chat.exam) : null;
                     return (
                       <div
                         key={chat.id}
-                        className="group rounded-xl border border-[var(--border)] bg-[var(--bg-card)] overflow-hidden hover:border-[var(--color-brand)] transition-colors shadow-[var(--shadow-sm)]"
+                        className={cn(
+                          'group rounded-xl border bg-[var(--bg-card)] overflow-hidden transition-colors shadow-[var(--shadow-sm)]',
+                          exam
+                            ? 'border-violet-400/70 dark:border-violet-500/60 hover:border-violet-500'
+                            : 'border-[var(--border)] hover:border-[var(--color-brand)]',
+                        )}
                       >
                         <Link href={`/chat/${chat.id}`} className="block px-3.5 py-3">
+                          {exam && (
+                            <span className="inline-flex items-center gap-1 mb-1.5 text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300">
+                              {exam.emoji} {t('exams.eyebrow')}
+                            </span>
+                          )}
                           <p className="text-sm font-semibold text-[var(--text-primary)] truncate mb-2">{chat.title}</p>
                           <div className="flex items-center gap-2">
                             <div className="flex-1 h-1.5 rounded-full bg-[var(--bg-subtle)] overflow-hidden">

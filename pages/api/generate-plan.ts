@@ -190,7 +190,7 @@ Return ONLY this JSON:
     .from('chats')
     .update({
       title: plan.chat_title,
-      plan: { ...plan, lang: chat.plan?.lang ?? null, approved: false },
+      plan: { ...plan, lang: chat.plan?.lang ?? null, exam: chat.plan?.exam ?? null, approved: false },
       total_lessons: plan.lessons.length,
       current_lesson_index: 0,
       status: 'active',

@@ -47,7 +47,7 @@ export default function ExamsPage() {
       const res = await fetch('/api/create-chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token ?? ''}` },
-        body: JSON.stringify({ goal: examGoal(selected, target, date), lang: router.locale }),
+        body: JSON.stringify({ goal: examGoal(selected, target, date), lang: router.locale, exam: selected.id }),
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
