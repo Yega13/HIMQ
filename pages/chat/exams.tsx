@@ -189,6 +189,9 @@ export default function ExamsPage() {
                     placeholder={selected.scorePlaceholder}
                     className="w-full px-4 py-2.5 rounded-xl border border-[var(--border-strong)] bg-[var(--bg-secondary)] text-[var(--text-primary)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-brand)]"
                   />
+                  {selected.scoreHint && (
+                    <p className="text-xs text-[var(--text-muted)] mt-1.5">{selected.scoreHint}</p>
+                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1.5">

@@ -14,6 +14,7 @@ export interface ExamMeta {
   blurb: string;
   sections: string[];  // the exam's real sections/papers
   scoreLabel: string;  // what the target input means, e.g. "Target band (1–9)"
+  scoreHint?: string;  // clarifies total-vs-section scoring
   scorePlaceholder: string;
   status: ExamStatus;
 }
@@ -34,6 +35,7 @@ export const EXAMS: ExamMeta[] = [
     blurb: 'The national maths exam used for university admission in Armenia. Algebra, functions, geometry and problem-solving.',
     sections: ['Algebra', 'Functions & graphs', 'Geometry', 'Problem solving'],
     scoreLabel: 'Target score (0–20)',
+    scoreHint: "Armenia's 20-point unified-exam scale",
     scorePlaceholder: '18',
     status: 'live',
   },
@@ -46,6 +48,7 @@ export const EXAMS: ExamMeta[] = [
     blurb: 'The national Armenian language & literature exam — grammar, orthography, text analysis and essay writing.',
     sections: ['Grammar & orthography', 'Text analysis', 'Literature', 'Essay writing'],
     scoreLabel: 'Target score (0–20)',
+    scoreHint: "Armenia's 20-point unified-exam scale",
     scorePlaceholder: '18',
     status: 'live',
   },
@@ -57,7 +60,8 @@ export const EXAMS: ExamMeta[] = [
     emoji: '🇬🇧',
     blurb: 'The English test for studying abroad. Four papers, band-scored 1–9 — with real practice in each.',
     sections: ['Listening', 'Reading', 'Writing', 'Speaking'],
-    scoreLabel: 'Target band (1–9)',
+    scoreLabel: 'Target overall band (1–9)',
+    scoreHint: 'Overall band = average of the 4 sections (each 1–9)',
     scorePlaceholder: '7.0',
     status: 'live',
   },
@@ -69,7 +73,8 @@ export const EXAMS: ExamMeta[] = [
     emoji: '🗽',
     blurb: 'The US-oriented English proficiency test, scored 0–120 across four sections.',
     sections: ['Reading', 'Listening', 'Speaking', 'Writing'],
-    scoreLabel: 'Target score (0–120)',
+    scoreLabel: 'Target total score (0–120)',
+    scoreHint: 'Total of the 4 sections (each scored 0–30)',
     scorePlaceholder: '100',
     status: 'live',
   },
@@ -81,7 +86,8 @@ export const EXAMS: ExamMeta[] = [
     emoji: '🎓',
     blurb: 'For US university admission. Digital SAT: Reading & Writing plus Math, scored 400–1600.',
     sections: ['Reading & Writing', 'Math'],
-    scoreLabel: 'Target score (400–1600)',
+    scoreLabel: 'Target total score (400–1600)',
+    scoreHint: 'Total of 2 sections (Reading & Writing, Math — each 200–800)',
     scorePlaceholder: '1400',
     status: 'live',
   },
@@ -93,7 +99,8 @@ export const EXAMS: ExamMeta[] = [
     emoji: '🧠',
     blurb: 'For graduate school admission — verbal, quantitative and analytical writing.',
     sections: ['Verbal Reasoning', 'Quantitative Reasoning', 'Analytical Writing'],
-    scoreLabel: 'Target score (260–340)',
+    scoreLabel: 'Target total (260–340)',
+    scoreHint: 'Verbal + Quant, each 130–170 (Writing scored 0–6 separately)',
     scorePlaceholder: '320',
     status: 'soon',
   },
