@@ -148,4 +148,5 @@ On the landing page, anyone can **type a goal and watch May build a real plan li
 - **2026-07-13 (later 2)** — Animated desktop account menu (avatar morphs into name/email + Profile + Sign out); opportunity matcher ignores year-numbers to cut false matches.
 - **2026-07-13 (later 3)** — Pricing cards get a theme-aware cursor-following spotlight glow (CardSpotlight).
 - **2026-07-14** — Prompt tuning (May teaches more, asks fewer questions; plans build in order toward an outcome); tests + CI (vitest, 38 tests, GitHub Actions); control-token buffer extracted + tested; **Exam Prep** section (/chat/exams: IELTS/TOEFL/SAT/Unified, target+date → section-mapped path).
+- **2026-07-14 (later)** — Exam-prep quality pass: discovery uses an input box when a student can't pick a bucket; correct exam scoring (TOEFL now 1–6, 2026 format) + total-vs-section hints; guardrails so May never invents exam stats, never narrates a parallel study plan, never says "go search for it," and writes plain text (no markdown); exam-prep paths marked in the Learn sidebar (violet badge).
 - *(add new entries here as we ship)*
