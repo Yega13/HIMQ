@@ -115,6 +115,10 @@ export default function ChatDetail({ id }: { id: string }) {
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef  = useRef<HTMLTextAreaElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  // Only auto-scroll to the newest message when the user is already near the
+  // bottom — so scrolling up to re-read isn't yanked back down mid-stream.
+  const stickRef  = useRef(true);
 
   useEffect(() => {
     if (!userLoading && !user) router.replace('/auth');
@@ -144,7 +148,7 @@ export default function ChatDetail({ id }: { id: string }) {
   }, [user, id, router]);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (stickRef.current) bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
   const sendMessage = async (overrideMsg?: string) => {
@@ -950,7 +954,14 @@ export default function ChatDetail({ id }: { id: string }) {
           </div>
 
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto px-4 py-6 space-y-4">
+          <div
+            ref={scrollRef}
+            onScroll={() => {
+              const el = scrollRef.current;
+              if (el) stickRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 120;
+            }}
+            className="flex-1 overflow-y-auto px-4 py-6 space-y-4"
+          >
             {allDone && (
               <div className="max-w-md mx-auto py-10">
                 <div className="text-center">
