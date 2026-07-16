@@ -168,8 +168,15 @@ You are TEACHING now. Your job is to explain and show — not to interrogate. Yo
     }
   };
 
+  // Model routing: English chat normally uses Haiku (cheap), but Haiku botches
+  // the structured discovery Q/A/T format and isn't careful enough for exam
+  // prep. Route DISCOVERY and EXAM chats to Sonnet (via the 'opening' role,
+  // which selects Sonnet regardless of language). General English teaching
+  // stays on Haiku to keep costs down.
+  const aiRole = (isDiscovering || chat.plan?.exam) ? 'opening' : 'chat';
+
   try {
-    raw = await streamAIResponse(aiMessages, 'chat', systemPrompt, onDelta, modelId, chat.plan?.lang);
+    raw = await streamAIResponse(aiMessages, aiRole, systemPrompt, onDelta, modelId, chat.plan?.lang);
   } catch (err) {
     console.error('Chat stream failed:', err);
   }
