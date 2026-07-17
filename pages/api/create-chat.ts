@@ -20,7 +20,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const user = await requireUser(req, res);
   if (!user) return;
 
-  const { goal, lang, exam } = req.body as { goal?: string; lang?: string; exam?: string };
+  const { goal, lang, exam, intakeSummary } = req.body as {
+    goal?: string; lang?: string; exam?: string; intakeSummary?: string;
+  };
   const trimmedGoal = boundedText(goal, MAX_GOAL);
   if (!trimmedGoal) return res.status(400).json({ error: 'A goal under 500 characters is required' });
   // Only persist a recognised exam id (marks the path as exam-prep in the UI).
@@ -57,6 +59,36 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     console.error('Chat-create limiter unavailable, allowing:', createQuotaErr);
   } else if (createQuota && createQuota.allowed === false) {
     return res.status(429).json({ error: "You've reached today's limit for starting new topics. Try again tomorrow." });
+  }
+
+  // Exam prep with a hardcoded structured intake → SKIP the AI discovery phase
+  // entirely. Insert the intake as the student's first message so generate-plan
+  // (called next by the client) can build the plan directly from it.
+  if (intakeSummary?.trim()) {
+    const { data: chat, error: chatErr } = await admin
+      .from('chats')
+      .insert({
+        user_id: user.id,
+        title: trimmedGoal,
+        chat_type: 'learning',
+        plan: { discovering: true, lang: chatLang, ...(examId ? { exam: examId } : {}) },
+        total_lessons: 0,
+        current_lesson_index: 0,
+        status: 'active',
+      })
+      .select()
+      .single();
+    if (chatErr || !chat) {
+      console.error('Exam chat insert failed:', chatErr);
+      return res.status(500).json({ error: 'Failed to create chat' });
+    }
+    await admin.from('messages').insert({
+      chat_id: chat.id,
+      role: 'user',
+      content: intakeSummary.trim().slice(0, 2000),
+      lesson_index: 0,
+    });
+    return res.status(200).json({ chatId: chat.id, skipDiscovery: true });
   }
 
   // Generate ONLY the opening discovery question — no plan yet.

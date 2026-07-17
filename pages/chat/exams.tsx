@@ -6,14 +6,55 @@ import { useRouter } from 'next/router';
 import Head from 'next/head';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { GraduationCap, ArrowRight, X, Loader2, CalendarDays, ChevronLeft } from 'lucide-react';
+import { GraduationCap, ArrowRight, X, Loader2, ChevronLeft, Check } from 'lucide-react';
 import Layout from '@/components/Layout';
+import { DatePicker } from '@/components/DatePicker';
 import { useUser } from '@/lib/useUser';
 import { getBrowserClient } from '@/lib/supabase';
 import { EXAMS, examGoal, type ExamMeta } from '@/lib/exams';
 import { cn } from '@/lib/utils';
 
 const CATEGORY_ORDER: ExamMeta['category'][] = ['armenian', 'english', 'university'];
+
+// Hardcoded intake options (id = stable, label = i18n key, en = phrase baked
+// into the AI summary). Learning styles only cover what May can actually adapt
+// in text — no fake "video/voice" promises.
+const LEVELS = [
+  { id: 'new', label: 'exams.lvl_new', en: 'a complete beginner' },
+  { id: 'basic', label: 'exams.lvl_basic', en: 'have some basics' },
+  { id: 'inter', label: 'exams.lvl_inter', en: 'at an intermediate level' },
+  { id: 'adv', label: 'exams.lvl_adv', en: 'fairly advanced' },
+  { id: 'unsure', label: 'exams.lvl_unsure', en: 'not sure of my level' },
+];
+const HOURS = [
+  { id: 'u5', label: 'exams.hrs_u5', en: 'under 5' },
+  { id: '5_10', label: 'exams.hrs_5_10', en: '5-10' },
+  { id: '10_15', label: 'exams.hrs_10_15', en: '10-15' },
+  { id: '15p', label: 'exams.hrs_15p', en: '15+' },
+];
+const STYLES = [
+  { id: 'examples', label: 'exams.sty_examples', en: 'lots of examples' },
+  { id: 'concise', label: 'exams.sty_concise', en: 'concise, to-the-point explanations' },
+  { id: 'steps', label: 'exams.sty_steps', en: 'step-by-step detail' },
+  { id: 'analogies', label: 'exams.sty_analogies', en: 'real-world analogies' },
+];
+
+function buildIntakeSummary(
+  exam: ExamMeta, target: string, date: string,
+  level: string, weak: string[], hours: string, styles: string[],
+): string {
+  const parts = [`I'm preparing for the ${exam.fullName}.`];
+  if (target.trim()) parts.push(`My target score is ${target.trim()}.`);
+  if (date) parts.push(`My exam date is ${date}.`);
+  const lvl = LEVELS.find((l) => l.id === level);
+  if (lvl) parts.push(`Right now I am ${lvl.en}.`);
+  if (weak.length) parts.push(`My weakest sections are: ${weak.join(', ')}.`);
+  const hrs = HOURS.find((h) => h.id === hours);
+  if (hrs) parts.push(`I can study about ${hrs.en} hours per week.`);
+  const styleEn = styles.map((id) => STYLES.find((s) => s.id === id)?.en).filter(Boolean);
+  if (styleEn.length) parts.push(`I learn best with ${styleEn.join(', ')}.`);
+  return parts.join(' ');
+}
 
 export default function ExamsPage() {
   const { t } = useTranslation('common');
@@ -23,15 +64,21 @@ export default function ExamsPage() {
   const [selected, setSelected] = useState<ExamMeta | null>(null);
   const [target, setTarget] = useState('');
   const [date, setDate] = useState('');
+  const [level, setLevel] = useState('');
+  const [weak, setWeak] = useState<string[]>([]);
+  const [hours, setHours] = useState('');
+  const [styles, setStyles] = useState<string[]>([]);
   const [starting, setStarting] = useState(false);
   const [error, setError] = useState('');
 
   const open = (exam: ExamMeta) => {
     setSelected(exam);
-    setTarget('');
-    setDate('');
+    setTarget(''); setDate(''); setLevel(''); setWeak([]); setHours(''); setStyles([]);
     setError('');
   };
+
+  const toggle = (arr: string[], v: string, set: (x: string[]) => void) =>
+    set(arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v]);
 
   const startPrep = async () => {
     if (!selected) return;
@@ -44,16 +91,24 @@ export default function ExamsPage() {
     try {
       const supabase = getBrowserClient();
       const { data: { session } } = await supabase.auth.getSession();
+      const headers = { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token ?? ''}` };
+      // Skip AI discovery — hand the structured intake straight to plan generation.
+      const summary = buildIntakeSummary(selected, target, date, level, weak, hours, styles);
       const res = await fetch('/api/create-chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token ?? ''}` },
-        body: JSON.stringify({ goal: examGoal(selected, target, date), lang: router.locale, exam: selected.id }),
+        headers,
+        body: JSON.stringify({ goal: examGoal(selected, target, date), lang: router.locale, exam: selected.id, intakeSummary: summary }),
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
         throw new Error(body.error ?? (t('exams.error') as string));
       }
       const { chatId } = await res.json();
+      const planRes = await fetch('/api/generate-plan', { method: 'POST', headers, body: JSON.stringify({ chatId }) });
+      if (!planRes.ok) {
+        const body = await planRes.json().catch(() => ({}));
+        throw new Error(body.error ?? (t('exams.error') as string));
+      }
       await router.push(`/chat/${chatId}`);
     } catch (e) {
       setError(e instanceof Error ? e.message : (t('exams.error') as string));
@@ -165,7 +220,7 @@ export default function ExamsPage() {
               exit={{ scale: 0.96, opacity: 0, y: 8 }}
               transition={{ type: 'spring', damping: 22, stiffness: 300 }}
               onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-md rounded-2xl border border-[var(--border)] bg-[var(--bg-card)] p-6 shadow-[var(--shadow-lg)]"
+              className="w-full max-w-md max-h-[88vh] overflow-y-auto rounded-2xl border border-[var(--border)] bg-[var(--bg-card)] p-6 shadow-[var(--shadow-lg)]"
             >
               <div className="flex items-start justify-between mb-1">
                 <div className="flex items-center gap-2.5">
@@ -180,7 +235,8 @@ export default function ExamsPage() {
                 </button>
               </div>
 
-              <div className="mt-5 space-y-4">
+              <div className="mt-5 space-y-5">
+                {/* Target score */}
                 <div>
                   <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1.5">{selected.scoreLabel}</label>
                   <input
@@ -189,23 +245,94 @@ export default function ExamsPage() {
                     placeholder={selected.scorePlaceholder}
                     className="w-full px-4 py-2.5 rounded-xl border border-[var(--border-strong)] bg-[var(--bg-secondary)] text-[var(--text-primary)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-brand)]"
                   />
-                  {selected.scoreHint && (
-                    <p className="text-xs text-[var(--text-muted)] mt-1.5">{selected.scoreHint}</p>
-                  )}
+                  {selected.scoreHint && <p className="text-xs text-[var(--text-muted)] mt-1.5">{selected.scoreHint}</p>}
                 </div>
+
+                {/* Exam date */}
                 <div>
                   <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1.5">
                     {t('exams.setup_date')} <span className="text-[var(--text-muted)] font-normal">· {t('exams.setup_date_hint')}</span>
                   </label>
-                  <div className="relative">
-                    <CalendarDays size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)] pointer-events-none" />
-                    <input
-                      type="date"
-                      min={today}
-                      value={date}
-                      onChange={(e) => setDate(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-[var(--border-strong)] bg-[var(--bg-secondary)] text-[var(--text-primary)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-brand)]"
-                    />
+                  <DatePicker value={date} onChange={setDate} min={today} placeholder={t('exams.setup_date') as string} />
+                </div>
+
+                {/* Current level */}
+                <div>
+                  <label className="block text-sm font-medium text-[var(--text-secondary)] mb-2">{t('exams.intake_level')}</label>
+                  <div className="flex flex-wrap gap-2">
+                    {LEVELS.map((l) => (
+                      <button
+                        key={l.id}
+                        type="button"
+                        onClick={() => setLevel(level === l.id ? '' : l.id)}
+                        className={cn('px-3 py-1.5 rounded-full border text-xs font-medium transition-colors',
+                          level === l.id
+                            ? 'border-[var(--color-brand)] bg-[var(--color-brand-soft)] text-[var(--color-brand)]'
+                            : 'border-[var(--border-strong)] bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:border-[var(--color-brand)]')}
+                      >
+                        {t(l.label)}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Weakest sections */}
+                <div>
+                  <label className="block text-sm font-medium text-[var(--text-secondary)] mb-2">{t('exams.intake_weak')}</label>
+                  <div className="flex flex-wrap gap-2">
+                    {selected.sections.map((s) => (
+                      <button
+                        key={s}
+                        type="button"
+                        onClick={() => toggle(weak, s, setWeak)}
+                        className={cn('inline-flex items-center gap-1 px-3 py-1.5 rounded-full border text-xs font-medium transition-colors',
+                          weak.includes(s)
+                            ? 'border-[var(--color-brand)] bg-[var(--color-brand-soft)] text-[var(--color-brand)]'
+                            : 'border-[var(--border-strong)] bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:border-[var(--color-brand)]')}
+                      >
+                        {weak.includes(s) && <Check size={12} />}{s}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Study time per week */}
+                <div>
+                  <label className="block text-sm font-medium text-[var(--text-secondary)] mb-2">{t('exams.intake_hours')}</label>
+                  <div className="flex flex-wrap gap-2">
+                    {HOURS.map((h) => (
+                      <button
+                        key={h.id}
+                        type="button"
+                        onClick={() => setHours(hours === h.id ? '' : h.id)}
+                        className={cn('px-3 py-1.5 rounded-full border text-xs font-medium transition-colors',
+                          hours === h.id
+                            ? 'border-[var(--color-brand)] bg-[var(--color-brand-soft)] text-[var(--color-brand)]'
+                            : 'border-[var(--border-strong)] bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:border-[var(--color-brand)]')}
+                      >
+                        {t(h.label)}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Learning style */}
+                <div>
+                  <label className="block text-sm font-medium text-[var(--text-secondary)] mb-2">{t('exams.intake_style')}</label>
+                  <div className="flex flex-wrap gap-2">
+                    {STYLES.map((s) => (
+                      <button
+                        key={s.id}
+                        type="button"
+                        onClick={() => toggle(styles, s.id, setStyles)}
+                        className={cn('inline-flex items-center gap-1 px-3 py-1.5 rounded-full border text-xs font-medium transition-colors',
+                          styles.includes(s.id)
+                            ? 'border-[var(--color-brand)] bg-[var(--color-brand-soft)] text-[var(--color-brand)]'
+                            : 'border-[var(--border-strong)] bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:border-[var(--color-brand)]')}
+                      >
+                        {styles.includes(s.id) && <Check size={12} />}{t(s.label)}
+                      </button>
+                    ))}
                   </div>
                 </div>
               </div>
