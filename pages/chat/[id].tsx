@@ -9,6 +9,7 @@ import { Send, CheckCircle, Circle, Lock, ChevronLeft, BookOpen, Zap, Flame, Che
 import { MODELS, DEFAULT_MODEL, type ModelId } from '@/lib/models';
 import Layout from '@/components/Layout';
 import RelatedOpportunities from '@/components/RelatedOpportunities';
+import { MicButton } from '@/components/MicButton';
 import { useUser } from '@/lib/useUser';
 import { getBrowserClient, IS_MOCK } from '@/lib/supabase';
 import { cn } from '@/lib/utils';
@@ -1100,6 +1101,12 @@ export default function ChatDetail({ id }: { id: string }) {
                   rows={1}
                   className="flex-1 px-4 py-3 rounded-xl border border-[var(--border)] bg-[var(--bg-card)] text-[var(--text-primary)] text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[var(--color-brand)] transition placeholder-[var(--text-muted)] max-h-32 overflow-y-auto"
                   style={{ minHeight: '44px' }}
+                />
+                <MicButton
+                  lang={router.locale}
+                  getText={() => input}
+                  onTranscript={(text) => setInput(text)}
+                  disabled={sending}
                 />
                 <button
                   onClick={() => sendMessage()}
