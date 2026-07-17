@@ -104,7 +104,10 @@ export default function ExamsPage() {
       const res = await fetch('/api/create-chat', {
         method: 'POST',
         headers,
-        body: JSON.stringify({ goal: examGoal(selected, target, date), lang: router.locale, exam: selected.id, intakeSummary: summary }),
+        body: JSON.stringify({
+          goal: examGoal(selected, target, date), lang: router.locale, exam: selected.id,
+          intakeSummary: summary, examDate: date, hoursId: hours, level,
+        }),
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));

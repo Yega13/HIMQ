@@ -20,8 +20,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const user = await requireUser(req, res);
   if (!user) return;
 
-  const { goal, lang, exam, intakeSummary } = req.body as {
+  const { goal, lang, exam, intakeSummary, examDate, hoursId, level } = req.body as {
     goal?: string; lang?: string; exam?: string; intakeSummary?: string;
+    examDate?: string; hoursId?: string; level?: string;
   };
   const trimmedGoal = boundedText(goal, MAX_GOAL);
   if (!trimmedGoal) return res.status(400).json({ error: 'A goal under 500 characters is required' });
@@ -71,7 +72,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         user_id: user.id,
         title: trimmedGoal,
         chat_type: 'learning',
-        plan: { discovering: true, lang: chatLang, ...(examId ? { exam: examId } : {}) },
+        plan: {
+          discovering: true,
+          lang: chatLang,
+          ...(examId ? { exam: examId } : {}),
+          examDate: (examDate || '').slice(0, 10) || null,
+          hoursId: (hoursId || '').slice(0, 8) || null,
+          level: (level || '').slice(0, 12) || null,
+        },
         total_lessons: 0,
         current_lesson_index: 0,
         status: 'active',

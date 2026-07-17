@@ -89,6 +89,25 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const language = languageName(chat.plan?.lang);
 
+  // ── Exam prep: a comprehensive plan sized to the study time available ──
+  // Budget in STUDY HOURS (weeks-until-exam × weekly hours), calibrated for a
+  // slow learner (~5h/lesson) so even a weak student finishes in time. Capped at
+  // 32 lessons so generation fits the serverless time limit.
+  const isExam = !!chat.plan?.exam;
+  const HOURS_NUM: Record<string, number> = { u5: 3, '5_10': 7, '10_15': 12, '15p': 18 };
+  let lessonTarget = 0;
+  if (isExam) {
+    const hoursPerWeek = HOURS_NUM[(chat.plan?.hoursId as string) ?? ''] ?? 7;
+    const examDateStr = chat.plan?.examDate as string | undefined;
+    let weeks = 10; // default when no date given
+    if (examDateStr) {
+      const days = Math.max(3, Math.ceil((new Date(examDateStr).getTime() - Date.now()) / 86_400_000));
+      weeks = Math.max(1, days / 7);
+    }
+    const usableHours = weeks * hoursPerWeek * 0.85; // 15% buffer for review/slippage
+    lessonTarget = Math.min(32, Math.max(6, Math.round(usableHours / 5)));
+  }
+
   // If the student asked for changes during plan review, show May the previous
   // plan and their requested changes so it revises rather than starts over.
   const prevLessons = Array.isArray(chat.plan?.lessons)
@@ -100,7 +119,42 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     : '';
 
   const planSystemPrompt = `You are an expert curriculum designer. Return ONLY valid JSON — no markdown, no explanation. All human-readable text (chat_title, lesson titles and descriptions) MUST be written in ${language}.`;
-  const planUserMessage = `A student just completed a discovery conversation with Himq AI.
+  const planUserMessage = isExam
+    ? `You are an expert exam-prep curriculum designer. Build this student's COMPLETE study plan for a standardized exam. Write chat_title, every lesson title, and every description in ${language}.
+
+STUDENT'S GOAL: "${chat.title}"
+
+THEIR INTAKE (level, target score, exam date, weekly study hours, weakest sections, how they learn best):
+---
+${conversation}
+---
+${feedbackBlock}
+Create a COMPREHENSIVE plan of EXACTLY ${lessonTarget} lessons — hit this number closely (±2). It was calculated from their exam date and weekly study hours, so it fits the time they actually have.
+
+Rules:
+- This is real exam prep with a deadline: cover EVERYTHING on the test this student needs, thoroughly. Comprehensiveness matters MORE than brevity — do NOT minimize the count.
+- Calibrate for a student who learns SLOWLY and needs things spelled out. Assume little prior knowledge unless their intake clearly shows otherwise. If a weaker student would pass with this plan, a stronger one certainly will.
+- Make each lesson GRANULAR and SPECIFIC — ONE focused subtopic, never a broad chapter. Good: "Algebra: extraneous solutions and dividing polynomials". Bad: "Algebra".
+- Sequence as a real progression: core foundations first, then each exam section's skills in small steps, then advanced/tricky cases, then FULL timed practice tests, then targeted review of their weak spots. No forward references.
+- Put EXTRA lessons on the sections they named as weakest.
+- If you cover all the necessary content before ${lessonTarget} lessons, fill the rest with (a) more full-length timed practice tests and (b) review/strengthening of fundamentals. Never pad with fluff — but a serious exam plan always has room for more practice, so use the time.
+- The LAST few lessons MUST be full-length, timed practice under real exam conditions.
+
+For EACH lesson also set:
+- "difficulty": integer 1–5 (1 = easy/review, 3 = solid new step, 5 = genuinely challenging). Use the whole range.
+- "why": ONE short sentence (in ${language}) tied to their goal or weak areas, under 18 words, speaking to "you".
+
+Keep titles and descriptions to ONE concise line each — you have many lessons to produce.
+
+Return ONLY this JSON:
+{
+  "chat_title": "specific title for this exam path",
+  "welcome": "2-3 warm sentences (in ${language}) as May: acknowledge their exam and target, say you built this plan for them, invite them to start lesson 1.",
+  "lessons": [
+    {"index": 0, "title": "specific lesson title", "description": "one line: what they'll be able to DO after this", "difficulty": 2, "why": "one short reason in ${language}"}
+  ]
+}`
+    : `A student just completed a discovery conversation with Himq AI.
 Based on everything revealed in this conversation, create their PERSONALIZED learning plan.
 Write chat_title, every lesson title, and every description in ${language}.
 

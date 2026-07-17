@@ -65,14 +65,14 @@ async function withClaude(messages: AIMessage[], role: AIRole, system: string, l
   // fallback still has time.
   const res = await withTimeout(anthropic.messages.create({
     model,
-    max_tokens: role === 'plan' ? 2000 : 800,
+    max_tokens: role === 'plan' ? 8000 : 800,
     // Sonnet 5 runs adaptive thinking by default; disable it to keep chat fast
     // and stop hidden reasoning from eating the max_tokens budget. Haiku takes
     // no thinking param.
     ...(model === 'claude-sonnet-5' ? { thinking: { type: 'disabled' as const } } : {}),
     system,
     messages: apiMessages,
-  }));
+  }), role === 'plan' ? 58_000 : AI_TIMEOUT_MS); // big exam plans need longer
   const block = res.content[0];
   if (block.type !== 'text') throw new Error('Unexpected Claude response type');
   return block.text;
@@ -102,7 +102,7 @@ async function withGemini(messages: AIMessage[], role: AIRole, system: string): 
   const modelName = role === 'plan' ? 'gemini-1.5-pro' : 'gemini-1.5-flash';
   const model = gemini.getGenerativeModel({ model: modelName, systemInstruction: system });
   const history = toGeminiHistory(messages);
-  const chat = model.startChat({ history, generationConfig: { maxOutputTokens: role === 'plan' ? 2000 : 800 } });
+  const chat = model.startChat({ history, generationConfig: { maxOutputTokens: role === 'plan' ? 8000 : 800 } });
   const result = await withTimeout(chat.sendMessage(messages[messages.length - 1].content));
   return result.response.text();
 }
@@ -128,7 +128,7 @@ async function streamClaude(
 
   const stream = anthropic.messages.stream({
     model,
-    max_tokens: role === 'plan' ? 2000 : 800,
+    max_tokens: role === 'plan' ? 8000 : 800,
     ...(model === 'claude-sonnet-5' ? { thinking: { type: 'disabled' as const } } : {}),
     system,
     messages: apiMessages,
@@ -152,7 +152,7 @@ async function streamGemini(
   const modelName = role === 'plan' ? 'gemini-1.5-pro' : 'gemini-1.5-flash';
   const model = gemini.getGenerativeModel({ model: modelName, systemInstruction: system });
   const history = toGeminiHistory(messages);
-  const chat = model.startChat({ history, generationConfig: { maxOutputTokens: role === 'plan' ? 2000 : 800 } });
+  const chat = model.startChat({ history, generationConfig: { maxOutputTokens: role === 'plan' ? 8000 : 800 } });
   const result = await chat.sendMessageStream(messages[messages.length - 1].content);
   let full = '';
   for await (const chunk of result.stream) {
