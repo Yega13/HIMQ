@@ -257,15 +257,15 @@ export default function ChatIndex() {
                       <div
                         key={chat.id}
                         className={cn(
-                          'group rounded-xl border bg-[var(--bg-card)] overflow-hidden transition-colors shadow-[var(--shadow-sm)]',
+                          'group rounded-xl border overflow-hidden transition-colors shadow-[var(--shadow-sm)]',
                           exam
-                            ? 'border-violet-400/70 dark:border-violet-500/60 hover:border-violet-500'
-                            : 'border-[var(--border)] hover:border-[var(--color-brand)]',
+                            ? 'border-rose-400/60 bg-rose-50 dark:bg-rose-950/40 dark:border-rose-500/40 hover:border-rose-500'
+                            : 'border-[var(--border)] bg-[var(--bg-card)] hover:border-[var(--color-brand)]',
                         )}
                       >
                         <Link href={`/chat/${chat.id}`} className="block px-3.5 py-3">
                           {exam && (
-                            <span className="inline-flex items-center gap-1 mb-1.5 text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300">
+                            <span className="inline-flex items-center gap-1 mb-1.5 text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300">
                               {exam.emoji} {t('exams.eyebrow')}
                             </span>
                           )}

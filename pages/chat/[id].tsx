@@ -148,7 +148,11 @@ export default function ChatDetail({ id }: { id: string }) {
   }, [user, id, router]);
 
   useEffect(() => {
-    if (stickRef.current) bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    // Instant jump to bottom (not smooth) — during streaming, overlapping smooth
+    // animations are what caused the scroll to glitch/fight the user.
+    if (stickRef.current && scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
   }, [messages]);
 
   const sendMessage = async (overrideMsg?: string) => {
