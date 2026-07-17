@@ -100,8 +100,8 @@ export function MicButton({
             <motion.span
               key={i}
               className="w-[3px] h-full bg-white rounded-full"
-              animate={{ scaleY: [0.35, 1, 0.35] }}
-              transition={{ duration: 0.8, repeat: Infinity, ease: 'easeInOut', delay: i * 0.15 }}
+              animate={{ scaleY: [0.55, 1, 0.55] }}
+              transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut', delay: i * 0.25 }}
             />
           ))}
         </span>

@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { GraduationCap, ArrowRight, X, Loader2, ChevronLeft, Check } from 'lucide-react';
 import Layout from '@/components/Layout';
 import { DatePicker } from '@/components/DatePicker';
+import { PlanBuildingScreen } from '@/components/PlanBuildingScreen';
 import { useUser } from '@/lib/useUser';
 import { getBrowserClient } from '@/lib/supabase';
 import { EXAMS, examGoal, type ExamMeta } from '@/lib/exams';
@@ -137,6 +138,7 @@ export default function ExamsPage() {
   return (
     <Layout>
       <Head><title>Exam Prep · HIMQ</title></Head>
+      {starting && <PlanBuildingScreen />}
 
       <div className="max-w-5xl mx-auto px-4 pt-6 md:pt-10 pb-20">
         {/* Back to Learn */}

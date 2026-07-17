@@ -178,6 +178,16 @@
                   "sty_concise":  "Concise",
                   "sty_steps":  "Step-by-step",
                   "sty_analogies":  "Analogies",
+                  "building_title":  "Crafting your plan…",
+                  "facts":  [
+                    "Mapping the fastest route to your goal…",
+                    "Fun fact: short, spaced study sessions beat one long cram — every time.",
+                    "Choosing lessons that fit your exact level…",
+                    "Fun fact: explaining an idea out loud is one of the strongest ways to remember it.",
+                    "Hang tight — we're building a proper plan for you.",
+                    "Fun fact: a lot of learning happens while you sleep. Rest counts too.",
+                    "Weighing your weak spots so we spend time where it matters…"
+                  ],
                   "error":  "Couldn't start prep — please try again."
               },
     "learn":  {
