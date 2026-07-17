@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { motion } from 'framer-motion';
 import { Mic } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -89,11 +90,24 @@ export function MicButton({
       className={cn(
         'shrink-0 flex items-center justify-center w-10 h-10 rounded-xl border transition-colors disabled:opacity-50',
         listening
-          ? 'border-red-500 bg-red-500 text-white animate-pulse'
+          ? 'border-red-500 bg-red-500 text-white'
           : 'border-[var(--border-strong)] bg-[var(--bg-card)] text-[var(--text-muted)] hover:text-[var(--color-brand)] hover:border-[var(--color-brand)]',
       )}
     >
-      <Mic size={18} />
+      {listening ? (
+        <span className="flex items-center gap-[3px] h-4">
+          {[0, 1, 2].map((i) => (
+            <motion.span
+              key={i}
+              className="w-[3px] h-full bg-white rounded-full"
+              animate={{ scaleY: [0.35, 1, 0.35] }}
+              transition={{ duration: 0.8, repeat: Infinity, ease: 'easeInOut', delay: i * 0.15 }}
+            />
+          ))}
+        </span>
+      ) : (
+        <Mic size={18} />
+      )}
     </button>
   );
 }

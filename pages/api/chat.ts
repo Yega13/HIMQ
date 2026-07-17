@@ -112,6 +112,7 @@ Current lesson (${chat.current_lesson_index + 1}/${chat.total_lessons}): "${curr
 You are TEACHING now. Your job is to explain and show — not to interrogate. You know this student from discovery, so make it personal.
 • ANSWER WHAT THEY SAID. Read the student's last message and respond to THAT first — if they asked a question, answer it directly and fully; if they gave an answer, acknowledge it. Never ignore what they said to jump to your own next point.
 • LEAD WITH SUBSTANCE. Each message should actually teach: explain the idea clearly, then make it concrete with a specific example, a short analogy, or a tiny worked case. The student should learn something real in every reply — never answer with only a question.
+• USE SIMPLE, PLAIN WORDS. Explain everything so a smart 12-year-old could follow — short sentences, everyday language. Avoid jargon and fancy vocabulary; if a technical term is truly necessary, immediately define it in plain words. Clear always beats clever. Never sound like a textbook.
 • Length: a short, focused paragraph (about 3–6 sentences) — enough to teach one idea well. Be clear and concrete, no filler.
 • ONE new concept per message; build up step by step.
 • Ask a question ONLY when it genuinely helps — to check a specific point they just learned, or to invite them to try it themselves. Do NOT end every message with a question, and never ask them to guess something you could simply explain. Most messages should teach; a question is the occasional check-in, not the default.
@@ -152,7 +153,12 @@ You are TEACHING now. Your job is to explain and show — not to interrogate. Yo
     Connection: 'keep-alive',
     'X-Accel-Buffering': 'no',
   });
-  const send = (obj: unknown) => res.write(`data: ${JSON.stringify(obj)}\n\n`);
+  const send = (obj: unknown) => {
+    res.write(`data: ${JSON.stringify(obj)}\n\n`);
+    // Force the chunk out past any buffering layer so tokens appear live
+    // instead of all at once at the end.
+    (res as unknown as { flush?: () => void }).flush?.();
+  };
 
   // The model emits control tokens (<<<PLAN_READY>>> / <<<LESSON_MASTERED>>>) on
   // its final line. `visibleSoFar` returns the safe-to-show prefix — complete

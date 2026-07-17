@@ -1,7 +1,7 @@
 import { GetStaticProps } from 'next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { useTranslation } from 'next-i18next';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import Link from 'next/link';
@@ -70,6 +70,13 @@ export default function ExamsPage() {
   const [styles, setStyles] = useState<string[]>([]);
   const [starting, setStarting] = useState(false);
   const [error, setError] = useState('');
+
+  // Lock background scroll while the setup modal is open.
+  useEffect(() => {
+    if (!selected) return;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = ''; };
+  }, [selected]);
 
   const open = (exam: ExamMeta) => {
     setSelected(exam);
