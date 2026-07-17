@@ -116,7 +116,13 @@ export default function ExamsPage() {
     }
   };
 
-  const today = new Date().toISOString().split('T')[0];
+  // Earliest selectable exam date: 3 days out — so there's always at least a
+  // little time to prepare (blocking today/past isn't enough).
+  const minDate = (() => {
+    const d = new Date();
+    d.setDate(d.getDate() + 3);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  })();
 
   return (
     <Layout>
@@ -253,7 +259,7 @@ export default function ExamsPage() {
                   <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1.5">
                     {t('exams.setup_date')} <span className="text-[var(--text-muted)] font-normal">· {t('exams.setup_date_hint')}</span>
                   </label>
-                  <DatePicker value={date} onChange={setDate} min={today} placeholder={t('exams.setup_date') as string} />
+                  <DatePicker value={date} onChange={setDate} min={minDate} placeholder={t('exams.setup_date') as string} />
                 </div>
 
                 {/* Current level */}
