@@ -24,12 +24,23 @@ interface Event {
 // in but not an admin, 'error' = request failed, 'ok' = admin.
 type Access = 'checking' | 'anon' | 'forbidden' | 'error' | 'ok';
 
+function StatTile({ label, value, sub }: { label: string; value: number; sub?: string }) {
+  return (
+    <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-card)] p-4 shadow-[var(--shadow-sm)]">
+      <p className="text-[11px] font-semibold uppercase tracking-wider text-[var(--text-muted)]">{label}</p>
+      <p className="text-2xl font-extrabold text-[var(--text-primary)] mt-1">{value.toLocaleString()}</p>
+      {sub && <p className="text-[11px] text-[var(--text-muted)] mt-0.5">{sub}</p>}
+    </div>
+  );
+}
+
 export default function Admin() {
   const [access, setAccess]   = useState<Access>('checking');
   const [token, setToken]     = useState('');
   const [events, setEvents]   = useState<Event[]>([]);
   const [loading, setLoading] = useState(false);
   const [toast, setToast]     = useState('');
+  const [stats, setStats]     = useState<Record<string, number> | null>(null);
 
   const showToast = (msg: string) => {
     setToast(msg);
@@ -66,6 +77,11 @@ export default function Admin() {
         if (!session) { setAccess('anon'); return; }
         setToken(session.access_token);
         await fetchEvents(session.access_token);
+        // Live stat tiles (best-effort; failure just hides them).
+        fetch('/api/admin-stats', { headers: { Authorization: `Bearer ${session.access_token}` } })
+          .then((r) => (r.ok ? r.json() : null))
+          .then((d) => d && setStats(d))
+          .catch(() => {});
       } catch {
         setAccess('error');
       }
@@ -171,6 +187,17 @@ export default function Admin() {
             Refresh
           </button>
         </div>
+
+        {/* Live stats */}
+        {stats && (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-8">
+            <StatTile label="Users" value={stats.users} sub={`+${stats.newUsers7d} this week`} />
+            <StatTile label="Active paths" value={stats.activePaths} />
+            <StatTile label="Exam preps" value={stats.examPreps} />
+            <StatTile label="Lessons done" value={stats.lessonsDone} sub={`${stats.lessonsToday} today`} />
+            <StatTile label="Pending events" value={stats.pendingEvents} />
+          </div>
+        )}
 
         {loading && events.length === 0 ? (
           <div className="space-y-4">
