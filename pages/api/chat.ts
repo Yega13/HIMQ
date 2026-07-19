@@ -52,11 +52,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   if (chatErr || !chat) return res.status(404).json({ error: 'Chat not found' });
 
-  // Credit meter (no-op unless CREDIT_METER_ENABLED). Free tier is Gemini-only,
-  // so the requested model may be downgraded to Gemini here; the credit cost
-  // follows the model that will actually run. Deduct BEFORE the paid AI call.
+  const isDiscovering = (chat.total_lessons ?? 0) === 0;
+
+  // Credit meter (no-op unless CREDIT_METER_ENABLED). Discovery turns must follow
+  // the strict Q/A/T format (which Gemini/Haiku botch, badly in Armenian), so
+  // they ALWAYS use the smart model regardless of tier. Only ongoing teaching
+  // respects a free tier's Gemini-only rule. Credit cost follows the model that
+  // actually runs. Deduct BEFORE the paid AI call.
   const tier = await resolveTier(admin, user.id);
-  const effModel = effectiveModel(tier, modelId);
+  const effModel = isDiscovering ? 'may1' : effectiveModel(tier, modelId);
   const gate = await consumeCredits(admin, user.id, tier, MSG_COST[effModel]);
   if (gate.enabled && !gate.allowed) {
     return res.status(429).json({
@@ -79,7 +83,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     .limit(12);
   const history = (recent ?? []).reverse();
 
-  const isDiscovering = (chat.total_lessons ?? 0) === 0;
   const currentLesson = isDiscovering
     ? null
     : (chat.lessons as { lesson_index: number; title: string; description: string }[])

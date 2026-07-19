@@ -2,7 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { getAdminClient } from '@/lib/supabase';
 import { requireUser, boundedText } from '@/lib/apiAuth';
 import { generateAIResponse } from '@/lib/ai';
-import { resolveTier, effectiveModel, consumeCredits, MSG_COST } from '@/lib/credits';
+import { resolveTier, consumeCredits, MSG_COST } from '@/lib/credits';
 import { getExam } from '@/lib/exams';
 import { languageName } from '@/lib/utils';
 
@@ -141,10 +141,12 @@ Question rules:
 
   // Credit meter (no-op unless CREDIT_METER_ENABLED). Only the AI-discovery path
   // reaches here (the exam intake path returned above without an AI call), so we
-  // charge one message's worth of credits for the opening question. Free tier is
-  // Gemini-only, so the opening runs on Gemini for them.
+  // charge one message's worth of credits for the opening question. The opening
+  // is a structured discovery question (strict Q/A/T format that Gemini botches),
+  // so it ALWAYS runs on the smart model regardless of tier — only ongoing
+  // teaching respects a free tier's Gemini-only rule.
   const tier = await resolveTier(admin, user.id);
-  const openModel = effectiveModel(tier, 'may1');
+  const openModel = 'may1' as const;
   const openGate = await consumeCredits(admin, user.id, tier, MSG_COST[openModel]);
   if (openGate.enabled && !openGate.allowed) {
     return res.status(429).json({

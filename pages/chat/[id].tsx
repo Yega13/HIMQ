@@ -1,7 +1,7 @@
 import { GetServerSideProps } from 'next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { useTranslation } from 'next-i18next';
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -9,6 +9,7 @@ import { Send, CheckCircle, Circle, Lock, ChevronLeft, BookOpen, Zap, Flame, Che
 import { MODELS, DEFAULT_MODEL, type ModelId } from '@/lib/models';
 import Layout from '@/components/Layout';
 import RelatedOpportunities from '@/components/RelatedOpportunities';
+import { PlanBuildingScreen } from '@/components/PlanBuildingScreen';
 import { MicButton } from '@/components/MicButton';
 import { useUser } from '@/lib/useUser';
 import { getBrowserClient, IS_MOCK } from '@/lib/supabase';
@@ -126,22 +127,23 @@ export default function ChatDetail({ id }: { id: string }) {
   // bottom — so scrolling up to re-read isn't yanked back down mid-stream.
   const stickRef  = useRef(true);
 
-  // Load the credit-meter snapshot once. Best-effort — failures leave the UI
+  // Refresh the credit-meter snapshot. Best-effort — failures leave the UI
   // unchanged. If the tier is Gemini-only, force the model picker to Gemini.
-  useEffect(() => {
-    (async () => {
-      try {
-        const { data: { session } } = await getBrowserClient().auth.getSession();
-        const token = session?.access_token;
-        if (!token) return;
-        const res = await fetch('/api/credits', { headers: { Authorization: `Bearer ${token}` } });
-        if (!res.ok) return;
-        const data = await res.json();
-        setCredits(data);
-        if (data?.enabled && data?.geminiOnly) setSelectedModel('gemini');
-      } catch { /* credits UI is best-effort */ }
-    })();
+  // Called on mount and after every message so the "credits left" pill stays live.
+  const refreshCredits = useCallback(async () => {
+    try {
+      const { data: { session } } = await getBrowserClient().auth.getSession();
+      const token = session?.access_token;
+      if (!token) return;
+      const res = await fetch('/api/credits', { headers: { Authorization: `Bearer ${token}` } });
+      if (!res.ok) return;
+      const data = await res.json();
+      setCredits(data);
+      if (data?.enabled && data?.geminiOnly) setSelectedModel('gemini');
+    } catch { /* credits UI is best-effort */ }
   }, []);
+
+  useEffect(() => { refreshCredits(); }, [refreshCredits]);
 
   useEffect(() => {
     if (!userLoading && !user) router.replace('/auth');
@@ -322,6 +324,8 @@ export default function ChatDetail({ id }: { id: string }) {
       setStreamingId(null);
       setSending(false);
       inputRef.current?.focus();
+      // Keep the "credits left" pill live after each turn (and after a plan build).
+      refreshCredits();
     }
   };
 
@@ -512,23 +516,9 @@ export default function ChatDetail({ id }: { id: string }) {
     : null;
   // ── Plan-generating full-screen state ──────────────────────────────────────
   if (generatingPlan) {
-    return (
-      <Layout fullscreen>
-        <div className="min-h-screen flex flex-col items-center justify-center px-4 bg-[var(--bg-primary)]">
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-center"
-          >
-            <div className="w-16 h-16 rounded-2xl bg-[var(--color-brand)] flex items-center justify-center mx-auto mb-6">
-              <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
-            </div>
-            <h2 className="text-xl font-bold text-[var(--text-primary)] mb-2">{t('chat.building_title')}</h2>
-            <p className="text-sm text-[var(--text-muted)]">{t('chat.building_sub')}</p>
-          </motion.div>
-        </div>
-      </Layout>
-    );
+    // Rotating fun-facts screen (shared with the exam flow) so the ~30-50s plan
+    // build isn't a dead spinner. Discovery keeps its own heading.
+    return <PlanBuildingScreen titleKey="chat.building_title" />;
   }
 
   // ── Discovery wizard ────────────────────────────────────────────────────────

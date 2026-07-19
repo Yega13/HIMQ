@@ -2,7 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { getAdminClient } from '@/lib/supabase';
 import { requireUser } from '@/lib/apiAuth';
 import { generateAIResponse } from '@/lib/ai';
-import { resolveTier, effectiveModel, consumeCredits, PLAN_COST } from '@/lib/credits';
+import { resolveTier, consumeCredits, PLAN_COST } from '@/lib/credits';
 import { languageName } from '@/lib/utils';
 
 // Plan generation is a large Sonnet call; the default 10s (Vercel Hobby) would
@@ -75,10 +75,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
   }
 
-  // Credit meter (no-op unless CREDIT_METER_ENABLED). Free tier is Gemini-only,
-  // so free plans are generated with Gemini; the credit cost follows the model.
+  // Credit meter (no-op unless CREDIT_METER_ENABLED). Plan generation is quality-
+  // critical and low-volume (once per path), so it ALWAYS uses the smart model
+  // regardless of tier — free plans on Gemini came out glitchy, especially in
+  // Armenian. Only ongoing teaching respects a free tier's Gemini-only rule.
   const tier = await resolveTier(admin, user.id);
-  const planModel = effectiveModel(tier, 'may1');
+  const planModel = 'may1' as const;
   const planGate = await consumeCredits(admin, user.id, tier, PLAN_COST[planModel]);
   if (planGate.enabled && !planGate.allowed) {
     return res.status(429).json({

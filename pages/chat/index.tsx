@@ -1,7 +1,7 @@
 import { GetServerSideProps } from 'next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { useTranslation } from 'next-i18next';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import Head from 'next/head';
@@ -107,10 +107,16 @@ export default function ChatIndex() {
       });
   }, [user]);
 
+  // The "New path" button lives in the sidebar (top-left on desktop, below the
+  // form on mobile). Clicking it clears the form AND scrolls to the goal input so
+  // it's an actual call-to-action, not just a reset.
+  const goalRef = useRef<HTMLTextAreaElement>(null);
   const resetForm = () => {
     setGoal('');
     setActiveCategory(null);
     setError('');
+    goalRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    goalRef.current?.focus({ preventScroll: true });
   };
 
   const handleDelete = async (chatId: string) => {
@@ -387,6 +393,7 @@ export default function ChatIndex() {
                   {t('learn.goal_label')}
                 </label>
                 <textarea
+                  ref={goalRef}
                   value={goal}
                   onChange={(e) => setGoal(e.target.value)}
                   placeholder={t('chat.goal_placeholder') as string}

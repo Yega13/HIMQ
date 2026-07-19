@@ -28,16 +28,11 @@ export type Tier = 'free' | 'student' | 'pro' | 'max';
 // Monthly credit budget per tier. 1 credit = $0.0005 API cost, so the right
 // column is the worst-case monthly AI cost if a user drains their whole budget:
 //   free 400 → $0.20 · student 4,000 → $2.00 · pro 15,000 → $7.50 · max 30,000 → $15.00
-//
-// ⚠️ TEMPORARY TESTING VALUES — shrunk so the "out of credits" wall hits in a few
-// messages. REVERT to { free: 400, student: 4000, pro: 15000, max: 30000 } before
-// real use. A paid budget of 160 = one plan (110) + ~2 Sonnet messages (20 each);
-// free 15 = one Gemini plan (10) + ~5 Gemini messages.
 export const TIER_BUDGET: Record<Tier, number> = {
-  free: 15,
-  student: 160,
-  pro: 160,
-  max: 160,
+  free: 400,
+  student: 4_000,
+  pro: 15_000,
+  max: 30_000,
 };
 
 // Credit cost of one chat message, by the model that runs.

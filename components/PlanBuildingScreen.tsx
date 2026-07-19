@@ -4,8 +4,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles } from 'lucide-react';
 
 // Full-screen "building your plan" state with rotating fun facts + reassurances,
-// so the ~30-50s plan generation doesn't feel like a dead spinner.
-export function PlanBuildingScreen() {
+// so the ~30-50s plan generation doesn't feel like a dead spinner. `titleKey`
+// lets both the exam flow and the discovery flow reuse the same rotating screen
+// with their own heading (the fun facts are generic and shared).
+export function PlanBuildingScreen({ titleKey = 'exams.building_title' }: { titleKey?: string }) {
   const { t } = useTranslation('common');
   const facts = (t('exams.facts', { returnObjects: true }) as string[]) ?? [];
   const [i, setI] = useState(0);
@@ -26,7 +28,7 @@ export function PlanBuildingScreen() {
         <Sparkles size={30} />
       </motion.div>
 
-      <p className="text-lg font-bold text-[var(--text-primary)] mb-3">{t('exams.building_title')}</p>
+      <p className="text-lg font-bold text-[var(--text-primary)] mb-3">{t(titleKey)}</p>
 
       <div className="h-14 max-w-md flex items-start justify-center text-center">
         <AnimatePresence mode="wait">
