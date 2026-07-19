@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { getAdminClient } from '@/lib/supabase';
 import { requireUser, boundedText } from '@/lib/apiAuth';
 import { generateAIResponse } from '@/lib/ai';
+import { resolveTier, effectiveModel, consumeCredits, MSG_COST } from '@/lib/credits';
 import { getExam } from '@/lib/exams';
 import { languageName } from '@/lib/utils';
 
@@ -138,13 +139,28 @@ Question rules:
 - Never output any English words inside the question text or the choices (keep only the Q:/A:/T: labels in English).
 - PLAIN TEXT only — no markdown in the question or the choices. Never use ** or * (they render as literal asterisks).`;
 
+  // Credit meter (no-op unless CREDIT_METER_ENABLED). Only the AI-discovery path
+  // reaches here (the exam intake path returned above without an AI call), so we
+  // charge one message's worth of credits for the opening question. Free tier is
+  // Gemini-only, so the opening runs on Gemini for them.
+  const tier = await resolveTier(admin, user.id);
+  const openModel = effectiveModel(tier, 'may1');
+  const openGate = await consumeCredits(admin, user.id, tier, MSG_COST[openModel]);
+  if (openGate.enabled && !openGate.allowed) {
+    return res.status(429).json({
+      error: openGate.error
+        ? 'Service temporarily unavailable. Please try again.'
+        : "You've used all your credits this month. Upgrade your plan or come back next month.",
+    });
+  }
+
   let openingMessage: string;
   try {
     openingMessage = await generateAIResponse(
       [{ role: 'user', content: openingUserMessage }],
       'opening',
       openingSystemPrompt,
-      'may1',
+      openModel,
       chatLang
     );
   } catch {

@@ -39,14 +39,13 @@ export interface AIMessage { role: 'user' | 'assistant'; content: string; }
 
 async function withClaude(messages: AIMessage[], role: AIRole, system: string, lang?: string): Promise<string> {
   if (!anthropic) throw new Error('ANTHROPIC_API_KEY not set');
-  // Model routing to balance cost and quality:
-  // - Plan generation: always Sonnet 5 (once per path, quality-critical).
-  // - Chat in English: Haiku 4.5 (plenty good, ~3x cheaper).
-  // - Chat in Armenian/Russian: Sonnet 5 (Haiku's low-resource-language quality
-  //   is poor). Default non-'en' to Sonnet to be safe on quality.
-  const model = (role === 'plan' || role === 'opening')
-    ? 'claude-sonnet-5'
-    : (lang === 'en' ? 'claude-haiku-4-5' : 'claude-sonnet-5');
+  // Model routing: everything runs on Sonnet 5. Teaching quality is the core
+  // product, and A/B testing showed Haiku misdiagnoses wrong answers (the exact
+  // moment that matters most), while Sonnet nails them. English teaching used to
+  // run on Haiku for cost; the credit meter caps per-user spend regardless of
+  // model, so the quality win is worth it. `lang` is now unused for routing.
+  void lang;
+  const model = 'claude-sonnet-5';
 
   // Prompt caching: mark the last message as a cache breakpoint. The API caches
   // everything before it (system prompt + prior conversation) and, on the next
@@ -116,9 +115,10 @@ async function streamClaude(
   onDelta: (t: string) => void, lang?: string,
 ): Promise<string> {
   if (!anthropic) throw new Error('ANTHROPIC_API_KEY not set');
-  const model = (role === 'plan' || role === 'opening')
-    ? 'claude-sonnet-5'
-    : (lang === 'en' ? 'claude-haiku-4-5' : 'claude-sonnet-5');
+  // All roles run on Sonnet 5 — see withClaude for the rationale. `lang` is
+  // kept in the signature for the fallback path but no longer affects routing.
+  void lang;
+  const model = 'claude-sonnet-5';
 
   const apiMessages: Anthropic.MessageParam[] = messages.map((m, i) =>
     i === messages.length - 1
@@ -205,7 +205,7 @@ export async function generateAIResponse(
   if (messages.length === 0) return 'AI is temporarily unavailable. Please try again.';
 
   if (modelId === 'may1') {
-    // May-1: Claude primary (Haiku for EN chat, Sonnet otherwise), Gemini fallback
+    // May-1: Claude primary (Sonnet 5 for all roles), Gemini fallback
     if (anthropic) {
       try { return await withClaude(messages, role, system, lang); }
       catch (e) { console.error('[May-1] Claude failed, falling back to Gemini:', e); }

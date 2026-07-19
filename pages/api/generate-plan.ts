@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { getAdminClient } from '@/lib/supabase';
 import { requireUser } from '@/lib/apiAuth';
 import { generateAIResponse } from '@/lib/ai';
+import { resolveTier, effectiveModel, consumeCredits, PLAN_COST } from '@/lib/credits';
 import { languageName } from '@/lib/utils';
 
 // Plan generation is a large Sonnet call; the default 10s (Vercel Hobby) would
@@ -72,6 +73,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!quota?.allowed) {
       return res.status(429).json({ error: "You've reached today's limit of 5 plan updates. Try again tomorrow." });
     }
+  }
+
+  // Credit meter (no-op unless CREDIT_METER_ENABLED). Free tier is Gemini-only,
+  // so free plans are generated with Gemini; the credit cost follows the model.
+  const tier = await resolveTier(admin, user.id);
+  const planModel = effectiveModel(tier, 'may1');
+  const planGate = await consumeCredits(admin, user.id, tier, PLAN_COST[planModel]);
+  if (planGate.enabled && !planGate.allowed) {
+    return res.status(429).json({
+      error: planGate.error
+        ? 'Service temporarily unavailable. Please try again.'
+        : "You've used all your credits this month. Upgrade your plan or come back next month.",
+    });
   }
 
   // Load full conversation
@@ -200,7 +214,8 @@ Return ONLY this JSON:
     const raw = await generateAIResponse(
       [{ role: 'user', content: planUserMessage }],
       'plan',
-      planSystemPrompt
+      planSystemPrompt,
+      planModel,
     );
     plan = parsePlan(raw);
   } catch (err) {

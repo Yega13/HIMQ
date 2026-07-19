@@ -4,6 +4,7 @@ import { requireUser, boundedText } from '@/lib/apiAuth';
 import { streamAIResponse } from '@/lib/ai';
 import { visibleSoFar, interpretReply } from '@/lib/controlTokens';
 import { type ModelId, DEFAULT_MODEL } from '@/lib/models';
+import { resolveTier, effectiveModel, consumeCredits, MSG_COST } from '@/lib/credits';
 import { languageName } from '@/lib/utils';
 
 export const config = { maxDuration: 60 };
@@ -51,14 +52,31 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   if (chatErr || !chat) return res.status(404).json({ error: 'Chat not found' });
 
-  // Load the LAST 20 messages (newest first, then restore chronological order)
-  // so the model always sees the most recent context in long chats.
+  // Credit meter (no-op unless CREDIT_METER_ENABLED). Free tier is Gemini-only,
+  // so the requested model may be downgraded to Gemini here; the credit cost
+  // follows the model that will actually run. Deduct BEFORE the paid AI call.
+  const tier = await resolveTier(admin, user.id);
+  const effModel = effectiveModel(tier, modelId);
+  const gate = await consumeCredits(admin, user.id, tier, MSG_COST[effModel]);
+  if (gate.enabled && !gate.allowed) {
+    return res.status(429).json({
+      error: gate.error
+        ? 'Service temporarily unavailable. Please try again.'
+        : "You've used all your credits this month. Upgrade your plan or come back next month.",
+    });
+  }
+
+  // Load the LAST 12 messages (newest first, then restore chronological order)
+  // so the model always sees the most recent context in long chats. 12 is a
+  // deliberate cost lever: the history is re-sent (and re-billed) on every turn,
+  // so a smaller window means cheaper messages — students get more turns for the
+  // same budget — while still giving May plenty of recent context per lesson.
   const { data: recent } = await admin
     .from('messages')
     .select('role, content')
     .eq('chat_id', chatId)
     .order('created_at', { ascending: false })
-    .limit(20);
+    .limit(12);
   const history = (recent ?? []).reverse();
 
   const isDiscovering = (chat.total_lessons ?? 0) === 0;
@@ -179,15 +197,13 @@ When the student has GENUINELY mastered everything in THIS lesson, tell them war
     }
   };
 
-  // Model routing: English chat normally uses Haiku (cheap), but Haiku botches
-  // the structured discovery Q/A/T format and isn't careful enough for exam
-  // prep. Route DISCOVERY and EXAM chats to Sonnet (via the 'opening' role,
-  // which selects Sonnet regardless of language). General English teaching
-  // stays on Haiku to keep costs down.
+  // All teaching now runs on Sonnet 5 (see lib/ai.ts), so this role no longer
+  // changes the model — 'opening' and 'chat' both resolve to Sonnet. It's kept
+  // so discovery/exam turns stay tagged distinctly if we ever re-split routing.
   const aiRole = (isDiscovering || chat.plan?.exam) ? 'opening' : 'chat';
 
   try {
-    raw = await streamAIResponse(aiMessages, aiRole, systemPrompt, onDelta, modelId, chat.plan?.lang);
+    raw = await streamAIResponse(aiMessages, aiRole, systemPrompt, onDelta, effModel, chat.plan?.lang);
   } catch (err) {
     console.error('Chat stream failed:', err);
   }

@@ -91,6 +91,11 @@ export default function ChatDetail({ id }: { id: string }) {
   const [generatingPlan, setGeneratingPlan] = useState(false);
   const [selectedModel, setSelectedModel] = useState<ModelId>(DEFAULT_MODEL);
   const [modelMenuOpen, setModelMenuOpen] = useState(false);
+  // Credit-meter snapshot (null until loaded). enabled:false in the demo → the
+  // whole credits UI stays hidden and the picker behaves exactly as before.
+  const [credits, setCredits] = useState<{
+    enabled: boolean; tier: string; used: number; budget: number; remaining: number; geminiOnly: boolean;
+  } | null>(null);
 
   interface CelebrationData {
     lessonTitle: string;
@@ -120,6 +125,23 @@ export default function ChatDetail({ id }: { id: string }) {
   // Only auto-scroll to the newest message when the user is already near the
   // bottom — so scrolling up to re-read isn't yanked back down mid-stream.
   const stickRef  = useRef(true);
+
+  // Load the credit-meter snapshot once. Best-effort — failures leave the UI
+  // unchanged. If the tier is Gemini-only, force the model picker to Gemini.
+  useEffect(() => {
+    (async () => {
+      try {
+        const { data: { session } } = await getBrowserClient().auth.getSession();
+        const token = session?.access_token;
+        if (!token) return;
+        const res = await fetch('/api/credits', { headers: { Authorization: `Bearer ${token}` } });
+        if (!res.ok) return;
+        const data = await res.json();
+        setCredits(data);
+        if (data?.enabled && data?.geminiOnly) setSelectedModel('gemini');
+      } catch { /* credits UI is best-effort */ }
+    })();
+  }, []);
 
   useEffect(() => {
     if (!userLoading && !user) router.replace('/auth');
@@ -1035,7 +1057,7 @@ export default function ChatDetail({ id }: { id: string }) {
           {!allDone && (
             <div className="px-4 pt-2 pb-3 border-t border-[var(--border)] bg-[var(--bg-secondary)]">
               {/* Model selector */}
-              <div className="max-w-3xl mx-auto mb-2 relative">
+              <div className="max-w-3xl mx-auto mb-2 relative flex items-center justify-between gap-2">
                 {(() => {
                   const active = MODELS.find((m) => m.id === selectedModel)!;
                   return (
@@ -1061,31 +1083,50 @@ export default function ChatDetail({ id }: { id: string }) {
                             transition={{ duration: 0.12 }}
                             className="absolute bottom-full left-0 mb-1 bg-[var(--bg-card)] border border-[var(--border)] rounded-xl shadow-lg overflow-hidden z-10 min-w-[160px]"
                           >
-                            {MODELS.map((m) => (
+                            {MODELS.map((m) => {
+                              // Gemini-only tiers can't pick May-1 — show it locked.
+                              const locked = !!credits?.enabled && credits.geminiOnly && m.id === 'may1';
+                              return (
                               <button
                                 key={m.id}
-                                onClick={() => { setSelectedModel(m.id); setModelMenuOpen(false); }}
+                                onClick={() => { if (locked) return; setSelectedModel(m.id); setModelMenuOpen(false); }}
+                                disabled={locked}
                                 className={cn(
-                                  'w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-[var(--border)] transition-colors',
-                                  selectedModel === m.id && 'bg-[var(--border)]'
+                                  'w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors',
+                                  locked ? 'opacity-40 cursor-not-allowed' : 'hover:bg-[var(--border)]',
+                                  selectedModel === m.id && !locked && 'bg-[var(--border)]'
                                 )}
                               >
                                 <span className={cn('w-2 h-2 rounded-full flex-shrink-0', m.dot)} />
                                 <div>
                                   <p className={cn('text-xs font-bold', m.color)}>{m.name}</p>
-                                  <p className="text-[10px] text-[var(--text-muted)]">{m.subtitle}</p>
+                                  <p className="text-[10px] text-[var(--text-muted)]">{locked ? 'Upgrade to unlock' : m.subtitle}</p>
                                 </div>
-                                {selectedModel === m.id && (
+                                {locked ? (
+                                  <Lock size={12} className="ml-auto flex-shrink-0 text-[var(--text-muted)]" />
+                                ) : selectedModel === m.id && (
                                   <CheckCircle size={13} className={cn('ml-auto flex-shrink-0', m.color)} />
                                 )}
                               </button>
-                            ))}
+                              );
+                            })}
                           </motion.div>
                         )}
                       </AnimatePresence>
                     </>
                   );
                 })()}
+                {credits?.enabled && (
+                  <span
+                    className={cn(
+                      'text-[11px] font-semibold tabular-nums whitespace-nowrap',
+                      credits.remaining <= 0 ? 'text-red-500' : 'text-[var(--text-muted)]'
+                    )}
+                    title={`${credits.used.toLocaleString()} / ${credits.budget.toLocaleString()} credits used this month`}
+                  >
+                    {credits.remaining.toLocaleString()} credits left
+                  </span>
+                )}
               </div>
 
               {sendError && (
