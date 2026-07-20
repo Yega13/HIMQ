@@ -12,7 +12,7 @@ import { DatePicker } from '@/components/DatePicker';
 import { PlanBuildingScreen } from '@/components/PlanBuildingScreen';
 import { useUser } from '@/lib/useUser';
 import { getBrowserClient } from '@/lib/supabase';
-import { EXAMS, examGoal, type ExamMeta } from '@/lib/exams';
+import { EXAMS, examGoal, isFocusTrack, trackSections, type ExamMeta, type ExamTrack } from '@/lib/exams';
 import { cn } from '@/lib/utils';
 
 const CATEGORY_ORDER: ExamMeta['category'][] = ['armenian', 'english', 'university'];
@@ -43,8 +43,12 @@ const STYLES = [
 function buildIntakeSummary(
   exam: ExamMeta, target: string, date: string,
   level: string, weak: string[], hours: string, styles: string[],
+  track?: ExamTrack,
 ): string {
-  const parts = [`I'm preparing for the ${exam.fullName}.`];
+  const focus = isFocusTrack(track)
+    ? `, focusing ONLY on ${track!.name.replace(/ only$/i, '')} (I do not need the other sections)`
+    : '';
+  const parts = [`I'm preparing for the ${exam.fullName}${focus}.`];
   if (target.trim()) parts.push(`My target score is ${target.trim()}.`);
   if (date) parts.push(`My exam date is ${date}.`);
   const lvl = LEVELS.find((l) => l.id === level);
@@ -63,6 +67,7 @@ export default function ExamsPage() {
   const { user } = useUser();
 
   const [selected, setSelected] = useState<ExamMeta | null>(null);
+  const [track, setTrack] = useState<ExamTrack | null>(null);
   const [target, setTarget] = useState('');
   const [date, setDate] = useState('');
   const [level, setLevel] = useState('');
@@ -81,9 +86,13 @@ export default function ExamsPage() {
 
   const open = (exam: ExamMeta) => {
     setSelected(exam);
+    setTrack(exam.tracks?.[0] ?? null); // default to the full test
     setTarget(''); setDate(''); setLevel(''); setWeak([]); setHours(''); setStyles([]);
     setError('');
   };
+
+  // Switching focus changes which sections exist, so clear any weak-section picks.
+  const pickTrack = (tr: ExamTrack) => { setTrack(tr); setWeak([]); };
 
   const toggle = (arr: string[], v: string, set: (x: string[]) => void) =>
     set(arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v]);
@@ -101,12 +110,12 @@ export default function ExamsPage() {
       const { data: { session } } = await supabase.auth.getSession();
       const headers = { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token ?? ''}` };
       // Skip AI discovery — hand the structured intake straight to plan generation.
-      const summary = buildIntakeSummary(selected, target, date, level, weak, hours, styles);
+      const summary = buildIntakeSummary(selected, target, date, level, weak, hours, styles, track ?? undefined);
       const res = await fetch('/api/create-chat', {
         method: 'POST',
         headers,
         body: JSON.stringify({
-          goal: examGoal(selected, target, date), lang: router.locale, exam: selected.id,
+          goal: examGoal(selected, target, date, track ?? undefined), lang: router.locale, exam: selected.id,
           intakeSummary: summary, examDate: date, hoursId: hours, level,
         }),
       });
@@ -254,6 +263,28 @@ export default function ExamsPage() {
               </div>
 
               <div className="mt-5 space-y-5">
+                {/* Focus — full test or a single section */}
+                {selected.tracks && selected.tracks.length > 1 && (
+                  <div>
+                    <label className="block text-sm font-medium text-[var(--text-secondary)] mb-2">{t('exams.intake_focus')}</label>
+                    <div className="flex flex-wrap gap-2">
+                      {selected.tracks.map((tr) => (
+                        <button
+                          key={tr.id}
+                          type="button"
+                          onClick={() => pickTrack(tr)}
+                          className={cn('px-3 py-1.5 rounded-full border text-xs font-semibold transition-colors',
+                            track?.id === tr.id
+                              ? 'border-[var(--color-brand)] bg-[var(--color-brand-soft)] text-[var(--color-brand)]'
+                              : 'border-[var(--border-strong)] bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:border-[var(--color-brand)]')}
+                        >
+                          {tr.name}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {/* Target score */}
                 <div>
                   <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1.5">{selected.scoreLabel}</label>
@@ -298,7 +329,7 @@ export default function ExamsPage() {
                 <div>
                   <label className="block text-sm font-medium text-[var(--text-secondary)] mb-2">{t('exams.intake_weak')}</label>
                   <div className="flex flex-wrap gap-2">
-                    {selected.sections.map((s) => (
+                    {trackSections(selected, track ?? undefined).map((s) => (
                       <button
                         key={s}
                         type="button"

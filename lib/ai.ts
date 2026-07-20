@@ -98,7 +98,11 @@ function toGeminiHistory(messages: AIMessage[]) {
 
 async function withGemini(messages: AIMessage[], role: AIRole, system: string): Promise<string> {
   if (!gemini) throw new Error('GEMINI_API_KEY not set');
-  const modelName = role === 'plan' ? 'gemini-1.5-pro' : 'gemini-1.5-flash';
+  // gemini-2.0-flash: the 1.5 models are retired (no longer listed for our key),
+  // and 2.0-flash is a big quality jump for free-tier teaching + the Claude
+  // fallback, with no "thinking" latency. (2.5-flash needs a newer SDK than
+  // @google/generative-ai 0.24.1 — it 404s here.)
+  const modelName = 'gemini-2.0-flash';
   const model = gemini.getGenerativeModel({ model: modelName, systemInstruction: system });
   const history = toGeminiHistory(messages);
   const chat = model.startChat({ history, generationConfig: { maxOutputTokens: role === 'plan' ? 8000 : 800 } });
@@ -149,7 +153,11 @@ async function streamGemini(
   onDelta: (t: string) => void,
 ): Promise<string> {
   if (!gemini) throw new Error('GEMINI_API_KEY not set');
-  const modelName = role === 'plan' ? 'gemini-1.5-pro' : 'gemini-1.5-flash';
+  // gemini-2.0-flash: the 1.5 models are retired (no longer listed for our key),
+  // and 2.0-flash is a big quality jump for free-tier teaching + the Claude
+  // fallback, with no "thinking" latency. (2.5-flash needs a newer SDK than
+  // @google/generative-ai 0.24.1 — it 404s here.)
+  const modelName = 'gemini-2.0-flash';
   const model = gemini.getGenerativeModel({ model: modelName, systemInstruction: system });
   const history = toGeminiHistory(messages);
   const chat = model.startChat({ history, generationConfig: { maxOutputTokens: role === 'plan' ? 8000 : 800 } });
