@@ -4,7 +4,7 @@ if (typeof window !== 'undefined') {
 }
 
 import Anthropic from '@anthropic-ai/sdk';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenAI } from '@google/genai';
 import { type ModelId } from './models';
 
 const AI_TIMEOUT_MS = 45_000;
@@ -22,8 +22,13 @@ function withTimeout<T>(p: Promise<T>, ms = AI_TIMEOUT_MS): Promise<T> {
   ]);
 }
 
-const gemini: GoogleGenerativeAI | null = process.env.GEMINI_API_KEY
-  ? new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
+// gemini-flash-latest: an always-current alias to Google's latest Flash model.
+// The explicit gemini-2.5-flash id 404s ("not available to new users") for our
+// key, but the -latest alias is callable and won't go stale like a pinned id.
+// "thinking" is disabled per request (thinkingBudget: 0) to keep replies fast.
+const GEMINI_MODEL = 'gemini-flash-latest';
+const gemini: GoogleGenAI | null = process.env.GEMINI_API_KEY
+  ? new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY })
   : null;
 
 if (!anthropic && !gemini) {
@@ -98,16 +103,17 @@ function toGeminiHistory(messages: AIMessage[]) {
 
 async function withGemini(messages: AIMessage[], role: AIRole, system: string): Promise<string> {
   if (!gemini) throw new Error('GEMINI_API_KEY not set');
-  // gemini-2.0-flash: the 1.5 models are retired (no longer listed for our key),
-  // and 2.0-flash is a big quality jump for free-tier teaching + the Claude
-  // fallback, with no "thinking" latency. (2.5-flash needs a newer SDK than
-  // @google/generative-ai 0.24.1 — it 404s here.)
-  const modelName = 'gemini-2.0-flash';
-  const model = gemini.getGenerativeModel({ model: modelName, systemInstruction: system });
-  const history = toGeminiHistory(messages);
-  const chat = model.startChat({ history, generationConfig: { maxOutputTokens: role === 'plan' ? 8000 : 800 } });
-  const result = await withTimeout(chat.sendMessage(messages[messages.length - 1].content));
-  return result.response.text();
+  const chat = gemini.chats.create({
+    model: GEMINI_MODEL,
+    config: {
+      systemInstruction: system,
+      maxOutputTokens: role === 'plan' ? 8000 : 800,
+      thinkingConfig: { thinkingBudget: 0 },
+    },
+    history: toGeminiHistory(messages),
+  });
+  const result = await withTimeout(chat.sendMessage({ message: messages[messages.length - 1].content }));
+  return result.text ?? '';
 }
 
 // ── Streaming variants ──────────────────────────────────────────────────────
@@ -153,18 +159,19 @@ async function streamGemini(
   onDelta: (t: string) => void,
 ): Promise<string> {
   if (!gemini) throw new Error('GEMINI_API_KEY not set');
-  // gemini-2.0-flash: the 1.5 models are retired (no longer listed for our key),
-  // and 2.0-flash is a big quality jump for free-tier teaching + the Claude
-  // fallback, with no "thinking" latency. (2.5-flash needs a newer SDK than
-  // @google/generative-ai 0.24.1 — it 404s here.)
-  const modelName = 'gemini-2.0-flash';
-  const model = gemini.getGenerativeModel({ model: modelName, systemInstruction: system });
-  const history = toGeminiHistory(messages);
-  const chat = model.startChat({ history, generationConfig: { maxOutputTokens: role === 'plan' ? 8000 : 800 } });
-  const result = await chat.sendMessageStream(messages[messages.length - 1].content);
+  const chat = gemini.chats.create({
+    model: GEMINI_MODEL,
+    config: {
+      systemInstruction: system,
+      maxOutputTokens: role === 'plan' ? 8000 : 800,
+      thinkingConfig: { thinkingBudget: 0 },
+    },
+    history: toGeminiHistory(messages),
+  });
+  const stream = await chat.sendMessageStream({ message: messages[messages.length - 1].content });
   let full = '';
-  for await (const chunk of result.stream) {
-    const t = chunk.text();
+  for await (const chunk of stream) {
+    const t = chunk.text;
     if (t) { full += t; onDelta(t); }
   }
   return full;
