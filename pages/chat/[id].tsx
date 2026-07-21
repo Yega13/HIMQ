@@ -11,6 +11,7 @@ import Layout from '@/components/Layout';
 import RelatedOpportunities from '@/components/RelatedOpportunities';
 import { PlanBuildingScreen } from '@/components/PlanBuildingScreen';
 import { MicButton } from '@/components/MicButton';
+import { MediaEmbed } from '@/components/MediaEmbed';
 import { useUser } from '@/lib/useUser';
 import { getBrowserClient, IS_MOCK } from '@/lib/supabase';
 import { cn } from '@/lib/utils';
@@ -62,6 +63,25 @@ interface Chat {
 // language (no code), so removing asterisks is safe and keeps them from showing
 // up literally in questions/choices.
 const stripMd = (s: string) => s.replace(/\*+/g, '').trim();
+
+// Render an assistant message, turning any resolved [[media]]{json}[[/media]]
+// blocks (a video / image / link May surfaced) into real embeds. Plain text is
+// rendered as-is (the bubble is whitespace-pre-wrap).
+function renderMessageContent(content: string) {
+  const parts = content.split(/(\[\[media\]\][\s\S]*?\[\[\/media\]\])/g);
+  return parts.map((part, i) => {
+    const m = part.match(/^\[\[media\]\]([\s\S]*)\[\[\/media\]\]$/);
+    if (m) {
+      try {
+        const d = JSON.parse(m[1]) as { type: string; url: string; title?: string };
+        return <MediaEmbed key={i} type={d.type} url={d.url} title={d.title} />;
+      } catch { return null; }
+    }
+    // Defensive: strip any stray resource tag that slipped through unresolved.
+    const text = part.replace(/\[\[res:[a-z0-9-]+\]\]/gi, '');
+    return text ? <span key={i}>{text}</span> : null;
+  });
+}
 
 function parseQuestion(content: string) {
   const m = content.match(/^([\s\S]*?)Q:\s*([\s\S]+?)\s*A:\s*([\s\S]+?)(?:\s*T:\s*(single|multiple|open))?\s*$/i);
@@ -1021,7 +1041,7 @@ export default function ChatDetail({ id }: { id: string }) {
                       ? 'bg-[var(--color-brand)] text-white rounded-tr-sm'
                       : 'bg-[var(--bg-card)] border border-[var(--border)] text-[var(--text-primary)] rounded-tl-sm'
                   )}>
-                    {msg.content}
+                    {msg.role === 'assistant' ? renderMessageContent(msg.content) : msg.content}
                   </div>
                 </div>
               </div>

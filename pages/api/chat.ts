@@ -5,6 +5,7 @@ import { streamAIResponse } from '@/lib/ai';
 import { visibleSoFar, interpretReply } from '@/lib/controlTokens';
 import { type ModelId, DEFAULT_MODEL } from '@/lib/models';
 import { resolveTier, effectiveModel, consumeCredits, MSG_COST } from '@/lib/credits';
+import { matchResources, resolveResourceTokens } from '@/lib/resources';
 import { languageName } from '@/lib/utils';
 
 export const config = { maxDuration: 60 };
@@ -90,6 +91,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const language = languageName(chat.plan?.lang);
 
+  // Curated resources May may surface for THIS lesson (teaching only). She can
+  // only reference these exact IDs — never invent a link — and they render as
+  // real embeds in the chat. Empty (nothing offered) when nothing matches.
+  const matched = isDiscovering
+    ? []
+    : matchResources(`${chat.title} ${currentLesson?.title ?? ''} ${currentLesson?.description ?? ''}`);
+  const resourceBlock = matched.length === 0 ? '' : `
+
+════ RESOURCES YOU CAN SHOW ════
+You have a few hand-picked, REAL resources for this lesson. When one would genuinely help RIGHT NOW — a video that explains this far better than words can, or a diagram worth seeing — share it. To show one, write its tag on its OWN line, exactly:
+[[res:ID]]
+Rules:
+• Use ONLY these exact IDs — NEVER invent a link, URL, video, or ID, and never write a raw youtube/http link yourself.
+• Introduce it in one short sentence first (e.g. "Here's a great video that shows this:"), then the tag on its own line.
+• At most ONE per message, and only when it truly adds value — most messages should have none. Never force it.
+Available for this lesson:
+${matched.map((r) => `• [[res:${r.id}]] — ${r.type}: ${r.title}`).join('\n')}`;
+
   const systemPrompt = isDiscovering
     ? `You are May — a personal teacher built by Himq.
 
@@ -148,7 +167,7 @@ NEVER:
 • Never lay out a separate day-by-day or week-by-week study schedule — the lesson list already IS the plan; just teach THIS lesson.
 • Never tell the student to "search for", "look up", "google", or "find online" anything — you are the teacher; teach it directly.
 • Never use markdown — plain text only, no ** or * (they render as literal characters).
-• Never restart the discovery phase.
+• Never restart the discovery phase.${resourceBlock}
 
 Stay strictly on topic: "${chat.title}".
 When the student has GENUINELY mastered everything in THIS lesson, tell them warmly they seem ready, invite any last questions, and point them to the button: "If you don't have any more questions about this, I think you're ready — click 'Mark complete' to continue your roadmap." (They may not have noticed it.) Then output this EXACT token on its own final line and nothing after it: <<<LESSON_MASTERED>>>. Only when truly mastered — never after an ordinary answer, and at most once.`;
@@ -211,7 +230,11 @@ When the student has GENUINELY mastered everything in THIS lesson, tell them war
     console.error('Chat stream failed:', err);
   }
 
-  const { reply, planReady, lessonMastered } = interpretReply(raw, isDiscovering);
+  const interpreted = interpretReply(raw, isDiscovering);
+  const { planReady, lessonMastered } = interpreted;
+  // Resolve any [[res:ID]] tag May emitted into an inline [[media]] block the
+  // client renders as an embed (unknown ids are dropped — she can't invent one).
+  const reply = resolveResourceTokens(interpreted.reply);
 
   await admin.from('messages').insert({
     chat_id: chatId,

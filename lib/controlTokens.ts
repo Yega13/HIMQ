@@ -20,14 +20,28 @@ export function stripControlTokens(text: string): string {
  */
 export function visibleSoFar(full: string): string {
   let s = stripControlTokens(full);
+  // Resource tags ([[res:ID]]) are resolved to embeds only in the FINAL reply, so
+  // they must never appear in the live stream. Strip complete ones up front.
+  s = s.replace(/\[\[res:[a-z0-9-]+\]\]/gi, '');
+
   const open = s.lastIndexOf('<<<');
   if (open !== -1 && !s.slice(open).includes('>>>')) {
-    // an in-progress token has started but not closed → hold everything from it
+    // an in-progress control token has started but not closed → hold from it
     s = s.slice(0, open);
   } else {
     // a trailing '<' or '<<' might be the start of the next token → hold it back
     const m = s.match(/<{1,2}$/);
     if (m) s = s.slice(0, s.length - m[0].length);
+  }
+
+  // Same for an in-progress resource tag: hold everything from an unclosed '[['
+  // (or a trailing '[' / '[[') so a half-streamed tag never flashes.
+  const bopen = s.lastIndexOf('[[');
+  if (bopen !== -1 && !s.slice(bopen).includes(']]')) {
+    s = s.slice(0, bopen);
+  } else {
+    const mb = s.match(/\[{1,2}$/);
+    if (mb) s = s.slice(0, s.length - mb[0].length);
   }
   return s;
 }
