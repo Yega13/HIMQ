@@ -181,14 +181,29 @@ FULL DISCOVERY CONVERSATION:
 ${conversation}
 ---
 ${feedbackBlock}
-Build a deeply personalized plan. The #1 rule: use the FEWEST lessons possible
-while still teaching EVERYTHING the student needs to reach their goal. Never pad.
-- Find the balance: as short as possible, as complete as necessary. If the goal
-  can be achieved in 3 lessons, use 3. Only add a lesson if the goal genuinely
-  can't be reached without it. Hard range: 3–8 lessons.
+Build a deeply personalized plan. SIZE IT RIGHT for the goal and the student — do
+NOT cram a broad subject into a handful of lessons, and do NOT pad a small one.
+- Match the lesson count to how BROAD the goal is AND the student's level (which
+  you learned in the discovery conversation):
+  • A narrow, specific skill (e.g. "React hooks", "conversational French for
+    travel", "writing a cover letter") → about 4–8 focused lessons.
+  • A whole subject or field learned from scratch (e.g. "learn Python", "web
+    development", "digital marketing", "become fluent in Spanish") → about 14–26
+    lessons that genuinely cover it step by step. 7 lessons is FAR too few for
+    something like "learn Python" — a beginner needs the full progression
+    (setup, syntax, data types, operators, strings, control flow, loops,
+    functions, data structures, OOP, errors/debugging, modules, files, and a
+    real project or two). Give a broad goal the depth it actually requires.
+  • Anything in between → scale accordingly.
+- A COMPLETE BEGINNER on a broad goal needs MORE, smaller foundational lessons;
+  someone with real background needs fewer, deeper ones — skip what they already
+  know. Let their revealed level drive the count, not a fixed number.
+- Hard cap: at most 26 lessons. Never pad with filler — but never under-serve a
+  big goal by squeezing it small either.
 - Skip fundamentals they clearly already know (from the discovery conversation)
 - Each lesson must earn its place — one meaningful, distinct step toward the goal.
-  Merge overlapping topics rather than splitting them across lessons.
+  Merge only trivially-overlapping topics; a broad subject legitimately has many
+  distinct steps, so don't merge away real content to hit a smaller number.
 - Each lesson title must be SPECIFIC to this student — reference their background,
   goal, confusion points
 - Directly address their confusion points and knowledge gaps
