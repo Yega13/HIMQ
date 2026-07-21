@@ -324,8 +324,6 @@ export default function ChatDetail({ id }: { id: string }) {
       setStreamingId(null);
       setSending(false);
       inputRef.current?.focus();
-      // Keep the "credits left" pill live after each turn (and after a plan build).
-      refreshCredits();
     }
   };
 
@@ -1106,17 +1104,6 @@ export default function ChatDetail({ id }: { id: string }) {
                     </>
                   );
                 })()}
-                {credits?.enabled && (
-                  <span
-                    className={cn(
-                      'text-[11px] font-semibold tabular-nums whitespace-nowrap',
-                      credits.remaining <= 0 ? 'text-red-500' : 'text-[var(--text-muted)]'
-                    )}
-                    title={`${credits.used.toLocaleString()} / ${credits.budget.toLocaleString()} credits used this month`}
-                  >
-                    {credits.remaining.toLocaleString()} credits left
-                  </span>
-                )}
               </div>
 
               {sendError && (

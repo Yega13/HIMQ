@@ -8,7 +8,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import {
   Zap, Flame, BookOpenCheck, Edit2, Check, X, LogOut, Bookmark, Calendar, ExternalLink, Trash2,
-  Camera, Sun, Moon, Mail, Lock, AlertTriangle, Hash, Trophy, Gem, Shield, Medal, Award,
+  Camera, Sun, Moon, Mail, Lock, AlertTriangle, Hash, Trophy, Gem, Shield, Medal, Award, Gauge,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
@@ -71,6 +71,9 @@ export default function ProfilePage() {
 
   const [rank, setRank] = useState<number | null>(null);
   const [savedEvents, setSavedEvents] = useState<SavedEvent[]>([]);
+  const [credits, setCredits] = useState<{
+    enabled: boolean; tier: string; used: number; budget: number; remaining: number; geminiOnly: boolean;
+  } | null>(null);
 
   // Settings
   const [dark, setDark] = useState(false);
@@ -124,6 +127,20 @@ export default function ProfilePage() {
       }
       setPageLoading(false);
     });
+  }, [user]);
+
+  // Credit-meter usage snapshot (only shown when the meter is enabled server-side).
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      try {
+        const { data: { session } } = await getBrowserClient().auth.getSession();
+        const token = session?.access_token;
+        if (!token) return;
+        const res = await fetch('/api/credits', { headers: { Authorization: `Bearer ${token}` } });
+        if (res.ok) setCredits(await res.json());
+      } catch { /* best-effort */ }
+    })();
   }, [user]);
 
   const handleRemoveSaved = (id: string) => {
@@ -356,6 +373,35 @@ export default function ProfilePage() {
             </motion.div>
           ))}
         </div>
+
+        {/* Usage this month (credit meter — only when enabled server-side) */}
+        {credits?.enabled && (
+          <Section title={t('profile.usage_title') as string} icon={<Gauge size={15} className="text-[var(--color-brand)]" />}>
+            <div className="space-y-3">
+              <div className="flex items-end justify-between gap-3">
+                <div>
+                  <p className="text-2xl font-bold text-[var(--text-primary)] tabular-nums">
+                    {credits.remaining.toLocaleString()}
+                    <span className="text-sm font-medium text-[var(--text-muted)]"> / {credits.budget.toLocaleString()}</span>
+                  </p>
+                  <p className="text-xs text-[var(--text-muted)] mt-0.5">{t('profile.usage_remaining')}</p>
+                </div>
+                <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-[var(--color-brand-soft)] text-[var(--color-brand)] capitalize">
+                  {credits.tier}
+                </span>
+              </div>
+              <div className="h-2 rounded-full bg-[var(--bg-subtle)] overflow-hidden">
+                <div
+                  className={cn('h-full rounded-full transition-all', credits.remaining <= 0 ? 'bg-red-500' : 'bg-[var(--color-brand)]')}
+                  style={{ width: `${Math.min(100, Math.round((credits.used / Math.max(credits.budget, 1)) * 100))}%` }}
+                />
+              </div>
+              <p className="text-xs text-[var(--text-muted)]">
+                {t('profile.usage_used', { used: credits.used.toLocaleString(), budget: credits.budget.toLocaleString() })}
+              </p>
+            </div>
+          </Section>
+        )}
 
         {/* About / Edit */}
         <Section

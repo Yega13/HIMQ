@@ -22,6 +22,21 @@ function withTimeout<T>(p: Promise<T>, ms = AI_TIMEOUT_MS): Promise<T> {
   ]);
 }
 
+// Bound how long we wait for the FIRST streamed token. If a provider stalls
+// (e.g. Gemini silently retrying a 429 with backoff), we throw before any token
+// is emitted, so streamAIResponse can fall back to the other provider instead of
+// hanging until the serverless function is killed. Once the first token lands,
+// later chunks flow without a per-chunk cap.
+const FIRST_TOKEN_MS = 20_000;
+
+async function consumeStream<T>(iterable: AsyncIterable<T>, onChunk: (c: T) => void): Promise<void> {
+  const it = iterable[Symbol.asyncIterator]();
+  const first = await withTimeout(it.next(), FIRST_TOKEN_MS);
+  if (first.done) return;
+  onChunk(first.value);
+  for (let n = await it.next(); !n.done; n = await it.next()) onChunk(n.value);
+}
+
 // gemini-flash-latest: an always-current alias to Google's latest Flash model.
 // The explicit gemini-2.5-flash id 404s ("not available to new users") for our
 // key, but the -latest alias is callable and won't go stale like a pinned id.
@@ -145,12 +160,12 @@ async function streamClaude(
   });
 
   let full = '';
-  for await (const event of stream) {
+  await consumeStream(stream, (event) => {
     if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
       full += event.delta.text;
       onDelta(event.delta.text);
     }
-  }
+  });
   return full;
 }
 
@@ -168,12 +183,15 @@ async function streamGemini(
     },
     history: toGeminiHistory(messages),
   });
-  const stream = await chat.sendMessageStream({ message: messages[messages.length - 1].content });
+  const stream = await withTimeout(
+    chat.sendMessageStream({ message: messages[messages.length - 1].content }),
+    FIRST_TOKEN_MS,
+  );
   let full = '';
-  for await (const chunk of stream) {
+  await consumeStream(stream, (chunk) => {
     const t = chunk.text;
     if (t) { full += t; onDelta(t); }
-  }
+  });
   return full;
 }
 
