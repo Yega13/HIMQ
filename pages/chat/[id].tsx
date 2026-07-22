@@ -10,6 +10,7 @@ import { MODELS, DEFAULT_MODEL, type ModelId } from '@/lib/models';
 import Layout from '@/components/Layout';
 import RelatedOpportunities from '@/components/RelatedOpportunities';
 import { PlanBuildingScreen } from '@/components/PlanBuildingScreen';
+import { Confetti } from '@/components/Confetti';
 import { MicButton } from '@/components/MicButton';
 import { MediaEmbed } from '@/components/MediaEmbed';
 import { useUser } from '@/lib/useUser';
@@ -813,57 +814,84 @@ export default function ChatDetail({ id }: { id: string }) {
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4"
             onClick={() => setCelebration(null)}
           >
+            {celebration.isFinal && <Confetti />}
             <motion.div
               initial={{ scale: 0.8, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.9, opacity: 0, y: -10 }}
               transition={{ type: 'spring', damping: 20, stiffness: 300 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-[var(--bg-card)] border border-[var(--border)] rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl"
+              className="relative z-[61] bg-[var(--bg-card)] border border-[var(--border)] rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl"
             >
               {celebration.isFinal ? (
                 <>
                   <div className="text-5xl mb-4">🏆</div>
                   <h2 className="text-2xl font-extrabold text-[var(--text-primary)] mb-1">Course Complete!</h2>
-                  <p className="text-sm text-[var(--text-secondary)] mb-6">You finished every lesson in this course. That&apos;s huge.</p>
+                  <p className="text-sm text-[var(--text-secondary)] mb-1 font-semibold line-clamp-2">{chat?.title}</p>
+                  <p className="text-sm text-[var(--text-muted)] mb-6">You finished every lesson. That&apos;s a real achievement.</p>
+
+                  {/* Achievement stats */}
+                  <div className="grid grid-cols-3 gap-2 mb-6">
+                    <div className="bg-[var(--bg-secondary)] rounded-xl py-3">
+                      <p className="text-lg font-extrabold text-[var(--text-primary)]">{chat?.total_lessons ?? 0}</p>
+                      <p className="text-[10px] text-[var(--text-muted)] font-medium">lessons</p>
+                    </div>
+                    <div className="bg-green-50 dark:bg-green-900/20 rounded-xl py-3">
+                      <p className="text-lg font-extrabold text-[var(--color-green)]">
+                        {lessons.reduce((s, l) => s + (XP_BY_DIFFICULTY[Math.min(4, Math.max(0, (l.difficulty ?? 3) - 1))] ?? 50), 0)}
+                      </p>
+                      <p className="text-[10px] text-[var(--text-muted)] font-medium">total XP</p>
+                    </div>
+                    <div className="bg-orange-50 dark:bg-orange-900/20 rounded-xl py-3">
+                      <p className="text-lg font-extrabold text-orange-500">{celebration.newStreak}</p>
+                      <p className="text-[10px] text-[var(--text-muted)] font-medium">day streak</p>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => setCelebration(null)}
+                    className="w-full py-3 rounded-xl bg-[var(--color-brand)] text-white font-bold text-sm hover:opacity-90 transition-opacity"
+                  >
+                    See what&apos;s next →
+                  </button>
+                  <Link href="/dashboard" onClick={() => setCelebration(null)} className="inline-block mt-3 text-xs font-semibold text-[var(--text-muted)] hover:text-[var(--color-brand)]">
+                    {t('chat.back_to_dashboard')}
+                  </Link>
                 </>
               ) : (
                 <>
                   <div className="text-5xl mb-4">🎉</div>
                   <h2 className="text-xl font-extrabold text-[var(--text-primary)] mb-1">Lesson complete!</h2>
                   <p className="text-sm text-[var(--text-muted)] mb-6 line-clamp-2">{celebration.lessonTitle}</p>
+
+                  {/* XP + Streak badges */}
+                  <div className="flex justify-center gap-3 mb-6">
+                    <div className="flex items-center gap-1.5 bg-green-50 dark:bg-green-900/20 text-[var(--color-green)] px-4 py-2 rounded-xl font-bold text-sm">
+                      <Zap size={15} />
+                      +{celebration.xpGained} XP
+                    </div>
+                    {celebration.newStreak > 1 && (
+                      <div className="flex items-center gap-1.5 bg-orange-50 dark:bg-orange-900/20 text-orange-500 px-4 py-2 rounded-xl font-bold text-sm">
+                        <Flame size={15} />
+                        {celebration.newStreak} day streak
+                      </div>
+                    )}
+                  </div>
+
+                  {celebration.nextLesson && (
+                    <p className="text-xs text-[var(--text-muted)] mb-5">
+                      Next up: <span className="font-semibold text-[var(--text-primary)]">{celebration.nextLesson}</span>
+                    </p>
+                  )}
+
+                  <button
+                    onClick={() => setCelebration(null)}
+                    className="w-full py-3 rounded-xl bg-[var(--color-brand)] text-white font-bold text-sm hover:opacity-90 transition-opacity"
+                  >
+                    {t('chat.continue_learning')}
+                  </button>
                 </>
               )}
-
-              {/* XP + Streak badges */}
-              <div className="flex justify-center gap-3 mb-6">
-                <div className="flex items-center gap-1.5 bg-green-50 dark:bg-green-900/20 text-[var(--color-green)] px-4 py-2 rounded-xl font-bold text-sm">
-                  <Zap size={15} />
-                  +{celebration.xpGained} XP
-                </div>
-                {celebration.newStreak > 1 && (
-                  <div className="flex items-center gap-1.5 bg-orange-50 dark:bg-orange-900/20 text-orange-500 px-4 py-2 rounded-xl font-bold text-sm">
-                    <Flame size={15} />
-                    {celebration.newStreak} day streak
-                  </div>
-                )}
-              </div>
-
-              {!celebration.isFinal && celebration.nextLesson && (
-                <p className="text-xs text-[var(--text-muted)] mb-5">
-                  Next up: <span className="font-semibold text-[var(--text-primary)]">{celebration.nextLesson}</span>
-                </p>
-              )}
-
-              <button
-                onClick={() => {
-                  setCelebration(null);
-                  if (celebration.isFinal) router.push('/dashboard');
-                }}
-                className="w-full py-3 rounded-xl bg-[var(--color-brand)] text-white font-bold text-sm hover:opacity-90 transition-opacity"
-              >
-                {celebration.isFinal ? t('chat.back_to_dashboard') : t('chat.continue_learning')}
-              </button>
             </motion.div>
           </motion.div>
         )}
@@ -1003,16 +1031,24 @@ export default function ChatDetail({ id }: { id: string }) {
                   <div className="w-16 h-16 rounded-2xl bg-green-100 dark:bg-green-900/30 flex items-center justify-center mx-auto mb-4">
                     <CheckCircle size={32} className="text-[var(--color-green)]" />
                   </div>
-                  <h3 className="font-bold text-[var(--text-primary)] text-lg mb-2">Course Complete!</h3>
+                  <h3 className="font-bold text-[var(--text-primary)] text-lg mb-1">Course Complete!</h3>
                   <p className="text-sm text-[var(--text-secondary)]">
-                    You finished all {chat?.total_lessons} lessons. Great work!
+                    You finished all {chat?.total_lessons} lessons of <span className="font-semibold text-[var(--text-primary)]">{chat?.title}</span>. Great work!
                   </p>
-                  <Link
-                    href="/dashboard"
-                    className="inline-block mt-4 px-5 py-2.5 rounded-xl bg-[var(--color-brand)] text-white text-sm font-semibold"
-                  >
-                    Back to Dashboard
-                  </Link>
+                  <div className="flex flex-wrap items-center justify-center gap-2 mt-5">
+                    <Link
+                      href="/chat"
+                      className="px-5 py-2.5 rounded-xl bg-[var(--color-brand)] text-white text-sm font-semibold hover:opacity-90 transition-opacity"
+                    >
+                      Start a new path
+                    </Link>
+                    <Link
+                      href="/dashboard"
+                      className="px-5 py-2.5 rounded-xl border border-[var(--border)] text-[var(--text-secondary)] text-sm font-semibold hover:border-[var(--color-brand)] transition-colors"
+                    >
+                      Dashboard
+                    </Link>
+                  </div>
                 </div>
                 {chat && (
                   <RelatedOpportunities
