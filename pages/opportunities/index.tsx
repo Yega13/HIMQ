@@ -5,9 +5,10 @@ import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import Head from 'next/head';
-import { Calendar, Globe, ExternalLink, Search, Bookmark, BookmarkCheck, ArrowUp, ChevronDown, Sparkles, Heart, ArrowUpDown, Plus } from 'lucide-react';
+import { Calendar, Globe, ExternalLink, Search, Bookmark, BookmarkCheck, ArrowUp, Sparkles, Heart, ArrowUpDown, Plus } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
+import { ThemedSelect } from '@/components/ThemedSelect';
 import { supabase, getBrowserClient, IS_MOCK } from '@/lib/supabase';
 import { buildLessonPlan } from '@/lib/mockClient';
 import { useUser } from '@/lib/useUser';
@@ -210,20 +211,23 @@ export default function Opportunities({ events }: Props) {
               className="w-full h-12 pl-12 pr-4 rounded-2xl border border-[var(--border)] bg-[var(--bg-card)] text-sm text-[var(--text-primary)] shadow-[var(--shadow-sm)] focus:outline-none focus:border-[var(--color-brand)] focus:ring-2 focus:ring-[var(--color-brand)]/30 transition placeholder-[var(--text-muted)]"
             />
           </div>
-          <div className="relative flex items-center gap-2 h-12 rounded-2xl border border-[var(--border)] bg-[var(--bg-card)] pl-3.5 pr-9 shadow-[var(--shadow-sm)] sm:w-60 focus-within:border-[var(--color-brand)] focus-within:ring-2 focus-within:ring-[var(--color-brand)]/30 transition">
-            <ArrowUpDown size={15} className="text-[var(--text-muted)] shrink-0" />
-            <span className="text-xs font-semibold text-[var(--text-muted)] whitespace-nowrap">{t('opportunities.sort_label')}:</span>
-            <select
-              value={sort}
-              onChange={(e) => setSort(e.target.value)}
-              className="flex-1 h-full appearance-none bg-transparent text-sm font-semibold text-[var(--text-primary)] focus:outline-none cursor-pointer"
-            >
-              <option value="deadline">{t('opportunities.sort_deadline')}</option>
-              <option value="popular">{t('opportunities.sort_popular')}</option>
-              <option value="newest">{t('opportunities.sort_newest')}</option>
-            </select>
-            <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-secondary)] pointer-events-none" />
-          </div>
+          <ThemedSelect
+            className="sm:w-60"
+            ariaLabel={t('opportunities.sort_label') as string}
+            leading={
+              <>
+                <ArrowUpDown size={15} className="text-[var(--text-muted)] shrink-0" />
+                <span className="text-xs font-semibold text-[var(--text-muted)] whitespace-nowrap">{t('opportunities.sort_label')}:</span>
+              </>
+            }
+            value={sort}
+            onChange={setSort}
+            options={[
+              { value: 'deadline', label: t('opportunities.sort_deadline') as string },
+              { value: 'popular', label: t('opportunities.sort_popular') as string },
+              { value: 'newest', label: t('opportunities.sort_newest') as string },
+            ]}
+          />
         </div>
 
         {/* Type filters — all categories for full consistency */}

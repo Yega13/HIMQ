@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { ChevronLeft, Send, CheckCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
+import { ThemedSelect } from '@/components/ThemedSelect';
 import { useUser } from '@/lib/useUser';
 import { getBrowserClient } from '@/lib/supabase';
 
@@ -161,15 +162,12 @@ export default function SubmitEventPage() {
                 <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1.5">
                   Type <span className="text-red-500">*</span>
                 </label>
-                <select
+                <ThemedSelect
                   value={form.type}
-                  onChange={set('type')}
-                  className="w-full px-4 py-3 rounded-xl border border-[var(--border)] bg-[var(--bg-secondary)] text-[var(--text-primary)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-brand)] transition"
-                >
-                  {EVENT_TYPES.map((t) => (
-                    <option key={t} value={t} className="capitalize">{t.charAt(0).toUpperCase() + t.slice(1)}</option>
-                  ))}
-                </select>
+                  onChange={(v) => setForm((prev) => ({ ...prev, type: v as EventType }))}
+                  buttonClassName="rounded-xl bg-[var(--bg-secondary)]"
+                  options={EVENT_TYPES.map((ty) => ({ value: ty, label: ty.charAt(0).toUpperCase() + ty.slice(1) }))}
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1.5">
