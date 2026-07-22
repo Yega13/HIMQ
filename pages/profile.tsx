@@ -23,16 +23,18 @@ interface Profile {
   username: string | null;
   bio: string | null;
   goal: string | null;
-  skill_level: string | null;
   preferred_language: string;
   xp: number;
   streak_days: number;
   lessons_completed?: number;
   avatar_url?: string | null;
+  banner_url?: string | null;
   created_at: string;
 }
 
-const SKILL_LEVELS = ['beginner', 'intermediate', 'advanced'];
+const BIO_MAX = 200;
+const USERNAME_MAX = 50;
+
 const LANGUAGES = [
   { value: 'am', label: 'Հայերեն' },
   { value: 'en', label: 'English' },
@@ -67,7 +69,6 @@ export default function ProfilePage() {
   const [username, setUsername] = useState('');
   const [bio, setBio] = useState('');
   const [goal, setGoal] = useState('');
-  const [skillLevel, setSkillLevel] = useState('beginner');
 
   const [rank, setRank] = useState<number | null>(null);
   const [savedEvents, setSavedEvents] = useState<SavedEvent[]>([]);
@@ -88,6 +89,7 @@ export default function ProfilePage() {
   const [deleteError, setDeleteError] = useState('');
 
   const fileRef = useRef<HTMLInputElement>(null);
+  const bannerRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!userLoading && !user) router.replace('/auth');
@@ -116,14 +118,11 @@ export default function ProfilePage() {
         setUsername(data.username ?? '');
         setBio(data.bio ?? '');
         setGoal(data.goal ?? '');
-        setSkillLevel(data.skill_level ?? 'beginner');
-        // Rank = 1 + number of users with strictly more XP. A single COUNT
-        // head-query instead of transferring up to 1000 rows to findIndex.
+        // Rank = 1 + number of users with strictly more XP. RPC (not a raw
+        // cross-user select) since profiles' RLS only allows reading your own row.
         supabase
-          .from('profiles')
-          .select('id', { count: 'exact', head: true })
-          .gt('xp', data.xp ?? 0)
-          .then(({ count }) => setRank((count ?? 0) + 1));
+          .rpc('public_rank_by_xp', { p_xp: data.xp ?? 0 })
+          .then(({ data: count }) => setRank((Number(count) || 0) + 1));
       }
       setPageLoading(false);
     });
@@ -178,13 +177,33 @@ export default function ProfilePage() {
     setProfile((p) => (p ? { ...p, avatar_url: null } : p));
   };
 
-  const saveProfile = async () => {
+  const handleBanner = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+    const reader = new FileReader();
+    reader.onload = async () => {
+      const dataUrl = reader.result as string;
+      await getBrowserClient().from('profiles').update({ banner_url: dataUrl }).eq('id', user.id);
+      setProfile((p) => (p ? { ...p, banner_url: dataUrl } : p));
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const removeBanner = async () => {
     if (!user) return;
+    await getBrowserClient().from('profiles').update({ banner_url: null }).eq('id', user.id);
+    setProfile((p) => (p ? { ...p, banner_url: null } : p));
+  };
+
+  const usernameTooLong = username.length > USERNAME_MAX;
+
+  const saveProfile = async () => {
+    if (!user || usernameTooLong) return;
     setSaving(true);
     const supabase = getBrowserClient();
     const [{ data }] = await Promise.all([
       supabase.from('profiles')
-        .update({ full_name: fullName, username: username || null, bio: bio || null, goal, skill_level: skillLevel })
+        .update({ full_name: fullName, username: username || null, bio: bio || null, goal })
         .eq('id', user.id).select().single(),
       supabase.auth.updateUser({ data: { full_name: fullName } }),
     ]);
@@ -294,18 +313,42 @@ export default function ProfilePage() {
         {/* Header banner */}
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="relative mb-20">
           <div className="h-36 sm:h-44 rounded-3xl bg-gradient-to-br from-[var(--color-brand)] via-[#1d3262] to-[#0a1733] relative overflow-hidden">
-            {/* subtle dot pattern */}
-            <div
-              className="absolute inset-0 opacity-[0.18]"
-              style={{ backgroundImage: 'radial-gradient(rgba(255,255,255,0.7) 1px, transparent 1px)', backgroundSize: '16px 16px' }}
-            />
-            {/* soft corner highlight */}
-            <div
-              className="absolute inset-0"
-              style={{ background: 'radial-gradient(circle at 18% 18%, rgba(255,255,255,0.16), transparent 55%)' }}
-            />
-            <div className="absolute -top-10 -right-10 w-52 h-52 rounded-full bg-white/10" />
-            <div className="absolute bottom-0 left-0 w-40 h-40 rounded-full bg-[var(--color-gold)]/10 blur-2xl" />
+            {profile?.banner_url ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={profile.banner_url} alt="" className="absolute inset-0 w-full h-full object-cover" />
+            ) : (
+              <>
+                {/* subtle dot pattern */}
+                <div
+                  className="absolute inset-0 opacity-[0.18]"
+                  style={{ backgroundImage: 'radial-gradient(rgba(255,255,255,0.7) 1px, transparent 1px)', backgroundSize: '16px 16px' }}
+                />
+                {/* soft corner highlight */}
+                <div
+                  className="absolute inset-0"
+                  style={{ background: 'radial-gradient(circle at 18% 18%, rgba(255,255,255,0.16), transparent 55%)' }}
+                />
+                <div className="absolute -top-10 -right-10 w-52 h-52 rounded-full bg-white/10" />
+                <div className="absolute bottom-0 left-0 w-40 h-40 rounded-full bg-[var(--color-gold)]/10 blur-2xl" />
+              </>
+            )}
+            <button
+              onClick={() => bannerRef.current?.click()}
+              className="absolute bottom-3 right-3 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-black/40 text-white text-xs font-medium backdrop-blur-sm hover:bg-black/60 transition-colors"
+            >
+              <Camera size={13} />
+              {t('profile.change_banner')}
+            </button>
+            {profile?.banner_url && (
+              <button
+                onClick={removeBanner}
+                className="absolute bottom-3 right-[8.5rem] flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-black/40 text-white text-xs font-medium backdrop-blur-sm hover:bg-black/60 transition-colors"
+              >
+                <X size={13} />
+                {t('profile.remove_banner')}
+              </button>
+            )}
+            <input ref={bannerRef} type="file" accept="image/*" onChange={handleBanner} className="hidden" />
           </div>
 
           <div className="absolute left-6 -bottom-12">
@@ -422,28 +465,25 @@ export default function ProfilePage() {
                 <input value={fullName} onChange={(e) => setFullName(e.target.value)} className={inputCls} />
               </Field>
               <Field label={t('profile.username_label') as string}>
-                <input value={username} onChange={(e) => setUsername(e.target.value.replace(/\s/g, ''))} placeholder={t('profile.username_placeholder') as string} className={inputCls} />
+                <input
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value.replace(/\s/g, ''))}
+                  placeholder={t('profile.username_placeholder') as string}
+                  className={cn(inputCls, usernameTooLong && 'border-red-500 focus:ring-red-500')}
+                />
+                {usernameTooLong && (
+                  <p className="text-xs text-red-500 mt-1.5">{t('profile.username_too_long')}</p>
+                )}
               </Field>
               <Field label={t('profile.bio_label') as string}>
-                <textarea value={bio} onChange={(e) => setBio(e.target.value)} rows={2} placeholder={t('profile.bio_placeholder') as string} className={cn(inputCls, 'resize-none')} />
+                <textarea value={bio} onChange={(e) => setBio(e.target.value.slice(0, BIO_MAX))} rows={2} maxLength={BIO_MAX} placeholder={t('profile.bio_placeholder') as string} className={cn(inputCls, 'resize-none')} />
+                <p className="text-[11px] text-[var(--text-muted)] mt-1 text-right tabular-nums">{bio.length}/{BIO_MAX}</p>
               </Field>
               <Field label={t('profile.goal_label') as string}>
                 <textarea value={goal} onChange={(e) => setGoal(e.target.value)} rows={2} placeholder={t('profile.goal_placeholder') as string} className={cn(inputCls, 'resize-none')} />
               </Field>
-              <Field label={t('profile.skill_label') as string}>
-                <div className="flex gap-2">
-                  {SKILL_LEVELS.map((sk) => (
-                    <button key={sk} type="button" onClick={() => setSkillLevel(sk)}
-                      className={cn('flex-1 py-2 rounded-xl text-xs font-medium border transition-all',
-                        skillLevel === sk ? 'bg-[var(--color-brand)] text-white border-[var(--color-brand)]'
-                          : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] border-[var(--border)] hover:border-[var(--color-brand)]')}>
-                      {t(`common.${sk}`)}
-                    </button>
-                  ))}
-                </div>
-              </Field>
               <div className="flex gap-2 pt-1">
-                <button onClick={saveProfile} disabled={saving}
+                <button onClick={saveProfile} disabled={saving || usernameTooLong}
                   className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[var(--color-brand)] text-white text-sm font-semibold hover:bg-[var(--color-brand-hover)] transition-colors disabled:opacity-60">
                   <Check size={14} />{saving ? t('common.loading') : t('profile.save')}
                 </button>
@@ -482,10 +522,6 @@ export default function ProfilePage() {
                     <Edit2 size={12} />
                   </button>
                 )}
-              </div>
-              <div>
-                <p className="text-xs text-[var(--text-muted)] mb-0.5">{t('profile.skill_label')}</p>
-                <p className="text-sm text-[var(--text-primary)]">{profile?.skill_level ? t(`common.${profile.skill_level}`) : '—'}</p>
               </div>
             </div>
           )}

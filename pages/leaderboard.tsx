@@ -376,11 +376,10 @@ export const getServerSideProps: GetServerSideProps = async ({ locale }) => {
   // All-time top 50, real weekly/monthly top 50 (by lessons completed in the
   // window), and the true total learner count — in parallel.
   const [allRes, weekRes, monthRes, countRes] = await Promise.all([
-    supabase.from('profiles').select('id, full_name, xp, streak_days, lessons_completed')
-      .order('xp', { ascending: false }).limit(50),
+    supabase.rpc('public_leaderboard_alltime', { p_limit: 50 }),
     supabase.rpc('leaderboard_period', { p_since: weekAgo }),
     supabase.rpc('leaderboard_period', { p_since: monthAgo }),
-    supabase.from('profiles').select('id', { count: 'exact', head: true }),
+    supabase.rpc('public_learner_count'),
   ]);
 
   // Union all three boards so a weekly/monthly leader outside the all-time top
@@ -412,7 +411,7 @@ export const getServerSideProps: GetServerSideProps = async ({ locale }) => {
   return {
     props: {
       profiles,
-      totalLearners: countRes.count ?? profiles.length,
+      totalLearners: Number(countRes.data) || profiles.length,
       ...(await serverSideTranslations(locale ?? 'am', ['common'])),
     },
   };
