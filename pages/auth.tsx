@@ -35,6 +35,9 @@ export default function Auth() {
   const [oauthLoading, setOauthLoading] = useState(false);
   const [message, setMessage]   = useState('');
   const [isError, setIsError]   = useState(false);
+  // Gate rendering until we know whether there's a session, so the form doesn't
+  // flash before an already-signed-in user (or an OAuth return) redirects away.
+  const [checkingAuth, setCheckingAuth] = useState(true);
 
   // After signup — show email confirmation screen
   const [pendingEmail, setPendingEmail] = useState('');
@@ -44,12 +47,21 @@ export default function Auth() {
   // Redirect away if already signed in
   useEffect(() => {
     const dest = safeNext(router.query.next);
-    // getSession() is a local read — an already-signed-in user is redirected away
-    // instantly, without waiting on a getUser() network call that can stall on
-    // mobile data and leave them stuck on the login page.
-    getBrowserClient().auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) router.replace(dest);
+    const supabase = getBrowserClient();
+    let redirected = false;
+    const go = (session: { user?: unknown } | null) => {
+      if (session?.user && !redirected) { redirected = true; router.replace(dest); }
+    };
+    // getSession() is a local read — an already-signed-in user redirects away
+    // instantly, no getUser() network call that can stall on mobile data. If
+    // there's no session, reveal the form. The listener also catches the Google
+    // OAuth return, whose session lands a beat after the redirect hash is parsed.
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) go(session);
+      else setCheckingAuth(false);
     });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => go(session));
+    return () => subscription.unsubscribe();
   }, [router]);
 
   const handleGoogle = async () => {
@@ -127,6 +139,17 @@ export default function Auth() {
     setResent(true);
     setTimeout(() => setResent(false), 4000);
   };
+
+  // While we check for an existing session, show a minimal loader instead of the
+  // form — prevents the "form flashes then vanishes" when a signed-in user (or a
+  // returning Google sign-in) is about to be redirected away.
+  if (checkingAuth) {
+    return (
+      <div className="min-h-screen bg-[var(--bg-primary)] flex items-center justify-center">
+        <div className="w-8 h-8 rounded-full border-2 border-[var(--border)] border-t-[var(--color-brand)] animate-spin" />
+      </div>
+    );
+  }
 
   // Email confirmation pending screen
   if (pendingEmail) {
