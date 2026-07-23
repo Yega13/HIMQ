@@ -5,7 +5,8 @@ import { cn } from '@/lib/utils';
 
 // Minimal typing for the Web Speech API (no DOM lib types for it).
 interface SpeechResultEvent {
-  results: ArrayLike<ArrayLike<{ transcript: string }>>;
+  resultIndex: number;
+  results: ArrayLike<ArrayLike<{ transcript: string }> & { isFinal: boolean }>;
 }
 interface SpeechRecognitionLike {
   lang: string;
@@ -40,6 +41,10 @@ export function MicButton({
   const [supported, setSupported] = useState(true);
   const recRef = useRef<SpeechRecognitionLike | null>(null);
   const baseRef = useRef('');
+  // Finalized segments for the current session, accumulated exactly once each.
+  // Kept separate from live interim text so mobile Chrome re-delivering already-
+  // final results (with continuous=true) can't append the same words repeatedly.
+  const finalRef = useRef('');
   const cbRef = useRef(onTranscript);
   cbRef.current = onTranscript;
 
@@ -51,9 +56,17 @@ export function MicButton({
     rec.continuous = true;
     rec.interimResults = true;
     rec.onresult = (e) => {
-      let spoken = '';
-      for (let i = 0; i < e.results.length; i++) spoken += e.results[i][0].transcript;
+      // Only process results from resultIndex forward: earlier entries are
+      // already finalized. Final segments are added to finalRef once; only the
+      // still-changing interim tail is rebuilt each event.
+      let interim = '';
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const res = e.results[i];
+        if (res.isFinal) finalRef.current += res[0].transcript;
+        else interim += res[0].transcript;
+      }
       const base = baseRef.current;
+      const spoken = (finalRef.current + interim).trim();
       cbRef.current((base ? base.trimEnd() + ' ' : '') + spoken);
     };
     rec.onend = () => setListening(false);
@@ -71,6 +84,7 @@ export function MicButton({
       return;
     }
     baseRef.current = getText();
+    finalRef.current = '';
     rec.lang = LANG_MAP[lang] ?? 'en-US';
     try {
       rec.start();
