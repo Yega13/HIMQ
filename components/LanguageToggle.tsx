@@ -2,10 +2,47 @@ import { useRouter } from 'next/router';
 import { useState, useRef, useEffect } from 'react';
 import { getBrowserClient } from '@/lib/supabase';
 
+// Inline SVG flags — self-contained so a slow/blocked external image host
+// (previously flagcdn.com) can never leave a broken-image icon in the navbar.
+function Flag({ code, w = 20, h = 14 }: { code: string; w?: number; h?: number }) {
+  const common = { width: w, height: h, viewBox: '0 0 3 2', className: 'rounded-sm', style: { width: w, height: h } } as const;
+  if (code === 'am') {
+    return (
+      <svg {...common} aria-hidden>
+        <rect width="3" height="2" fill="#0033A0" />
+        <rect width="3" height="0.667" fill="#D90012" />
+        <rect width="3" height="0.667" y="1.333" fill="#F2A800" />
+      </svg>
+    );
+  }
+  if (code === 'ru') {
+    return (
+      <svg {...common} aria-hidden>
+        <rect width="3" height="2" fill="#fff" />
+        <rect width="3" height="0.667" y="0.667" fill="#0039A6" />
+        <rect width="3" height="0.667" y="1.333" fill="#D52B1E" />
+      </svg>
+    );
+  }
+  // en → US flag (simplified: stripes + blue canton)
+  return (
+    <svg {...common} aria-hidden>
+      <rect width="3" height="2" fill="#fff" />
+      {[0, 2, 4, 6].map((i) => (
+        <rect key={i} width="3" height="0.154" y={i * 0.154} fill="#B22234" />
+      ))}
+      {[8, 10, 12].map((i) => (
+        <rect key={i} width="3" height="0.154" y={i * 0.154} fill="#B22234" />
+      ))}
+      <rect width="1.3" height="1.077" fill="#3C3B6E" />
+    </svg>
+  );
+}
+
 const LANGS = [
-  { code: 'am', flagSrc: 'https://flagcdn.com/w40/am.png', label: 'Հայ' },
-  { code: 'en', flagSrc: 'https://flagcdn.com/w40/us.png', label: 'EN' },
-  { code: 'ru', flagSrc: 'https://flagcdn.com/w40/ru.png', label: 'RU' },
+  { code: 'am', label: 'Հայ' },
+  { code: 'en', label: 'EN' },
+  { code: 'ru', label: 'RU' },
 ];
 
 export default function LanguageToggle() {
@@ -47,8 +84,7 @@ export default function LanguageToggle() {
         aria-label="Switch language"
         className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--border)] transition-colors"
       >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={current.flagSrc} alt={current.code} width={20} height={14} className="rounded-sm object-cover" style={{ width: 20, height: 14 }} />
+        <Flag code={current.code} w={20} h={14} />
         <span>{current.label}</span>
       </button>
 
@@ -64,8 +100,7 @@ export default function LanguageToggle() {
                   : 'text-[var(--text-secondary)] hover:bg-[var(--border)]'
               }`}
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={l.flagSrc} alt={l.code} width={22} height={15} className="rounded-sm object-cover flex-shrink-0" style={{ width: 22, height: 15 }} />
+              <span className="flex-shrink-0"><Flag code={l.code} w={22} h={15} /></span>
               <span>{l.label}</span>
             </button>
           ))}
