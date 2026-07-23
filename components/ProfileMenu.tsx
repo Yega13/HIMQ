@@ -42,11 +42,18 @@ export default function ProfileMenu() {
   const rootRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    getBrowserClient().auth.getUser().then(({ data: { user } }) => {
-      if (!user) return;
-      setName((user.user_metadata?.full_name as string) ?? '');
-      setEmail(user.email ?? '');
-    });
+    const supabase = getBrowserClient();
+    // getSession() reads the persisted session locally (no network round-trip),
+    // so the avatar resolves instantly on a fresh tab instead of waiting on — or
+    // failing — a getUser() network call on flaky mobile data. The auth listener
+    // then keeps it in sync across tabs and token refreshes.
+    const apply = (user: { user_metadata?: Record<string, unknown>; email?: string } | null) => {
+      setName((user?.user_metadata?.full_name as string) ?? '');
+      setEmail(user?.email ?? '');
+    };
+    supabase.auth.getSession().then(({ data: { session } }) => apply(session?.user ?? null));
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => apply(session?.user ?? null));
+    return () => subscription.unsubscribe();
   }, []);
 
   useEffect(() => {

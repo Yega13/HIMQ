@@ -20,12 +20,20 @@ export default function MobileHeader() {
   const [initial, setInitial] = useState('?');
 
   useEffect(() => {
-    getBrowserClient().auth.getUser().then(({ data: { user } }) => {
+    const supabase = getBrowserClient();
+    // Local session read (no network) so the avatar shows immediately on a fresh
+    // mobile tab; the listener keeps it current across tabs / token refreshes.
+    const apply = (user: { user_metadata?: Record<string, unknown>; email?: string } | null) => {
       if (user) {
         const name = user.user_metadata?.full_name as string | undefined;
         setInitial(name ? name[0].toUpperCase() : user.email?.[0].toUpperCase() ?? '?');
+      } else {
+        setInitial('?');
       }
-    });
+    };
+    supabase.auth.getSession().then(({ data: { session } }) => apply(session?.user ?? null));
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => apply(session?.user ?? null));
+    return () => subscription.unsubscribe();
   }, []);
 
   // Close the drawer whenever the route changes.

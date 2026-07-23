@@ -44,8 +44,11 @@ export default function Auth() {
   // Redirect away if already signed in
   useEffect(() => {
     const dest = safeNext(router.query.next);
-    getBrowserClient().auth.getUser().then(({ data: { user } }) => {
-      if (user) router.replace(dest);
+    // getSession() is a local read — an already-signed-in user is redirected away
+    // instantly, without waiting on a getUser() network call that can stall on
+    // mobile data and leave them stuck on the login page.
+    getBrowserClient().auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) router.replace(dest);
     });
   }, [router]);
 
