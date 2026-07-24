@@ -4,9 +4,9 @@ export const MODELS = [
     id: 'may1' as const,
     name: 'May-1',
     subtitle: 'Best quality',
-    color: 'text-orange-500',
-    bg: 'bg-orange-50 dark:bg-orange-900/20',
-    dot: 'bg-orange-500',
+    color: 'text-red-500',
+    bg: 'bg-red-50 dark:bg-red-900/20',
+    dot: 'bg-red-500',
   },
   {
     id: 'gemini' as const,
