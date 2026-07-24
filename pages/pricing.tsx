@@ -21,7 +21,7 @@ interface Tier {
 const TIERS: Tier[] = [
   {
     id: 'free', name: 'Free', price: '$0', credits: '400 credits / mo', tagline: 'Everything you need to start learning.',
-    features: ['May, your AI tutor (Gemini)', 'Unlimited learning paths', 'Practice Labs', 'Armenian opportunities feed', 'XP, streaks & leaderboard'],
+    features: ['May, your AI tutor (Aris)', 'Unlimited learning paths', 'Practice Labs', 'Armenian opportunities feed', 'XP, streaks & leaderboard'],
   },
   {
     id: 'student', name: 'Student', price: '$2.50', period: '/mo', credits: '4,000 credits / mo', tagline: 'For learners who show up every day.', popular: true,

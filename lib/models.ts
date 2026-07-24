@@ -10,7 +10,7 @@ export const MODELS = [
   },
   {
     id: 'gemini' as const,
-    name: 'Gemini',
+    name: 'Aris',
     subtitle: 'Fast',
     color: 'text-blue-500',
     bg: 'bg-blue-50 dark:bg-blue-900/20',
