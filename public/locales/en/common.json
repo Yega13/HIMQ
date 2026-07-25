@@ -109,6 +109,9 @@
                  "or_continue_with":  "or continue with",
                  "continue_google":  "Continue with Google",
                  "already_have_account":  "Already have an account?",
+                 "consent_label":  "I confirm I'm 16 or older, or a parent/guardian has given permission, and I agree to the",
+                 "consent_privacy_link":  "Privacy Policy",
+                 "consent_required":  "Please confirm the checkbox below before signing up.",
                  "no_account":  "Don\u0027t have an account?"
              },
     "dashboard":  {

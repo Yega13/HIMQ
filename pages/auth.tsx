@@ -3,6 +3,7 @@ import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { useTranslation } from 'next-i18next';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
+import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mail, RefreshCw, CheckCircle, Eye, EyeOff } from 'lucide-react';
 import Logo from '@/components/Logo';
@@ -30,6 +31,7 @@ export default function Auth() {
   const [email, setEmail]       = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
+  const [consent, setConsent] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading]   = useState(false);
   const [oauthLoading, setOauthLoading] = useState(false);
@@ -94,6 +96,11 @@ export default function Auth() {
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (mode === 'signup' && !consent) {
+      setIsError(true);
+      setMessage(t('auth.consent_required') as string);
+      return;
+    }
     setLoading(true);
     setMessage('');
     const supabase = getBrowserClient();
@@ -330,6 +337,23 @@ export default function Auth() {
                   </button>
                 </div>
               </div>
+
+              {mode === 'signup' && (
+                <label className="flex items-start gap-2.5 text-xs text-[var(--text-secondary)] leading-relaxed cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={consent}
+                    onChange={(e) => setConsent(e.target.checked)}
+                    className="mt-0.5 w-4 h-4 shrink-0 rounded border-[var(--border-strong)] accent-[var(--color-brand)]"
+                  />
+                  <span>
+                    {t('auth.consent_label')}{' '}
+                    <Link href="/privacy" target="_blank" className="text-[var(--color-brand)] hover:underline">
+                      {t('auth.consent_privacy_link')}
+                    </Link>
+                  </span>
+                </label>
+              )}
 
               {message && (
                 <p className={`text-sm ${isError ? 'text-red-500 dark:text-red-400' : 'text-green-600 dark:text-green-400'}`}>

@@ -1,7 +1,6 @@
 import { GetStaticProps } from 'next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import Head from 'next/head';
-import Link from 'next/link';
 import { ShieldCheck } from 'lucide-react';
 import Layout from '@/components/Layout';
 
@@ -63,6 +62,15 @@ export default function Privacy() {
           </ul>
         </Section>
 
+        <Section title="Minors &amp; parental consent">
+          <p>
+            HIMQ is built for students, many of whom are teenagers. If you are under 16, you should have a parent or
+            guardian&apos;s permission before creating an account. We collect the minimum needed to run the app — your
+            learning goals, progress, and conversations with May — and never sell it or use it for advertising. A parent
+            or guardian can request to view or delete a minor&apos;s data at any time by emailing us below.
+          </p>
+        </Section>
+
         <Section title="We never sell your data">
           <p>We do not sell, rent, or trade your personal information. We share data only with the infrastructure providers above that are strictly necessary to operate HIMQ.</p>
         </Section>
@@ -81,8 +89,8 @@ export default function Privacy() {
 
         <Section title="Contact">
           <p>
-            Questions about privacy? Email <a href="mailto:himqaiteam@gmail.com" className="text-[var(--color-brand)] hover:underline">himqaiteam@gmail.com</a>.
-            See also our <Link href="/terms" className="text-[var(--color-brand)] hover:underline">Terms of Service</Link>.
+            Questions about privacy, or a parent/guardian request about a minor&apos;s account? Email{' '}
+            <a href="mailto:himqaiteam@gmail.com" className="text-[var(--color-brand)] hover:underline">himqaiteam@gmail.com</a>.
           </p>
         </Section>
       </div>
