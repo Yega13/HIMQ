@@ -426,33 +426,6 @@ export default function ChatIndex() {
                 </div>
               </motion.div>
 
-              {/* Suggestions / popular */}
-              {suggestions.length > 0 && (
-                <motion.div
-                  initial={{ opacity: 0, y: 16 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.15 }}
-                  className="mb-5"
-                >
-                  <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)] mb-2.5">
-                    {suggestionsLabel}
-                  </label>
-                  <div className="flex flex-wrap gap-2">
-                    {suggestions.map((s) => (
-                      <button
-                        key={s}
-                        type="button"
-                        onClick={() => setGoal(s)}
-                        className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border-strong)] bg-[var(--bg-card)] px-3.5 py-2 text-sm font-medium text-[var(--text-primary)] hover:border-[var(--color-green)] hover:text-[var(--color-green)] transition-colors"
-                      >
-                        <Sparkles size={13} className="text-[var(--color-green)]" />
-                        {s}
-                      </button>
-                    ))}
-                  </div>
-                </motion.div>
-              )}
-
               {error && <p className="text-sm text-red-500 dark:text-red-400 mb-3">{error}</p>}
 
               <motion.button
@@ -475,6 +448,34 @@ export default function ChatIndex() {
                   </>
                 )}
               </motion.button>
+
+              {/* Suggestions / popular — below the primary action, so the CTA
+                  isn't pushed down the page by a long suggestion list. */}
+              {suggestions.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.15 }}
+                  className="mt-6"
+                >
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)] mb-2.5">
+                    {suggestionsLabel}
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {suggestions.map((s) => (
+                      <button
+                        key={s}
+                        type="button"
+                        onClick={() => setGoal(s)}
+                        className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border-strong)] bg-[var(--bg-card)] px-3.5 py-2 text-sm font-medium text-[var(--text-primary)] hover:border-[var(--color-green)] hover:text-[var(--color-green)] transition-colors"
+                      >
+                        <Sparkles size={13} className="text-[var(--color-green)]" />
+                        {s}
+                      </button>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
             </form>
 
             {/* How it works — dedicated section */}

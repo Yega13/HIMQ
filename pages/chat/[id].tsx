@@ -358,6 +358,42 @@ export default function ChatDetail({ id }: { id: string }) {
     }
   };
 
+  // Escape hatch. May sometimes announces "your plan is ready" in prose without
+  // emitting the <<<PLAN_READY>>> control token the client watches for — which
+  // stranded the student on the discovery screen with an answer box forever.
+  // This lets them build the plan themselves whenever they've answered enough.
+  const buildPlanNow = async () => {
+    if (generatingPlan || sending) return;
+    setSendError('');
+    setGeneratingPlan(true);
+    try {
+      const { data: { session } } = await getBrowserClient().auth.getSession();
+      const planRes = await fetch('/api/generate-plan', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session?.access_token ?? ''}`,
+        },
+        body: JSON.stringify({ chatId: id }),
+      });
+      if (planRes.ok) {
+        const { chat: updatedChat, lessons: newLessons } = await planRes.json();
+        setChat(updatedChat);
+        setLessons(newLessons);
+      } else {
+        const body = await planRes.json().catch(() => null);
+        setSendError(
+          (body as { error?: string } | null)?.error
+          || 'Could not build your plan. Please try again.',
+        );
+      }
+    } catch {
+      setSendError('Could not build your plan. Please try again.');
+    } finally {
+      setGeneratingPlan(false);
+    }
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -719,6 +755,15 @@ export default function ChatDetail({ id }: { id: string }) {
                     {sending ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <>{t('chat.continue')} <Send size={14} /></>}
                   </button>
                 </>
+              )}
+              {answeredCount >= 2 && (
+                <button
+                  onClick={buildPlanNow}
+                  disabled={sending || generatingPlan}
+                  className="w-full mt-3 py-2.5 rounded-2xl border border-[var(--border-strong)] text-[var(--text-secondary)] text-xs font-semibold hover:border-[var(--color-brand)] hover:text-[var(--color-brand)] transition-colors disabled:opacity-50"
+                >
+                  {t('chat.build_plan_now')}
+                </button>
               )}
               {answeredCount > 0 && (
                 <p className="text-center text-[11px] text-[var(--text-muted)] mt-3">
