@@ -323,6 +323,16 @@ export default function ChatDetail({ id }: { id: string }) {
             setLessons(newLessons);
             // Plan is now in REVIEW state — the review screen takes over until
             // the student approves it (startPlan) or asks for changes.
+          } else {
+            // NEVER swallow this. A failed plan build (out of credits, rate
+            // limit, AI timeout) used to fall through silently, dropping the
+            // student back on the discovery screen with the previous assistant
+            // message rendered as if it were the next question.
+            const body = await planRes.json().catch(() => null);
+            setSendError(
+              (body as { error?: string } | null)?.error
+              || 'Could not build your plan. Please try again.',
+            );
           }
         } finally {
           setGeneratingPlan(false);
@@ -505,10 +515,15 @@ export default function ChatDetail({ id }: { id: string }) {
     () => (teachingCutoff ? messages.filter((m) => m.created_at >= teachingCutoff) : messages),
     [messages, teachingCutoff],
   );
-  const rawQuestion = useMemo(
-    () => [...messages].reverse().find((m) => m.role === 'assistant')?.content ?? '',
-    [messages],
+  // The last assistant message that is NOT still streaming. Using the in-flight
+  // message here re-keyed the question card on every token (remount + re-run the
+  // enter animation, which read as glitching) and exposed the raw Q:/A:/T:
+  // scaffolding to the student as it arrived.
+  const questionMsg = useMemo(
+    () => [...messages].reverse().find((m) => m.role === 'assistant' && m.id !== streamingId) ?? null,
+    [messages, streamingId],
   );
+  const rawQuestion = questionMsg?.content ?? '';
   const parsed = useMemo(() => parseQuestion(rawQuestion), [rawQuestion]);
   const answeredCount = useMemo(() => messages.filter((m) => m.role === 'user').length, [messages]);
 
@@ -566,7 +581,7 @@ export default function ChatDetail({ id }: { id: string }) {
             {/* Question card */}
             <AnimatePresence mode="wait">
               <motion.div
-                key={rawQuestion}
+                key={questionMsg?.id ?? 'pending'}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -12 }}
@@ -581,6 +596,12 @@ export default function ChatDetail({ id }: { id: string }) {
                 </p>
               </motion.div>
             </AnimatePresence>
+
+            {/* Discovery had no error surface at all, so a failed turn or plan
+                build looked like the app silently glitching. */}
+            {sendError && (
+              <p className="w-full max-w-lg mb-4 text-center text-xs text-red-500">{sendError}</p>
+            )}
 
             {/* Answer area */}
             <div className="w-full max-w-lg">
