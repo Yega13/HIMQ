@@ -112,6 +112,7 @@
                  "consent_label":  "I confirm I'm 16 or older, or a parent/guardian has given permission, and I agree to the",
                  "consent_privacy_link":  "Privacy Policy",
                  "consent_required":  "Please confirm the checkbox below before signing up.",
+                 "generic_error":  "Something went wrong. Please check your connection and try again.",
                  "no_account":  "Don\u0027t have an account?"
              },
     "dashboard":  {

@@ -23,6 +23,17 @@ function safeNext(next: unknown): string {
   return /^\/(?!\/)[^\\\x00-\x1F]*$/.test(next) ? next : '/dashboard';
 }
 
+// Supabase can surface an error whose message is empty or a bare "{}" when the
+// auth request fails at the network/provider level rather than validation —
+// rendering that raw shows the user a meaningless "{}". Always fall back to
+// something readable, and log the real error for diagnosis.
+function authErrorMessage(err: unknown, fallback: string): string {
+  const raw = (err as { message?: unknown } | null)?.message;
+  const text = typeof raw === 'string' ? raw.trim() : '';
+  if (!text || text === '{}' || text === '[object Object]') return fallback;
+  return text;
+}
+
 export default function Auth() {
   const { t } = useTranslation('common');
   const router = useRouter();
@@ -112,7 +123,8 @@ export default function Auth() {
         options: { data: { full_name: fullName } },
       });
       if (error) {
-        setMessage(error.message);
+        console.error('[auth] signUp failed:', error);
+        setMessage(authErrorMessage(error, t('auth.generic_error') as string));
         setIsError(true);
       } else if (data?.session) {
         // Signed in immediately (no email confirmation required) — go straight in.
@@ -129,7 +141,8 @@ export default function Auth() {
     } else {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) {
-        setMessage(error.message);
+        console.error('[auth] signIn failed:', error);
+        setMessage(authErrorMessage(error, t('auth.generic_error') as string));
         setIsError(true);
       } else {
         await router.replace(safeNext(router.query.next));
