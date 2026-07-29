@@ -1,0 +1,151 @@
+import { describe, it, expect } from 'vitest';
+import { assess, gapByExam, type RequiredExam } from '@/lib/eligibility';
+
+const mathOnly: RequiredExam[] = [{ exam: 'unified-math', required: true }];
+const mathAndArm: RequiredExam[] = [
+  { exam: 'unified-math', required: true },
+  { exam: 'unified-armenian', required: true },
+];
+
+describe('assess', () => {
+  it('returns no_data when there are no cutoffs at all', () => {
+    const r = assess({ 'unified-math': 18 }, mathOnly, []);
+    expect(r.verdict).toBe('no_data');
+    expect(r.reference).toBeNull();
+    expect(r.yearsUsed).toEqual([]);
+  });
+
+  it('compares against the HIGHEST of the recent years, not the average', () => {
+    const r = assess({ 'unified-math': 16 }, mathOnly, [
+      { year: 2025, cutoff_score: 15.0 },
+      { year: 2024, cutoff_score: 16.5 },
+      { year: 2023, cutoff_score: 14.0 },
+    ]);
+    expect(r.reference).toBe(16.5);
+    expect(r.verdict).toBe('reach');
+    expect(r.gap).toBe(0.5);
+  });
+
+  it('ignores years older than the three most recent', () => {
+    const r = assess({ 'unified-math': 16 }, mathOnly, [
+      { year: 2025, cutoff_score: 15 },
+      { year: 2024, cutoff_score: 15 },
+      { year: 2023, cutoff_score: 15 },
+      { year: 2019, cutoff_score: 19 }, // must not influence the forecast
+    ]);
+    expect(r.reference).toBe(15);
+    expect(r.yearsUsed).toEqual([2025, 2024, 2023]);
+  });
+
+  it('sorts unordered cutoff rows by year before slicing', () => {
+    const r = assess({ 'unified-math': 16 }, mathOnly, [
+      { year: 2019, cutoff_score: 19 },
+      { year: 2025, cutoff_score: 15 },
+      { year: 2023, cutoff_score: 15 },
+      { year: 2024, cutoff_score: 15 },
+    ]);
+    expect(r.yearsUsed).toEqual([2025, 2024, 2023]);
+    expect(r.reference).toBe(15);
+  });
+
+  it('grades every verdict at its boundary', () => {
+    const c = [{ year: 2025, cutoff_score: 15 }];
+    expect(assess({ 'unified-math': 16.5 }, mathOnly, c).verdict).toBe('safe');
+    expect(assess({ 'unified-math': 15.0 }, mathOnly, c).verdict).toBe('likely');
+    expect(assess({ 'unified-math': 13.0 }, mathOnly, c).verdict).toBe('reach');
+    expect(assess({ 'unified-math': 12.9 }, mathOnly, c).verdict).toBe('unlikely');
+  });
+
+  it('reports no gap when the student is at or above the reference', () => {
+    const r = assess({ 'unified-math': 15 }, mathOnly, [{ year: 2025, cutoff_score: 15 }]);
+    expect(r.gap).toBeNull();
+  });
+
+  it('sums across every required exam', () => {
+    const r = assess(
+      { 'unified-math': 16, 'unified-armenian': 14 },
+      mathAndArm,
+      [{ year: 2025, cutoff_score: 28 }],
+    );
+    expect(r.total).toBe(30);
+    expect(r.verdict).toBe('safe');
+  });
+
+  it('reports missing exams and counts them as zero', () => {
+    const r = assess({ 'unified-math': 16 }, mathAndArm, [{ year: 2025, cutoff_score: 28 }]);
+    expect(r.missingExams).toEqual(['unified-armenian']);
+    expect(r.total).toBe(16);
+    expect(r.verdict).toBe('unlikely');
+  });
+
+  it('ignores exams that are not required', () => {
+    const r = assess(
+      { 'unified-math': 16, 'unified-armenian': 20 },
+      [
+        { exam: 'unified-math', required: true },
+        { exam: 'unified-armenian', required: false },
+      ],
+      [{ year: 2025, cutoff_score: 15 }],
+    );
+    expect(r.total).toBe(16);
+    expect(r.missingExams).toEqual([]);
+  });
+
+  it('skips years whose cutoff was never published', () => {
+    const r = assess({ 'unified-math': 16 }, mathOnly, [
+      { year: 2025, cutoff_score: null },
+      { year: 2024, cutoff_score: 15 },
+    ]);
+    expect(r.reference).toBe(15);
+    expect(r.yearsUsed).toEqual([2024]);
+  });
+
+  it('accepts numeric() values arriving from Postgres as strings', () => {
+    const r = assess({ 'unified-math': 16 }, mathOnly, [{ year: 2025, cutoff_score: '15.50' }]);
+    expect(r.reference).toBe(15.5);
+    expect(r.verdict).toBe('likely');
+  });
+
+  it('rounds the gap to two decimals', () => {
+    // 15 - 12.333 = 2.667, which must not surface as 2.6670000000000016.
+    const r = assess({ 'unified-math': 12.333 }, mathOnly, [{ year: 2025, cutoff_score: 15 }]);
+    expect(r.gap).toBe(2.67);
+  });
+});
+
+describe('gapByExam', () => {
+  it('weights the shortfall toward the exam with more headroom', () => {
+    const out = gapByExam({ 'unified-math': 10, 'unified-armenian': 18 }, mathAndArm, 4);
+    const math = out.find((o) => o.exam === 'unified-math')!;
+    const arm = out.find((o) => o.exam === 'unified-armenian')!;
+    expect(math.suggestedTarget - math.current).toBeGreaterThan(arm.suggestedTarget - arm.current);
+  });
+
+  it('never suggests a target above the 20-point ceiling', () => {
+    const out = gapByExam({ 'unified-math': 19.5 }, mathOnly, 3);
+    expect(out[0].suggestedTarget).toBeLessThanOrEqual(20);
+  });
+
+  it('rounds targets to the nearest half point', () => {
+    const out = gapByExam({ 'unified-math': 12 }, mathOnly, 2.1);
+    expect(out[0].suggestedTarget * 2).toBe(Math.round(out[0].suggestedTarget * 2));
+  });
+
+  it('returns nothing when there is no gap to close', () => {
+    expect(gapByExam({ 'unified-math': 18 }, mathOnly, 0)).toEqual([]);
+    expect(gapByExam({ 'unified-math': 18 }, mathOnly, -1)).toEqual([]);
+  });
+
+  it('treats a missing score as zero rather than dropping the exam', () => {
+    const out = gapByExam({}, mathOnly, 5);
+    expect(out).toHaveLength(1);
+    expect(out[0].current).toBe(0);
+    expect(out[0].suggestedTarget).toBeGreaterThan(0);
+  });
+
+  it('splits evenly when no exam has headroom left', () => {
+    const out = gapByExam({ 'unified-math': 20, 'unified-armenian': 20 }, mathAndArm, 4);
+    expect(out).toHaveLength(2);
+    for (const o of out) expect(o.suggestedTarget).toBe(20);
+  });
+});
