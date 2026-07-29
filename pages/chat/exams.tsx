@@ -1,7 +1,7 @@
 import { GetStaticProps } from 'next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { useTranslation } from 'next-i18next';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import Link from 'next/link';
@@ -83,6 +83,30 @@ export default function ExamsPage() {
     document.body.style.overflow = 'hidden';
     return () => { document.body.style.overflow = ''; };
   }, [selected]);
+
+  // Deep link from the eligibility checker:
+  //   /chat/exams?exam=unified-math&target=16
+  // Opens the setup modal with the exam preselected and the target score
+  // prefilled from the student's gap. The rest of the intake (level, weak
+  // sections, hours) is still filled in by the student — those are what make
+  // the generated plan good, so we don't skip them.
+  //
+  // Guarded by a ref rather than `selected`: keying this on `selected` would
+  // re-open the modal every time the student closed it, making it impossible
+  // to dismiss while the query param is still in the URL.
+  const deepLinkApplied = useRef(false);
+  useEffect(() => {
+    if (!router.isReady || deepLinkApplied.current) return;
+    const examId = router.query.exam;
+    if (typeof examId !== 'string') return;
+    const found = EXAMS.find((e) => e.id === examId && e.status === 'live');
+    if (!found) return;
+    deepLinkApplied.current = true;
+    setSelected(found);
+    setTrack(found.tracks?.[0] ?? null);      // default to the full test
+    const raw = router.query.target;
+    if (typeof raw === 'string' && raw.trim()) setTarget(raw.trim());
+  }, [router.isReady, router.query.exam, router.query.target]);
 
   const open = (exam: ExamMeta) => {
     setSelected(exam);
