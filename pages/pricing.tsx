@@ -20,20 +20,20 @@ interface Tier {
 
 const TIERS: Tier[] = [
   {
-    id: 'free', name: 'Free', price: '$0', credits: '400 credits / mo', tagline: 'Everything you need to start learning.',
-    features: ['May, your AI tutor (Aris)', 'Unlimited learning paths', 'Practice Labs', 'Armenian opportunities feed', 'XP, streaks & leaderboard'],
+    id: 'free', name: 'Free', price: '$0', credits: '10 messages / day', tagline: 'Everything you need to start learning.',
+    features: ['May, your AI tutor', '10 messages a day', '5 learning paths a month', 'Opportunities feed', 'XP, streaks & leaderboard'],
   },
   {
-    id: 'student', name: 'Student', price: '$2.50', period: '/mo', credits: '4,000 credits / mo', tagline: 'For learners who show up every day.', popular: true,
-    features: ['Everything in Free', 'May powered by Claude (far better Armenian & Russian)', 'Priority responses', '~10× the monthly AI usage'],
+    id: 'student', name: 'Student', price: '$2.50', period: '/mo', credits: '4 premium messages / day', tagline: 'For learners who show up every day.', popular: true,
+    features: ['Everything in Free', 'Practice Labs', '4 premium messages a day, on Claude', '~20 standard messages a day', 'Premium learning paths'],
   },
   {
-    id: 'pro', name: 'Pro', price: '$10', period: '/mo', credits: '12,000 credits / mo', tagline: 'For power learners and multiple goals.',
-    features: ['Everything in Student', '3× the Student usage', 'Early access to new labs & features'],
+    id: 'pro', name: 'Pro', price: '$10', period: '/mo', credits: '25 premium messages / day', tagline: 'For power learners and multiple goals.',
+    features: ['Everything in Student', '25 premium messages a day', 'Premium learning paths, no practical limit'],
   },
   {
-    id: 'max', name: 'Max', price: '$25', period: '/mo', credits: '30,000 credits / mo', tagline: 'For the most intensive study loads.',
-    features: ['Everything in Pro', 'Highest monthly AI usage', 'Priority support'],
+    id: 'max', name: 'Max', price: '$25', period: '/mo', credits: '50 premium messages / day', tagline: 'For the most intensive study loads.',
+    features: ['Everything in Pro', '50 premium messages a day', 'Highest monthly usage'],
   },
 ];
 
@@ -51,7 +51,7 @@ export default function Pricing() {
             Start free. Upgrade when you&apos;re flying.
           </h1>
           <p className="text-[var(--text-secondary)] mt-3">
-            Every plan includes the full app — paths, labs, and opportunities. Paid plans simply give May more room to think.
+            Free gets you the tutor, learning paths, and the opportunities feed. Paid plans add Practice Labs and give May far more room to think.
           </p>
         </div>
 
@@ -109,11 +109,12 @@ export default function Pricing() {
 
         {/* Credit explainer */}
         <div className="mt-12 max-w-3xl mx-auto rounded-2xl border border-[var(--border)] bg-[var(--bg-secondary)] p-6">
-          <h3 className="text-sm font-bold text-[var(--text-primary)] mb-2">What&apos;s a credit?</h3>
+          <h3 className="text-sm font-bold text-[var(--text-primary)] mb-2">How the limits work</h3>
           <p className="text-[13.5px] text-[var(--text-secondary)] leading-relaxed">
-            A credit is one small unit of AI usage. A quick question costs about 1–6 credits; a deeper answer or building a
-            full personalized plan costs more. Credits keep pricing fair — you pay for the thinking you actually use, and your
-            balance refreshes every month. Most learners never come close to their limit.
+            Every plan is a monthly pool of usage, shared between messages and learning paths. A standard message uses a
+            single unit; a premium message on Claude uses about 20, because it costs us about 20× more to run. A generated
+            learning path is bigger again. Your pool refreshes every month, so heavy premium use means fewer standard
+            messages left over — the daily figures above are what you get if you spread usage evenly.
           </p>
         </div>
 
