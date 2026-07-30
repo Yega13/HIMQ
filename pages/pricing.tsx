@@ -21,19 +21,19 @@ interface Tier {
 const TIERS: Tier[] = [
   {
     id: 'free', name: 'Free', price: '$0', credits: '400 credits / mo', tagline: 'Everything you need to start learning.',
-    features: ['Aris, your everyday AI tutor', 'Learning paths', 'Opportunities feed', 'XP, streaks & leaderboard'],
+    features: ['Aris, your everyday AI tutor', '1 learning path', 'Opportunities feed', 'XP, streaks & leaderboard'],
   },
   {
     id: 'student', name: 'Student', price: '$2.50', period: '/mo', credits: '4,000 credits / mo', tagline: 'For learners who show up every day.', popular: true,
-    features: ['May-1, our best-quality tutor', 'Aris for everyday questions', 'Core Practice Labs', 'Learning paths built by May-1', 'Opportunities feed', 'XP, streaks & leaderboard'],
+    features: ['May, our best-quality tutor', 'Aris for everyday questions', 'Core Practice Labs', '5 learning paths built by May', 'Opportunities feed', 'XP, streaks & leaderboard'],
   },
   {
     id: 'pro', name: 'Pro', price: '$10', period: '/mo', credits: '15,000 credits / mo', tagline: 'For power learners and multiple goals.',
-    features: ['May-1, our best-quality tutor', 'Aris for everyday questions', 'Every Practice Lab', 'Longer conversation memory', 'Learning paths built by May-1', 'Opportunities feed', 'XP, streaks & leaderboard'],
+    features: ['May, our best-quality tutor', 'Aris for everyday questions', 'Every Practice Lab', 'Longer conversation memory', 'Learning paths built by May', 'Opportunities feed', 'XP, streaks & leaderboard'],
   },
   {
     id: 'max', name: 'Max', price: '$25', period: '/mo', credits: '30,000 credits / mo', tagline: 'For the most intensive study loads.',
-    features: ['May-1, our best-quality tutor', 'Aris for everyday questions', 'Every Practice Lab', 'Longest conversation memory', 'Learning paths built by May-1', 'Opportunities feed', 'XP, streaks & leaderboard'],
+    features: ['May, our best-quality tutor', 'Aris for everyday questions', 'Every Practice Lab', 'Longest conversation memory', 'Learning paths built by May', 'Opportunities feed', 'XP, streaks & leaderboard'],
   },
 ];
 
@@ -51,7 +51,7 @@ export default function Pricing() {
             Start free. Upgrade when you&apos;re flying.
           </h1>
           <p className="text-[var(--text-secondary)] mt-3">
-            Free gets you the tutor, learning paths, and the opportunities feed. Paid plans add Practice Labs and give May far more room to think.
+            Free gets you the tutor, learning paths, and the opportunities feed. Paid plans unlock Practice Labs and give May far more room to think.
           </p>
         </div>
 

@@ -2,7 +2,7 @@
 export const MODELS = [
   {
     id: 'may1' as const,
-    name: 'May-1',
+    name: 'May',
     subtitle: 'Best quality',
     color: 'text-red-500',
     bg: 'bg-red-50 dark:bg-red-900/20',
