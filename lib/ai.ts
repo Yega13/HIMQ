@@ -82,13 +82,20 @@ async function withClaude(messages: AIMessage[], role: AIRole, system: string, l
   // hung Claude call could otherwise burn ~45s×retries and 504 the 60s route
   // BEFORE the Gemini fallback ever runs. This bounds the whole attempt so the
   // fallback still has time.
+  // Thinking is a latency/token-budget tradeoff, not a free win, so it's tuned
+  // per role. Chat needs to feel instant and runs on an 800-token cap — hidden
+  // reasoning would eat straight into that, so it stays off; the system prompt's
+  // "silently re-read and fix your phrasing" instruction covers language
+  // self-correction instead. Plan generation is the opposite: it's a background
+  // multi-step reasoning task (sequencing a whole curriculum), already tolerates
+  // a 58s timeout, and benefits from thinking exactly where it matters most —
+  // so it runs adaptive, with extra max_tokens headroom for the reasoning itself.
   const res = await withTimeout(anthropic.messages.create({
     model,
-    max_tokens: role === 'plan' ? 8000 : 800,
-    // Sonnet 5 runs adaptive thinking by default; disable it to keep chat fast
-    // and stop hidden reasoning from eating the max_tokens budget. Haiku takes
-    // no thinking param.
-    ...(model === 'claude-sonnet-5' ? { thinking: { type: 'disabled' as const } } : {}),
+    max_tokens: role === 'plan' ? 12000 : 800,
+    ...(model === 'claude-sonnet-5'
+      ? { thinking: role === 'plan' ? { type: 'adaptive' as const } : { type: 'disabled' as const } }
+      : {}),
     system,
     messages: apiMessages,
   }), role === 'plan' ? 58_000 : AI_TIMEOUT_MS); // big exam plans need longer
