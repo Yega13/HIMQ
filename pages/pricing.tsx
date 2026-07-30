@@ -20,20 +20,20 @@ interface Tier {
 
 const TIERS: Tier[] = [
   {
-    id: 'free', name: 'Free', price: '$0', credits: '10 messages / day', tagline: 'Everything you need to start learning.',
-    features: ['May, your AI tutor', '10 messages a day', '5 learning paths a month', 'Opportunities feed', 'XP, streaks & leaderboard'],
+    id: 'free', name: 'Free', price: '$0', credits: '400 credits / mo', tagline: 'Everything you need to start learning.',
+    features: ['Aris, your everyday AI tutor', 'Learning paths', 'Opportunities feed', 'XP, streaks & leaderboard'],
   },
   {
-    id: 'student', name: 'Student', price: '$2.50', period: '/mo', credits: '4 premium messages / day', tagline: 'For learners who show up every day.', popular: true,
-    features: ['Everything in Free', 'Practice Labs', '4 premium messages a day, on Claude', '~20 standard messages a day', 'Premium learning paths'],
+    id: 'student', name: 'Student', price: '$2.50', period: '/mo', credits: '4,000 credits / mo', tagline: 'For learners who show up every day.', popular: true,
+    features: ['May-1, our best-quality tutor', 'Aris for everyday questions', 'Core Practice Labs', 'Learning paths built by May-1', 'Opportunities feed', 'XP, streaks & leaderboard'],
   },
   {
-    id: 'pro', name: 'Pro', price: '$10', period: '/mo', credits: '25 premium messages / day', tagline: 'For power learners and multiple goals.',
-    features: ['Everything in Student', '25 premium messages a day', 'Premium learning paths, no practical limit'],
+    id: 'pro', name: 'Pro', price: '$10', period: '/mo', credits: '15,000 credits / mo', tagline: 'For power learners and multiple goals.',
+    features: ['May-1, our best-quality tutor', 'Aris for everyday questions', 'Every Practice Lab', 'Longer conversation memory', 'Learning paths built by May-1', 'Opportunities feed', 'XP, streaks & leaderboard'],
   },
   {
-    id: 'max', name: 'Max', price: '$25', period: '/mo', credits: '50 premium messages / day', tagline: 'For the most intensive study loads.',
-    features: ['Everything in Pro', '50 premium messages a day', 'Highest monthly usage'],
+    id: 'max', name: 'Max', price: '$25', period: '/mo', credits: '30,000 credits / mo', tagline: 'For the most intensive study loads.',
+    features: ['May-1, our best-quality tutor', 'Aris for everyday questions', 'Every Practice Lab', 'Longest conversation memory', 'Learning paths built by May-1', 'Opportunities feed', 'XP, streaks & leaderboard'],
   },
 ];
 
