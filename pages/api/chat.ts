@@ -64,8 +64,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const effModel = isDiscovering ? 'may1' : effectiveModel(tier, modelId);
 
   // Daily pace cap on premium messages, checked before the monthly credit
-  // deduction so a blocked message never touches the credit balance.
-  if (effModel === 'may1') {
+  // deduction so a blocked message never touches the credit balance. Exempt
+  // during discovery: that phase forces 'may1' for EVERY tier regardless of
+  // entitlement (see above), so free tier's cap of 0 would otherwise block a
+  // user's very first message. Discovery cost is already bounded by the
+  // monthly credit budget; this cap is only for optional, ongoing premium use.
+  if (effModel === 'may1' && !isDiscovering) {
     const premiumGate = await consumePremiumMessage(admin, user.id, tier);
     if (premiumGate.enabled && !premiumGate.allowed) {
       return res.status(429).json({
