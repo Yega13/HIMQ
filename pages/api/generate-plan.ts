@@ -2,7 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { getAdminClient } from '@/lib/supabase';
 import { requireUser } from '@/lib/apiAuth';
 import { generateAIResponse } from '@/lib/ai';
-import { resolveTier, consumeCredits, PLAN_COST } from '@/lib/credits';
+import { resolveTier, consumeCredits, CREDIT_METER_ENABLED, PLAN_COST, type Tier } from '@/lib/credits';
 import { languageName } from '@/lib/utils';
 
 // Plan generation is a large Sonnet call; the default 10s (Vercel Hobby) would
@@ -59,6 +59,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(400).json({ error: 'Plan already started' });
   }
 
+  const tier = await resolveTier(admin, user.id);
+
   // Rate-limit plan REGENERATIONS to 5/day. The first plan (total_lessons still
   // 0) is free; any subsequent call — with or without feedback — means a plan
   // already exists, so it's a regeneration and counts against the cap. (Gating
@@ -73,13 +75,39 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!quota?.allowed) {
       return res.status(429).json({ error: "You've reached today's limit of 5 plan updates. Try again tomorrow." });
     }
+  } else if (CREDIT_METER_ENABLED) {
+    // Rate-limit NEW plans per tier per month (pricing page: 1 free, 5 student,
+    // uncapped pro/max). This is separate from the regeneration limiter above —
+    // it counts distinct paths created, not edits to one. Off entirely while the
+    // meter is off, same as every other tier gate in the app.
+    const PLAN_CAP: Record<Tier, number> = { free: 1, student: 5, pro: Infinity, max: Infinity };
+    const cap = PLAN_CAP[tier];
+    if (Number.isFinite(cap)) {
+      const monthStart = new Date();
+      monthStart.setUTCDate(1);
+      monthStart.setUTCHours(0, 0, 0, 0);
+      const { count, error: countErr } = await admin
+        .from('chats')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .gt('total_lessons', 0)
+        .gte('created_at', monthStart.toISOString());
+      if (countErr) {
+        console.error('Plan-count check failed:', countErr);
+        return res.status(503).json({ error: 'Service temporarily unavailable. Please try again.' });
+      }
+      if ((count ?? 0) >= cap) {
+        return res.status(429).json({
+          error: `You've used all ${cap} learning path${cap === 1 ? '' : 's'} for this tier this month. Upgrade for more.`,
+        });
+      }
+    }
   }
 
   // Credit meter (no-op unless CREDIT_METER_ENABLED). Plan generation is quality-
   // critical and low-volume (once per path), so it ALWAYS uses the smart model
   // regardless of tier — free plans on Gemini came out glitchy, especially in
   // Armenian. Only ongoing teaching respects a free tier's Gemini-only rule.
-  const tier = await resolveTier(admin, user.id);
   const planModel = 'may1' as const;
   const planGate = await consumeCredits(admin, user.id, tier, PLAN_COST[planModel]);
   if (planGate.enabled && !planGate.allowed) {

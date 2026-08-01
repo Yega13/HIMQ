@@ -4,7 +4,7 @@ import { requireUser, boundedText } from '@/lib/apiAuth';
 import { streamAIResponse } from '@/lib/ai';
 import { visibleSoFar, interpretReply } from '@/lib/controlTokens';
 import { type ModelId, DEFAULT_MODEL } from '@/lib/models';
-import { resolveTier, effectiveModel, consumeCredits, MSG_COST } from '@/lib/credits';
+import { resolveTier, effectiveModel, consumeCredits, consumePremiumMessage, MSG_COST } from '@/lib/credits';
 import { matchResources, resolveResourceTokens } from '@/lib/resources';
 import { languageName } from '@/lib/utils';
 
@@ -62,6 +62,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   // actually runs. Deduct BEFORE the paid AI call.
   const tier = await resolveTier(admin, user.id);
   const effModel = isDiscovering ? 'may1' : effectiveModel(tier, modelId);
+
+  // Daily pace cap on premium messages, checked before the monthly credit
+  // deduction so a blocked message never touches the credit balance.
+  if (effModel === 'may1') {
+    const premiumGate = await consumePremiumMessage(admin, user.id, tier);
+    if (premiumGate.enabled && !premiumGate.allowed) {
+      return res.status(429).json({
+        error: premiumGate.error
+          ? 'Service temporarily unavailable. Please try again.'
+          : "You've used today's premium messages. More tomorrow, or upgrade for a higher daily limit.",
+      });
+    }
+  }
+
   const gate = await consumeCredits(admin, user.id, tier, MSG_COST[effModel]);
   if (gate.enabled && !gate.allowed) {
     return res.status(429).json({

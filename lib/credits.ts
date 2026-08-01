@@ -27,10 +27,18 @@ export type Tier = 'free' | 'student' | 'pro' | 'max';
 
 // Monthly credit budget per tier. 1 credit = $0.0005 API cost, so the right
 // column is the worst-case monthly AI cost if a user drains their whole budget:
-//   free 400 → $0.20 · student 4,000 → $2.00 · pro 15,000 → $7.50 · max 30,000 → $15.00
+//   free 350 → $0.175 · student 3,000 → $1.50 · pro 15,000 → $7.50 · max 30,000 → $15.00
+//
+// free and student were lowered from 400/4,000 (2026-07) after the entry tier
+// priced out near-zero margin at full burn once payment fees are subtracted.
+// pro and max are sized to exactly cover PREMIUM_DAILY_CAP sustained for a
+// full 30-day month (25/day and 50/day × 20 credits × 30 ≈ 15,000 / 30,000) —
+// don't lower either without also lowering its daily cap below, or the
+// pricing page's "N premium messages a day" promise stops being true for the
+// back half of the month.
 export const TIER_BUDGET: Record<Tier, number> = {
-  free: 400,
-  student: 4_000,
+  free: 350,
+  student: 3_000,
   pro: 15_000,
   max: 30_000,
 };
@@ -42,6 +50,18 @@ export const MSG_COST: Record<ModelId, number> = { may1: 20, gemini: 1 };
 
 // Credit cost of generating a full learning/exam plan (one large call).
 export const PLAN_COST: Record<ModelId, number> = { may1: 110, gemini: 10 };
+
+// Daily cap on PREMIUM (Sonnet) messages, independent of the monthly credit
+// pool — without this, a user could burn a whole month's credits on Sonnet in
+// under a week. Matches the "N premium messages a day" figures already stated
+// on the pricing page. free is Gemini-only (see tierAllowsClaude) so its cap
+// is never actually reached; kept here so the Record is total over Tier.
+export const PREMIUM_DAILY_CAP: Record<Tier, number> = {
+  free: 0,
+  student: 4,
+  pro: 25,
+  max: 50,
+};
 
 export function normalizeTier(v: unknown): Tier {
   return v === 'student' || v === 'pro' || v === 'max' ? v : 'free';
@@ -94,6 +114,27 @@ export async function consumeCredits(
   }
   const r = (data ?? {}) as { allowed?: boolean; used?: number; remaining?: number };
   return { enabled: true, allowed: !!r.allowed, used: r.used, budget, remaining: r.remaining };
+}
+
+// Atomically check-and-increment today's premium-message count against
+// PREMIUM_DAILY_CAP. Separate ledger from consumeCredits — this caps *pace*,
+// not total monthly spend. Call before consumeCredits so a blocked premium
+// message never touches the credit balance. Fails CLOSED like consumeCredits,
+// for the same reason (better to block than let a bug bypass the cap).
+export async function consumePremiumMessage(
+  admin: Admin, userId: string, tier: Tier,
+): Promise<CreditGate> {
+  if (!CREDIT_METER_ENABLED) return { enabled: false, allowed: true };
+  const limit = PREMIUM_DAILY_CAP[tier];
+  const { data, error } = await admin.rpc('consume_premium_message', {
+    p_user_id: userId, p_limit: limit,
+  });
+  if (error) {
+    console.error('consume_premium_message RPC failed:', error);
+    return { enabled: true, allowed: false, error: true, budget: limit };
+  }
+  const r = (data ?? {}) as { allowed?: boolean; count?: number };
+  return { enabled: true, allowed: !!r.allowed, used: r.count, budget: limit };
 }
 
 // Read-only snapshot for the credits UI (no deduction).
