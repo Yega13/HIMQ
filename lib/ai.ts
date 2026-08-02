@@ -99,8 +99,12 @@ async function withClaude(messages: AIMessage[], role: AIRole, system: string, l
     system,
     messages: apiMessages,
   }), role === 'plan' ? 58_000 : AI_TIMEOUT_MS); // big exam plans need longer
-  const block = res.content[0];
-  if (block.type !== 'text') throw new Error('Unexpected Claude response type');
+  // Find the text block by type, not position: with thinking enabled (role
+  // 'plan'), content is [thinking_block, text_block] — index 0 is thinking,
+  // not the answer. Assuming position broke every plan generation the moment
+  // adaptive thinking was turned on for this role.
+  const block = res.content.find((b) => b.type === 'text');
+  if (!block) throw new Error('No text block in Claude response');
   return block.text;
 }
 
