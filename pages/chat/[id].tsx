@@ -795,7 +795,7 @@ export default function ChatDetail({ id }: { id: string }) {
                 <span className="text-white text-xl font-extrabold">M</span>
               </div>
               <h2 className="text-xl font-bold text-[var(--text-primary)]">{chat?.title}</h2>
-              <p className="text-sm text-[var(--text-muted)] mt-1 max-w-md">
+              <p className="text-sm text-[var(--text-muted)] mt-1 max-w-md mx-auto text-center">
                 {t('chat.review_intro', { count: lessons.length }) as string}
               </p>
             </div>
