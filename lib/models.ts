@@ -19,4 +19,10 @@ export const MODELS = [
 ] as const;
 
 export type ModelId = typeof MODELS[number]['id'];
-export const DEFAULT_MODEL: ModelId = 'may1';
+// Default to Aris, not May. Free tier gets force-downgraded to Aris anyway
+// (see effectiveModel in lib/credits.ts) once the meter is on, but the UI
+// would still show May as "selected" — misleading. More importantly for
+// Student: May is a limited, capped resource (PREMIUM_DAILY_CAP). Defaulting
+// to it means a student can burn part of today's cap on a message they never
+// deliberately chose to spend on May. Opt into May, don't opt out of it.
+export const DEFAULT_MODEL: ModelId = 'gemini';
