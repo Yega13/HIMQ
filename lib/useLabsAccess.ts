@@ -8,6 +8,12 @@ interface CreditStatusResponse { enabled: boolean; geminiOnly: boolean; }
 // and every tier is treated as allowed — matches today's behavior everywhere
 // else in the app. Fails OPEN on a network error: a transient blip shouldn't
 // lock a paying user out of a page they're entitled to.
+//
+// signedIn is exposed separately from allowed so the page can show "sign in"
+// instead of "upgrade" — an anonymous visitor isn't on the wrong tier, they're
+// not on any tier. Previously an anonymous visitor fell through to `allowed`'s
+// default of true (the effect returned early on `!user` without ever setting
+// it) — full access to a paid feature with no account at all.
 export function useLabsAccess() {
   const { user, loading: userLoading } = useUser();
   const [allowed, setAllowed] = useState(true);
@@ -15,7 +21,7 @@ export function useLabsAccess() {
 
   useEffect(() => {
     if (userLoading) return;
-    if (!user) { setLoading(false); return; }
+    if (!user) { setAllowed(false); setLoading(false); return; }
 
     let cancelled = false;
     fetch('/api/credits')
@@ -29,5 +35,5 @@ export function useLabsAccess() {
     return () => { cancelled = true; };
   }, [user, userLoading]);
 
-  return { allowed, loading: userLoading || loading };
+  return { allowed, signedIn: !!user, loading: userLoading || loading };
 }

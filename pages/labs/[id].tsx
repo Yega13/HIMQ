@@ -11,7 +11,7 @@ import { useLabsAccess } from '@/lib/useLabsAccess';
 
 export default function LabPage({ id }: { id: string }) {
   const lab = getLab(id);
-  const { allowed, loading } = useLabsAccess();
+  const { allowed, signedIn, loading } = useLabsAccess();
   if (!lab) return null;
 
   return (
@@ -33,6 +33,20 @@ export default function LabPage({ id }: { id: string }) {
         {loading ? (
           <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-secondary)] p-10 text-center animate-pulse">
             <p className="text-sm text-[var(--text-muted)]">Checking access…</p>
+          </div>
+        ) : !allowed && !signedIn ? (
+          <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-secondary)] p-10 text-center">
+            <Lock size={32} className="mx-auto mb-3 text-[var(--text-muted)]" />
+            <p className="text-lg font-bold text-[var(--text-primary)]">Sign in to access Practice Labs</p>
+            <p className="text-sm text-[var(--text-secondary)] mt-1.5 max-w-sm mx-auto">
+              Create a free account to see what&apos;s available on your plan.
+            </p>
+            <Link
+              href="/auth"
+              className="inline-flex mt-5 px-4 py-2.5 rounded-xl bg-[var(--color-brand)] text-white text-sm font-semibold hover:bg-[var(--color-brand-hover)] transition-colors"
+            >
+              Sign in
+            </Link>
           </div>
         ) : !allowed ? (
           <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-secondary)] p-10 text-center">
