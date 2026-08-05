@@ -90,12 +90,13 @@ export function matchResources(text: string, limit = 3): Resource[] {
 
 // Resolve `[[res:ID]]` tags a reply may contain into inline `[[media]]{json}[[/media]]`
 // blocks the client renders as embeds. Unknown IDs are dropped (May can only ever
-// reference the curated set, so this also guards against any stray invention).
+// reference the curated set — or, per `extra`, this lesson's live-fetched set —
+// so this also guards against any stray invention).
 const RES_TOKEN_RE = /\[\[res:([a-z0-9-]+)\]\]/gi;
 
-export function resolveResourceTokens(text: string): string {
+export function resolveResourceTokens(text: string, extra: Resource[] = []): string {
   return text.replace(RES_TOKEN_RE, (_, id: string) => {
-    const r = RESOURCES.find((x) => x.id === id.toLowerCase());
+    const r = [...RESOURCES, ...extra].find((x) => x.id === id.toLowerCase());
     if (!r) return '';
     const payload = JSON.stringify({ type: r.type, url: r.url, title: r.title });
     return `\n[[media]]${payload}[[/media]]\n`;

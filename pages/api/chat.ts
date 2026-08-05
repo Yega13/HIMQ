@@ -5,7 +5,8 @@ import { streamAIResponse } from '@/lib/ai';
 import { visibleSoFar, interpretReply } from '@/lib/controlTokens';
 import { type ModelId, DEFAULT_MODEL } from '@/lib/models';
 import { resolveTier, effectiveModel, consumeCredits, consumePremiumMessage, MSG_COST } from '@/lib/credits';
-import { matchResources, resolveResourceTokens } from '@/lib/resources';
+import { matchResources, resolveResourceTokens, type Resource } from '@/lib/resources';
+import { fetchLessonResources } from '@/lib/externalResources';
 import { languageName } from '@/lib/utils';
 
 export const config = { maxDuration: 60 };
@@ -104,17 +105,36 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const currentLesson = isDiscovering
     ? null
-    : (chat.lessons as { lesson_index: number; title: string; description: string }[])
+    : (chat.lessons as { id: string; lesson_index: number; title: string; description: string; resources: Resource[] | null }[])
         ?.find((l) => l.lesson_index === chat.current_lesson_index);
 
   const language = languageName(chat.plan?.lang);
 
-  // Curated resources May may surface for THIS lesson (teaching only). She can
+  // Resources May may surface for THIS lesson (teaching only): the small
+  // hand-curated list, plus a live Wikipedia/YouTube lookup fetched once per
+  // lesson and cached on lessons.resources (null = not fetched yet). She can
   // only reference these exact IDs — never invent a link — and they render as
   // real embeds in the chat. Empty (nothing offered) when nothing matches.
-  const matched = isDiscovering
+  let matched: Resource[] = isDiscovering
     ? []
     : matchResources(`${chat.title} ${currentLesson?.title ?? ''} ${currentLesson?.description ?? ''}`);
+  if (!isDiscovering && currentLesson) {
+    let live = currentLesson.resources;
+    if (live == null) {
+      live = await fetchLessonResources(
+        `${chat.title} — ${currentLesson.title}`,
+        chat.plan?.lang ?? 'en',
+        currentLesson.id,
+      ).catch(() => []);
+      const { error: cacheErr } = await admin.from('lessons').update({ resources: live }).eq('id', currentLesson.id);
+      // Non-fatal (this message still gets its resources either way), but
+      // means every future message in this lesson re-fetches instead of
+      // reading the cache — most likely lessons.resources doesn't exist yet
+      // (2026-08-05_lesson_resources.sql not applied).
+      if (cacheErr) console.error('Lesson resources cache write failed:', cacheErr);
+    }
+    matched = [...live, ...matched].slice(0, 4);
+  }
   const resourceBlock = matched.length === 0 ? '' : `
 
 ════ RESOURCES YOU CAN SHOW ════
@@ -256,7 +276,7 @@ When the student has GENUINELY mastered everything in THIS lesson, tell them war
   const { planReady, lessonMastered } = interpreted;
   // Resolve any [[res:ID]] tag May emitted into an inline [[media]] block the
   // client renders as an embed (unknown ids are dropped — she can't invent one).
-  const reply = resolveResourceTokens(interpreted.reply);
+  const reply = resolveResourceTokens(interpreted.reply, matched);
 
   await admin.from('messages').insert({
     chat_id: chatId,
