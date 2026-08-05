@@ -2,16 +2,18 @@ import { GetStaticProps } from 'next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import Head from 'next/head';
 import Link from 'next/link';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Lock } from 'lucide-react';
 import Layout from '@/components/Layout';
 import { EncryptedText } from '@/components/ui/encrypted-text';
 import { LABS } from '@/lib/labs';
 import { cn } from '@/lib/utils';
+import { useLabsAccess } from '@/lib/useLabsAccess';
 
 export default function LabsIndex() {
   const live = LABS.filter((l) => l.status === 'live');
   const hero = live[0];
   const rest = LABS.filter((l) => l.id !== hero?.id);
+  const { allowed, signedIn, loading } = useLabsAccess();
 
   return (
     <Layout>
@@ -66,69 +68,95 @@ export default function LabsIndex() {
             Build it, break it, and see exactly why. When a lesson matches a lab, May brings you straight here.
           </p>
 
-          {/* Featured live lab */}
-          {hero && (
-            <Link href={`/labs/${hero.id}`} className="block mt-10 group">
-              <div className="relative overflow-hidden rounded-3xl border border-[var(--border-strong)] bg-[var(--bg-card)] p-6 sm:p-8 transition-all group-hover:border-[var(--color-brand)] group-hover:shadow-[0_20px_50px_-20px_var(--color-brand)]">
-                <div className="flex flex-col sm:flex-row sm:items-center gap-6">
-                  {/* Emoji tile */}
-                  <div className="flex-none w-20 h-20 rounded-2xl grid place-items-center text-4xl bg-[var(--bg-secondary)] border border-[var(--border)] shadow-inner">
-                    {hero.emoji}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="lb-dot w-1.5 h-1.5 rounded-full bg-[var(--color-green)]" />
-                      <span className="font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--color-green)]">Live now</span>
-                      <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--text-muted)]">· {hero.subject}</span>
+          {loading ? (
+            <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-secondary)] p-10 text-center mt-10 animate-pulse">
+              <p className="text-sm text-[var(--text-muted)]">Checking access…</p>
+            </div>
+          ) : !allowed ? (
+            <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-secondary)] p-10 text-center mt-10">
+              <Lock size={32} className="mx-auto mb-3 text-[var(--text-muted)]" />
+              <p className="text-lg font-bold text-[var(--text-primary)]">
+                {signedIn ? 'Practice Labs is a paid feature' : 'Sign in to access Practice Labs'}
+              </p>
+              <p className="text-sm text-[var(--text-secondary)] mt-1.5 max-w-sm mx-auto">
+                {signedIn
+                  ? 'Upgrade to Student or above to build in interactive labs.'
+                  : 'Create a free account to see what\'s available on your plan.'}
+              </p>
+              <Link
+                href={signedIn ? '/pricing' : '/auth'}
+                className="inline-flex mt-5 px-4 py-2.5 rounded-xl bg-[var(--color-brand)] text-white text-sm font-semibold hover:bg-[var(--color-brand-hover)] transition-colors"
+              >
+                {signedIn ? 'See plans' : 'Sign in'}
+              </Link>
+            </div>
+          ) : (
+            <>
+              {/* Featured live lab */}
+              {hero && (
+                <Link href={`/labs/${hero.id}`} className="block mt-10 group">
+                  <div className="relative overflow-hidden rounded-3xl border border-[var(--border-strong)] bg-[var(--bg-card)] p-6 sm:p-8 transition-all group-hover:border-[var(--color-brand)] group-hover:shadow-[0_20px_50px_-20px_var(--color-brand)]">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-6">
+                      {/* Emoji tile */}
+                      <div className="flex-none w-20 h-20 rounded-2xl grid place-items-center text-4xl bg-[var(--bg-secondary)] border border-[var(--border)] shadow-inner">
+                        {hero.emoji}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="lb-dot w-1.5 h-1.5 rounded-full bg-[var(--color-green)]" />
+                          <span className="font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--color-green)]">Live now</span>
+                          <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--text-muted)]">· {hero.subject}</span>
+                        </div>
+                        <h2 className="text-2xl font-extrabold text-[var(--text-primary)] tracking-tight">{hero.title}</h2>
+                        <p className="text-sm text-[var(--text-secondary)] mt-2 leading-relaxed max-w-xl">{hero.blurb}</p>
+                        <span className="inline-flex items-center gap-2 mt-5 px-4 py-2.5 rounded-xl bg-[var(--color-brand)] text-white text-sm font-semibold transition-colors group-hover:bg-[var(--color-brand-hover)]">
+                          Open lab <ArrowRight size={16} className="transition-transform group-hover:translate-x-0.5" />
+                        </span>
+                      </div>
                     </div>
-                    <h2 className="text-2xl font-extrabold text-[var(--text-primary)] tracking-tight">{hero.title}</h2>
-                    <p className="text-sm text-[var(--text-secondary)] mt-2 leading-relaxed max-w-xl">{hero.blurb}</p>
-                    <span className="inline-flex items-center gap-2 mt-5 px-4 py-2.5 rounded-xl bg-[var(--color-brand)] text-white text-sm font-semibold transition-colors group-hover:bg-[var(--color-brand-hover)]">
-                      Open lab <ArrowRight size={16} className="transition-transform group-hover:translate-x-0.5" />
-                    </span>
+                    {/* Animated circuit trace */}
+                    <div className="lb-trace relative h-1 mt-7 rounded-full overflow-hidden bg-[color-mix(in_srgb,var(--color-brand)_18%,transparent)]" />
                   </div>
-                </div>
-                {/* Animated circuit trace */}
-                <div className="lb-trace relative h-1 mt-7 rounded-full overflow-hidden bg-[color-mix(in_srgb,var(--color-brand)_18%,transparent)]" />
-              </div>
-            </Link>
-          )}
+                </Link>
+              )}
 
-          {/* Coming soon — blueprint cards */}
-          <div className="flex items-center gap-3 mt-14 mb-5">
-            <span className="font-mono text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--text-muted)]">On the workbench</span>
-            <div className="flex-1 h-px bg-[var(--border)]" />
-          </div>
-          <div className="grid sm:grid-cols-3 gap-4">
-            {rest.map((lab, i) => {
-              const isLive = lab.status === 'live';
-              const inner = (
-                <div className={cn(
-                  'h-full rounded-2xl border p-5 transition-all',
-                  isLive
-                    ? 'border-[var(--border)] bg-[var(--bg-card)] hover:border-[var(--color-brand)] cursor-pointer'
-                    : 'border-dashed border-[var(--border-strong)] bg-[var(--bg-secondary)]/50'
-                )}>
-                  <div className="flex items-center justify-between">
-                    <span className="font-mono text-[11px] text-[var(--text-muted)]">LAB_{String(i + 2).padStart(2, '0')}</span>
-                    <span className={cn(
-                      'font-mono text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded',
-                      isLive ? 'bg-[var(--color-green)]/15 text-[var(--color-green)]' : 'bg-[var(--border)] text-[var(--text-muted)]'
+              {/* Coming soon — blueprint cards */}
+              <div className="flex items-center gap-3 mt-14 mb-5">
+                <span className="font-mono text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--text-muted)]">On the workbench</span>
+                <div className="flex-1 h-px bg-[var(--border)]" />
+              </div>
+              <div className="grid sm:grid-cols-3 gap-4">
+                {rest.map((lab, i) => {
+                  const isLive = lab.status === 'live';
+                  const inner = (
+                    <div className={cn(
+                      'h-full rounded-2xl border p-5 transition-all',
+                      isLive
+                        ? 'border-[var(--border)] bg-[var(--bg-card)] hover:border-[var(--color-brand)] cursor-pointer'
+                        : 'border-dashed border-[var(--border-strong)] bg-[var(--bg-secondary)]/50'
                     )}>
-                      {isLive ? 'Live' : 'Building'}
-                    </span>
-                  </div>
-                  <div className={cn('text-3xl mt-4', !isLive && 'opacity-45 grayscale')}>{lab.emoji}</div>
-                  <p className="font-mono text-[10px] uppercase tracking-wider text-[var(--text-muted)] mt-3">{lab.subject}</p>
-                  <h3 className="text-[15px] font-bold text-[var(--text-primary)] mt-1">{lab.title}</h3>
-                  <p className="text-[13px] text-[var(--text-secondary)] mt-1.5 leading-relaxed">{lab.blurb}</p>
-                </div>
-              );
-              return isLive
-                ? <Link key={lab.id} href={`/labs/${lab.id}`} className="block h-full">{inner}</Link>
-                : <div key={lab.id} className="h-full">{inner}</div>;
-            })}
-          </div>
+                      <div className="flex items-center justify-between">
+                        <span className="font-mono text-[11px] text-[var(--text-muted)]">LAB_{String(i + 2).padStart(2, '0')}</span>
+                        <span className={cn(
+                          'font-mono text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded',
+                          isLive ? 'bg-[var(--color-green)]/15 text-[var(--color-green)]' : 'bg-[var(--border)] text-[var(--text-muted)]'
+                        )}>
+                          {isLive ? 'Live' : 'Building'}
+                        </span>
+                      </div>
+                      <div className={cn('text-3xl mt-4', !isLive && 'opacity-45 grayscale')}>{lab.emoji}</div>
+                      <p className="font-mono text-[10px] uppercase tracking-wider text-[var(--text-muted)] mt-3">{lab.subject}</p>
+                      <h3 className="text-[15px] font-bold text-[var(--text-primary)] mt-1">{lab.title}</h3>
+                      <p className="text-[13px] text-[var(--text-secondary)] mt-1.5 leading-relaxed">{lab.blurb}</p>
+                    </div>
+                  );
+                  return isLive
+                    ? <Link key={lab.id} href={`/labs/${lab.id}`} className="block h-full">{inner}</Link>
+                    : <div key={lab.id} className="h-full">{inner}</div>;
+                })}
+              </div>
+            </>
+          )}
         </div>
       </div>
     </Layout>
