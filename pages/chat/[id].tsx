@@ -113,6 +113,20 @@ export default function ChatDetail({ id }: { id: string }) {
   const [generatingPlan, setGeneratingPlan] = useState(false);
   const [selectedModel, setSelectedModel] = useState<ModelId>(DEFAULT_MODEL);
   const [modelMenuOpen, setModelMenuOpen] = useState(false);
+
+  // Remember an explicit model choice across refreshes/new chats (localStorage
+  // — a per-device UI preference, not account data, so no DB round-trip).
+  // Must run before the refreshCredits effect below: if the account is
+  // actually Gemini-only, that effect's forced override should win over a
+  // stale saved preference, not the other way around.
+  useEffect(() => {
+    const saved = localStorage.getItem('himq_selected_model');
+    if (saved === 'may1' || saved === 'gemini') setSelectedModel(saved);
+  }, []);
+  const chooseModel = (id: ModelId) => {
+    setSelectedModel(id);
+    localStorage.setItem('himq_selected_model', id);
+  };
   // Credit-meter snapshot (null until loaded). enabled:false in the demo → the
   // whole credits UI stays hidden and the picker behaves exactly as before.
   const [credits, setCredits] = useState<{
@@ -1199,7 +1213,7 @@ export default function ChatDetail({ id }: { id: string }) {
                               return (
                               <button
                                 key={m.id}
-                                onClick={() => { if (locked) return; setSelectedModel(m.id); setModelMenuOpen(false); }}
+                                onClick={() => { if (locked) return; chooseModel(m.id); setModelMenuOpen(false); }}
                                 disabled={locked}
                                 className={cn(
                                   'w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors',
