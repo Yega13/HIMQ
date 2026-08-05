@@ -36,6 +36,18 @@ function xpForDifficulty(d?: number): number {
   return XP_BY_DIFFICULTY[n - 1];
 }
 
+// Rotating accent per lesson for the sticky divider — ties a color to a
+// lesson number consistently (lesson 2 is always this blue, everywhere),
+// which is what makes scrolling past one actually register as a scene change.
+const LESSON_ACCENTS = [
+  { badge: 'bg-blue-500', text: 'text-blue-600 dark:text-blue-400', tint: 'bg-blue-500/[0.08]', border: 'border-blue-500/20' },
+  { badge: 'bg-violet-500', text: 'text-violet-600 dark:text-violet-400', tint: 'bg-violet-500/[0.08]', border: 'border-violet-500/20' },
+  { badge: 'bg-emerald-500', text: 'text-emerald-600 dark:text-emerald-400', tint: 'bg-emerald-500/[0.08]', border: 'border-emerald-500/20' },
+  { badge: 'bg-amber-500', text: 'text-amber-600 dark:text-amber-400', tint: 'bg-amber-500/[0.08]', border: 'border-amber-500/20' },
+  { badge: 'bg-rose-500', text: 'text-rose-600 dark:text-rose-400', tint: 'bg-rose-500/[0.08]', border: 'border-rose-500/20' },
+  { badge: 'bg-cyan-500', text: 'text-cyan-600 dark:text-cyan-400', tint: 'bg-cyan-500/[0.08]', border: 'border-cyan-500/20' },
+] as const;
+
 interface Message {
   id: string;
   role: 'user' | 'assistant';
@@ -1169,14 +1181,32 @@ export default function ChatDetail({ id }: { id: string }) {
               const divider = lessonDividers.get(msg.id);
               return (
                 <div key={msg.id}>
-                  {divider && (
-                    <div className="sticky top-0 z-10 -mx-4 mb-4 px-4 py-1.5 bg-[var(--bg-primary)]/95 backdrop-blur-sm text-center">
-                      <span className="text-[11px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">
-                        {t('chat.lesson_divider', { n: divider.index + 1 })}
-                        {divider.title ? ` · ${divider.title}` : ''}
-                      </span>
-                    </div>
-                  )}
+                  {divider && (() => {
+                    const accent = LESSON_ACCENTS[divider.index % LESSON_ACCENTS.length];
+                    return (
+                      <motion.div
+                        initial={{ opacity: 0, y: -8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.35, ease: 'easeOut' }}
+                        className={cn(
+                          'sticky top-0 z-10 -mx-4 mb-4 px-4 py-2.5 backdrop-blur-md border-b',
+                          accent.tint, accent.border,
+                        )}
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <span className={cn(
+                            'flex-none flex items-center justify-center w-7 h-7 rounded-full text-white text-xs font-bold shadow-sm',
+                            accent.badge,
+                          )}>
+                            {divider.index + 1}
+                          </span>
+                          <span className={cn('text-sm font-bold truncate', accent.text)}>
+                            {divider.title || t('chat.lesson_divider', { n: divider.index + 1 })}
+                          </span>
+                        </div>
+                      </motion.div>
+                    );
+                  })()}
                   <div className={cn('flex', msg.role === 'user' ? 'justify-end' : 'justify-start')}>
                     <div className={cn('max-w-[76%]', msg.role === 'user' ? 'items-end' : 'items-start')}>
                       {msg.role === 'assistant' && (
