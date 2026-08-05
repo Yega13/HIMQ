@@ -256,6 +256,7 @@
                  "building_plan":  "AI is building your plan...",
                  "lesson_plan":  "Lesson Plan",
                  "lesson_number":  "Lesson {{n}} / {{total}}",
+                 "lesson_divider":  "Lesson {{n}}",
                  "complete_lesson":  "Mark Complete",
                  "back_to_chats":  "All chats",
                  "you":  "You",

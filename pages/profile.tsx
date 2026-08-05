@@ -138,7 +138,12 @@ export default function ProfilePage() {
         if (!token) return;
         const res = await fetch('/api/credits', { headers: { Authorization: `Bearer ${token}` } });
         if (res.ok) setCredits(await res.json());
-      } catch { /* best-effort */ }
+        // Non-ok isn't fatal to the page (the usage section just stays
+        // hidden), but stay loud about it — a silent failure here looks
+        // identical to CREDIT_METER_ENABLED being off, which made a real
+        // outage indistinguishable from expected behavior.
+        else console.error('/api/credits failed:', res.status, await res.text().catch(() => ''));
+      } catch (e) { console.error('/api/credits threw:', e); }
     })();
   }, [user]);
 

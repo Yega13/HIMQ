@@ -256,6 +256,7 @@
                  "building_plan":  "AI-ն ստեղծում է ծրագիրը...",
                  "lesson_plan":  "Դասի Ծրագիր",
                  "lesson_number":  "Դաս {{n}} / {{total}}",
+                 "lesson_divider":  "Դաս {{n}}",
                  "complete_lesson":  "Ավարտել Դասը",
                  "back_to_chats":  "Բոլոր դասընթացները",
                  "you":  "Դու",

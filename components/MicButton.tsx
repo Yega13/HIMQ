@@ -69,9 +69,14 @@ export function MicButton({
       // If the textbox no longer matches what we last wrote, the user edited
       // it by hand mid-recording (e.g. fixing a word) — treat their edit as
       // the new base to build on top of, instead of clobbering it with the
-      // next transcript update.
+      // next transcript update. finalRef must reset too: it holds everything
+      // spoken so far, which is now folded into `current` — without this, the
+      // next result re-appends that same speech on top of the edit, duplicating it.
       const current = getTextRef.current();
-      if (current !== lastSetRef.current) baseRef.current = current;
+      if (current !== lastSetRef.current) {
+        baseRef.current = current;
+        finalRef.current = '';
+      }
 
       let interim = '';
       for (let i = e.resultIndex; i < e.results.length; i++) {
@@ -92,6 +97,7 @@ export function MicButton({
   }, []);
 
   const toggle = () => {
+    if (disabled) return;
     const rec = recRef.current;
     if (!rec) return;
     if (listening) {
@@ -108,6 +114,23 @@ export function MicButton({
       setListening(true);
     } catch { /* already started */ }
   };
+  // Kept current every render so the keydown listener below always calls the
+  // latest closure without needing to re-subscribe on every render.
+  const toggleRef = useRef(toggle);
+  toggleRef.current = toggle;
+
+  // Ctrl+M (Cmd+M on Mac) toggles the mic from anywhere on the page — same
+  // action both ways, matching a click. e.repeat is ignored so holding the
+  // keys down doesn't rapid-fire start/stop.
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.repeat || e.key.toLowerCase() !== 'm' || !(e.ctrlKey || e.metaKey)) return;
+      e.preventDefault();
+      toggleRef.current();
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, []);
 
   if (!supported) return null;
 
@@ -116,8 +139,8 @@ export function MicButton({
       type="button"
       onClick={toggle}
       disabled={disabled}
-      aria-label="Voice input"
-      title="Voice input"
+      aria-label="Voice input (Ctrl+M)"
+      title="Voice input (Ctrl+M)"
       className={cn(
         'shrink-0 flex items-center justify-center w-10 h-10 rounded-xl border transition-colors disabled:opacity-50',
         listening

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useUser } from './useUser';
+import { getBrowserClient } from '@/lib/supabase';
 
 interface CreditStatusResponse { enabled: boolean; geminiOnly: boolean; }
 
@@ -24,13 +25,27 @@ export function useLabsAccess() {
     if (!user) { setAllowed(false); setLoading(false); return; }
 
     let cancelled = false;
-    fetch('/api/credits')
-      .then((r) => r.json())
-      .then((status: CreditStatusResponse) => {
+    (async () => {
+      try {
+        const { data: { session } } = await getBrowserClient().auth.getSession();
+        const token = session?.access_token;
+        // No token yet (session still hydrating) — not a real failure, just
+        // not ready to check; leave `allowed` alone and stop the spinner.
+        if (!token) { if (!cancelled) setLoading(false); return; }
+        const res = await fetch('/api/credits', { headers: { Authorization: `Bearer ${token}` } });
+        // A non-ok response (expired token, server error) is a real signal,
+        // not a blip — don't grant access on a guess.
+        if (!res.ok) { if (!cancelled) setAllowed(false); return; }
+        const status = (await res.json()) as CreditStatusResponse;
         if (!cancelled) setAllowed(!status.enabled || !status.geminiOnly);
-      })
-      .catch(() => { if (!cancelled) setAllowed(true); })
-      .finally(() => { if (!cancelled) setLoading(false); });
+      } catch {
+        // Thrown (offline, DNS, etc.) — a genuine transient blip, not a
+        // definitive answer either way; don't lock out a paying user over it.
+        if (!cancelled) setAllowed(true);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
 
     return () => { cancelled = true; };
   }, [user, userLoading]);

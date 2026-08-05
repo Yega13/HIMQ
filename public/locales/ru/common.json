@@ -256,6 +256,7 @@
                  "building_plan":  "ИИ строит твой план...",
                  "lesson_plan":  "План уроков",
                  "lesson_number":  "Урок {{n}} / {{total}}",
+                 "lesson_divider":  "Урок {{n}}",
                  "complete_lesson":  "Отметить выполненным",
                  "back_to_chats":  "Все чаты",
                  "you":  "Ты",

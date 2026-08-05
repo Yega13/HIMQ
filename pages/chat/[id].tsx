@@ -41,6 +41,10 @@ interface Message {
   role: 'user' | 'assistant';
   content: string;
   created_at: string;
+  // Which lesson this message belongs to. Present on every DB row (chat.ts /
+  // create-chat.ts / complete-lesson.ts all stamp it on insert); undefined only
+  // for the couple of client-only placeholders below, which stamp it themselves.
+  lesson_index?: number;
 }
 
 interface Chat {
@@ -114,18 +118,21 @@ export default function ChatDetail({ id }: { id: string }) {
   const [selectedModel, setSelectedModel] = useState<ModelId>(DEFAULT_MODEL);
   const [modelMenuOpen, setModelMenuOpen] = useState(false);
 
-  // Remember an explicit model choice across refreshes/new chats (localStorage
-  // — a per-device UI preference, not account data, so no DB round-trip).
-  // Must run before the refreshCredits effect below: if the account is
-  // actually Gemini-only, that effect's forced override should win over a
-  // stale saved preference, not the other way around.
+  // Remember an explicit model choice, but scoped to THIS chat only (key
+  // includes `id`) — a new path always opens on DEFAULT_MODEL, and picking a
+  // model in one chat must never leak into another. Re-runs on `id` so
+  // switching chats client-side (no remount) re-reads the right chat's key
+  // instead of carrying over the previous chat's selection. Must still run
+  // before the refreshCredits effect below on initial mount: if the account
+  // is actually Gemini-only, that effect's forced override should win over a
+  // saved preference, not the other way around.
   useEffect(() => {
-    const saved = localStorage.getItem('himq_selected_model');
-    if (saved === 'may1' || saved === 'gemini') setSelectedModel(saved);
-  }, []);
-  const chooseModel = (id: ModelId) => {
-    setSelectedModel(id);
-    localStorage.setItem('himq_selected_model', id);
+    const saved = localStorage.getItem(`himq_selected_model:${id}`);
+    setSelectedModel(saved === 'may1' || saved === 'gemini' ? saved : DEFAULT_MODEL);
+  }, [id]);
+  const chooseModel = (modelId: ModelId) => {
+    setSelectedModel(modelId);
+    localStorage.setItem(`himq_selected_model:${id}`, modelId);
   };
   // Credit-meter snapshot (null until loaded). enabled:false in the demo → the
   // whole credits UI stays hidden and the picker behaves exactly as before.
@@ -231,6 +238,7 @@ export default function ChatDetail({ id }: { id: string }) {
       role: 'user',
       content: userMsg,
       created_at: new Date().toISOString(),
+      lesson_index: chat.current_lesson_index,
     }]);
 
     // Once the assistant reply starts streaming in, a later failure must NOT
@@ -267,6 +275,7 @@ export default function ChatDetail({ id }: { id: string }) {
         streamStarted = true;
         setMessages((prev) => [...prev, {
           id: aiId!, role: 'assistant', content: '', created_at: new Date().toISOString(),
+          lesson_index: chat.current_lesson_index,
         }]);
         setStreamingId(aiId);
       };
@@ -565,6 +574,23 @@ export default function ChatDetail({ id }: { id: string }) {
     () => (teachingCutoff ? messages.filter((m) => m.created_at >= teachingCutoff) : messages),
     [messages, teachingCutoff],
   );
+  // Sticky lesson divider: the message id where each lesson's block starts,
+  // mapped to what to show there. One entry per run of consecutive messages
+  // sharing a lesson_index (so re-visiting an earlier lesson's messages, if
+  // that's ever possible, would correctly get its own new divider rather than
+  // being silently folded into the block above it).
+  const lessonDividers = useMemo(() => {
+    const starts = new Map<string, { index: number; title: string }>();
+    let prevIndex: number | null = null;
+    for (const m of visibleMessages) {
+      const idx = m.lesson_index ?? 0;
+      if (idx === prevIndex) continue;
+      prevIndex = idx;
+      const title = lessons.find((l) => l.lesson_index === idx)?.title ?? '';
+      starts.set(m.id, { index: idx, title });
+    }
+    return starts;
+  }, [visibleMessages, lessons]);
   // The last assistant message that is NOT still streaming. Using the in-flight
   // message here re-keyed the question card on every token (remount + re-run the
   // enter animation, which read as glitching) and exposed the raw Q:/A:/T:
@@ -1139,29 +1165,42 @@ export default function ChatDetail({ id }: { id: string }) {
               </div>
             )}
 
-            {visibleMessages.map((msg) => (
-              <div key={msg.id} className={cn('flex', msg.role === 'user' ? 'justify-end' : 'justify-start')}>
-                <div className={cn('max-w-[76%]', msg.role === 'user' ? 'items-end' : 'items-start')}>
-                  {msg.role === 'assistant' && (
-                    <p className="text-[11px] font-medium mb-1 text-[var(--color-brand)] flex items-center gap-1.5">
-                      {t('chat.ai')}
-                      <span className="text-[var(--text-muted)] font-normal">·</span>
-                      <span className="text-[var(--text-muted)] font-normal">
-                        {MODELS.find((m) => m.id === selectedModel)?.name}
+            {visibleMessages.map((msg) => {
+              const divider = lessonDividers.get(msg.id);
+              return (
+                <div key={msg.id}>
+                  {divider && (
+                    <div className="sticky top-0 z-10 -mx-4 mb-4 px-4 py-1.5 bg-[var(--bg-primary)]/95 backdrop-blur-sm text-center">
+                      <span className="text-[11px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+                        {t('chat.lesson_divider', { n: divider.index + 1 })}
+                        {divider.title ? ` · ${divider.title}` : ''}
                       </span>
-                    </p>
+                    </div>
                   )}
-                  <div className={cn(
-                    'px-4 py-3 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap',
-                    msg.role === 'user'
-                      ? 'bg-[var(--color-brand)] text-white rounded-tr-sm'
-                      : 'bg-[var(--bg-card)] border border-[var(--border)] text-[var(--text-primary)] rounded-tl-sm'
-                  )}>
-                    {msg.role === 'assistant' ? renderMessageContent(msg.content) : msg.content}
+                  <div className={cn('flex', msg.role === 'user' ? 'justify-end' : 'justify-start')}>
+                    <div className={cn('max-w-[76%]', msg.role === 'user' ? 'items-end' : 'items-start')}>
+                      {msg.role === 'assistant' && (
+                        <p className="text-[11px] font-medium mb-1 text-[var(--color-brand)] flex items-center gap-1.5">
+                          {t('chat.ai')}
+                          <span className="text-[var(--text-muted)] font-normal">·</span>
+                          <span className="text-[var(--text-muted)] font-normal">
+                            {MODELS.find((m) => m.id === selectedModel)?.name}
+                          </span>
+                        </p>
+                      )}
+                      <div className={cn(
+                        'px-4 py-3 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap',
+                        msg.role === 'user'
+                          ? 'bg-[var(--color-brand)] text-white rounded-tr-sm'
+                          : 'bg-[var(--bg-card)] border border-[var(--border)] text-[var(--text-primary)] rounded-tl-sm'
+                      )}>
+                        {msg.role === 'assistant' ? renderMessageContent(msg.content) : msg.content}
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
 
             {sending && !streamingId && (
               <div className="flex justify-start">
