@@ -343,6 +343,8 @@
                     "streak":  "Day Streak",
                     "member_since":  "Member since",
                     "usage_title":  "Usage this month",
+                    "plan_title":  "Your plan",
+                    "plan_desc":  "Your current plan",
                     "usage_remaining":  "credits left",
                     "usage_used":  "{{used}} of {{budget}} credits used",
                     "no_goal":  "No goal set yet",

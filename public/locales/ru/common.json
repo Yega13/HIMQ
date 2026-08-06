@@ -343,6 +343,8 @@
                     "streak":  "Дней подряд",
                     "member_since":  "С нами с",
                     "usage_title":  "Использование за месяц",
+                    "plan_title":  "Ваш план",
+                    "plan_desc":  "Ваш текущий план",
                     "usage_remaining":  "кредитов осталось",
                     "usage_used":  "Использовано {{used}} из {{budget}} кредитов",
                     "no_goal":  "Цель пока не задана",

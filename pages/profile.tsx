@@ -422,32 +422,46 @@ export default function ProfilePage() {
           ))}
         </div>
 
-        {/* Usage this month (credit meter — only when enabled server-side) */}
-        {credits?.enabled && (
-          <Section title={t('profile.usage_title') as string} icon={<Gauge size={15} className="text-[var(--color-brand)]" />}>
-            <div className="space-y-3">
-              <div className="flex items-end justify-between gap-3">
-                <div>
-                  <p className="text-2xl font-bold text-[var(--text-primary)] tabular-nums">
-                    {credits.remaining.toLocaleString()}
-                    <span className="text-sm font-medium text-[var(--text-muted)]"> / {credits.budget.toLocaleString()}</span>
-                  </p>
-                  <p className="text-xs text-[var(--text-muted)] mt-0.5">{t('profile.usage_remaining')}</p>
+        {/* Plan tier — always shown once loaded. Full usage/budget UI only
+            when the credit meter is actively enforcing (server-side flag);
+            the TIER ITSELF is a real account fact and must show regardless. */}
+        {credits && (
+          <Section
+            title={t(credits.enabled ? 'profile.usage_title' : 'profile.plan_title') as string}
+            icon={<Gauge size={15} className="text-[var(--color-brand)]" />}
+          >
+            {credits.enabled ? (
+              <div className="space-y-3">
+                <div className="flex items-end justify-between gap-3">
+                  <div>
+                    <p className="text-2xl font-bold text-[var(--text-primary)] tabular-nums">
+                      {credits.remaining.toLocaleString()}
+                      <span className="text-sm font-medium text-[var(--text-muted)]"> / {credits.budget.toLocaleString()}</span>
+                    </p>
+                    <p className="text-xs text-[var(--text-muted)] mt-0.5">{t('profile.usage_remaining')}</p>
+                  </div>
+                  <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-[var(--color-brand-soft)] text-[var(--color-brand)] capitalize">
+                    {credits.tier}
+                  </span>
                 </div>
+                <div className="h-2 rounded-full bg-[var(--bg-subtle)] overflow-hidden">
+                  <div
+                    className={cn('h-full rounded-full transition-all', credits.remaining <= 0 ? 'bg-red-500' : 'bg-[var(--color-brand)]')}
+                    style={{ width: `${Math.min(100, Math.round((credits.used / Math.max(credits.budget, 1)) * 100))}%` }}
+                  />
+                </div>
+                <p className="text-xs text-[var(--text-muted)]">
+                  {t('profile.usage_used', { used: credits.used.toLocaleString(), budget: credits.budget.toLocaleString() })}
+                </p>
+              </div>
+            ) : (
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-[var(--text-secondary)]">{t('profile.plan_desc')}</p>
                 <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-[var(--color-brand-soft)] text-[var(--color-brand)] capitalize">
                   {credits.tier}
                 </span>
               </div>
-              <div className="h-2 rounded-full bg-[var(--bg-subtle)] overflow-hidden">
-                <div
-                  className={cn('h-full rounded-full transition-all', credits.remaining <= 0 ? 'bg-red-500' : 'bg-[var(--color-brand)]')}
-                  style={{ width: `${Math.min(100, Math.round((credits.used / Math.max(credits.budget, 1)) * 100))}%` }}
-                />
-              </div>
-              <p className="text-xs text-[var(--text-muted)]">
-                {t('profile.usage_used', { used: credits.used.toLocaleString(), budget: credits.budget.toLocaleString() })}
-              </p>
-            </div>
+            )}
           </Section>
         )}
 

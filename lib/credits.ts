@@ -89,10 +89,14 @@ export interface CreditGate {
   error?: boolean;    // true when an infra failure made us fail closed
 }
 
-// Resolve the caller's tier. Skips the DB read entirely when the meter is off so
-// the demo path stays a single query lighter.
+// Resolve the caller's real tier from the DB — ALWAYS, regardless of
+// CREDIT_METER_ENABLED. That flag gates whether budgets/caps are enforced; it
+// must not also decide whether a user can see their own account tier. (It
+// used to short-circuit to 'free' here whenever the flag was off, which made
+// the profile page structurally incapable of ever showing a real tier while
+// metering was disabled — not a caching or fetch bug, just this.) The read is
+// a single indexed row lookup, cheap enough to always do.
 export async function resolveTier(admin: Admin, userId: string): Promise<Tier> {
-  if (!CREDIT_METER_ENABLED) return 'free';
   const { data } = await admin.from('profiles').select('tier').eq('id', userId).single();
   return normalizeTier((data as { tier?: unknown } | null)?.tier);
 }
