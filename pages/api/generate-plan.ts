@@ -239,6 +239,13 @@ NOT cram a broad subject into a handful of lessons, and do NOT pad a small one.
 - ORDER matters: sequence the lessons as a real progression where each one builds on the previous (prerequisites first) and sets up the next — no forward references, no jumping ahead of what they've learned
 - Aim the plan at a concrete outcome: by the final lesson the student should be able to DO the real thing they came for, not just "know about" it
 - Titles should read like: "Understanding X through the lens of Y" not generic "Introduction to X"
+- Teach the REAL vocabulary of the field, not a simplified paraphrase of it. If the
+  field has established, named frameworks or terms practitioners actually use —
+  a business path → ICP, TAM/SAM/SOM, competitive moat, unit economics, CAC/LTV;
+  a science → the real model/law names; a design field → its named principles —
+  name and teach THOSE specific terms as their own lessons where they matter. A
+  student should leave knowing the words a real practitioner uses, not a
+  reinvented substitute for them.
 
 For EACH lesson also set:
 - "difficulty": an integer 1–5 rating how hard THIS lesson is FOR THIS STUDENT, calibrated to the level they revealed in the discovery conversation (1 = easy/review for them, 3 = a solid new step, 5 = genuinely challenging). Use the whole range across the plan — don't make every lesson a 3.

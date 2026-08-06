@@ -151,6 +151,10 @@ export default function ChatIndex() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    submitGoal();
+  };
+
+  const submitGoal = async () => {
     if (!goal.trim() || !user) return;
     setBuilding(true);
     setError('');
@@ -396,6 +400,14 @@ export default function ChatIndex() {
                   ref={goalRef}
                   value={goal}
                   onChange={(e) => setGoal(e.target.value)}
+                  onKeyDown={(e) => {
+                    // Plain Enter starts the plan; Ctrl/Cmd+Enter (and Shift+Enter,
+                    // via default textarea behavior) inserts a newline instead.
+                    if (e.key === 'Enter' && !e.ctrlKey && !e.metaKey && !e.shiftKey) {
+                      e.preventDefault();
+                      submitGoal();
+                    }
+                  }}
                   placeholder={t('chat.goal_placeholder') as string}
                   rows={3}
                   className="w-full bg-transparent text-[var(--text-primary)] text-base leading-relaxed resize-none focus:outline-none placeholder-[var(--text-muted)] pt-1"

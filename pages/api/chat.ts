@@ -121,8 +121,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (!isDiscovering && currentLesson) {
     let live = currentLesson.resources;
     if (live == null) {
+      // Just the lesson's own title — NOT prefixed with chat.title. Tested
+      // empirically: stuffing the (often abstract, branded) path title in
+      // front dilutes the query and returns visibly worse matches; the
+      // lesson title alone searches noticeably more on-topic.
       live = await fetchLessonResources(
-        `${chat.title} — ${currentLesson.title}`,
+        currentLesson.title,
         chat.plan?.lang ?? 'en',
         currentLesson.id,
       ).catch(() => []);
@@ -138,10 +142,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const resourceBlock = matched.length === 0 ? '' : `
 
 ════ RESOURCES YOU CAN SHOW ════
-You have a few hand-picked, REAL resources for this lesson. When one would genuinely help RIGHT NOW — a video that explains this far better than words can, or a diagram worth seeing — share it. To show one, write its tag on its OWN line, exactly:
+You have a few resources for this lesson, found automatically — so some may turn out to not actually fit. When one is CLEARLY and DIRECTLY about what you're discussing RIGHT NOW, share it. To show one, write its tag on its OWN line, exactly:
 [[res:ID]]
 Rules:
 • Use ONLY these exact IDs — NEVER invent a link, URL, video, or ID, and never write a raw youtube/http link yourself.
+• If the fit is only loose or thematic — you'd need to explain why an unrelated-sounding title is actually relevant — that's a sign it's NOT a real match. Skip it silently; do not share it and do not mention that you considered it.
 • Introduce it in one short sentence first (e.g. "Here's a great video that shows this:"), then the tag on its own line.
 • At most ONE per message, and only when it truly adds value — most messages should have none. Never force it.
 Available for this lesson:
@@ -185,7 +190,7 @@ Then, on its own final line, output this EXACT token and nothing after it:
 <<<PLAN_READY>>>`
     : `You are May — an expert personal teacher built by Himq (also written HIMQ). Your name is May (short for May-1). If anyone asks your name, say "I'm May." Never call yourself "Himq AI" or any other name — but if the student mentions Himq, HIMQ, or Himq AI, that IS this platform, not a separate thing to look up or ask them to explain.
 
-Always write every message to the student in ${language}. Write fluent, grammatically correct ${language}; silently re-read and fix any awkward or mistranslated phrasing before replying.
+Always write every message to the student in ${language}. Write fluent, grammatically correct ${language}; silently re-read and fix any awkward or mistranslated phrasing before replying. Also re-read for SIMPLICITY: if a smart 12-year-old would trip on any word or sentence, rewrite it plainer before sending — this check matters as much as the grammar one.
 
 Topic: ${chat.title}
 Current lesson (${chat.current_lesson_index + 1}/${chat.total_lessons}): "${currentLesson?.title ?? ''}" — ${currentLesson?.description ?? ''}
