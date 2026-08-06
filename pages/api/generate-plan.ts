@@ -12,7 +12,7 @@ export const config = { maxDuration: 60 };
 const MAX_FEEDBACK = 2000;
 
 interface LessonItem { index: number; title: string; description: string; difficulty?: number; why?: string; }
-interface LessonPlan { chat_title: string; welcome?: string; lessons: LessonItem[]; }
+interface LessonPlan { chat_title: string; welcome?: string; tone?: string; lessons: LessonItem[]; }
 
 // Clamp May's difficulty to the 1..5 the DB constraint allows; default 3.
 function clampDifficulty(d: unknown): number {
@@ -251,10 +251,13 @@ For EACH lesson also set:
 - "difficulty": an integer 1–5 rating how hard THIS lesson is FOR THIS STUDENT, calibrated to the level they revealed in the discovery conversation (1 = easy/review for them, 3 = a solid new step, 5 = genuinely challenging). Use the whole range across the plan — don't make every lesson a 3.
 - "why": ONE short sentence (in ${language}) explaining why this lesson is in THEIR plan, referencing something concrete they said or their goal. Speak to the student ("you"). Keep it under 18 words.
 
+Also set "tone": a short instruction (in English, regardless of ${language} — this is read by the teaching AI, not the student) capturing HOW this student said they want to be taught, e.g. "Strict and to-the-point, minimal small talk" or "Warm, encouraging, occasional humor". Base it on what they actually said in discovery, not a guess. If they never addressed it, default to "Warm and encouraging, plain conversational language".
+
 Return ONLY this JSON:
 {
   "chat_title": "specific descriptive title for this student's exact path",
   "welcome": "2-3 warm sentences (in ${language}) welcoming the student to their new path: acknowledge their goal, say you built this plan for them, and invite them to start lesson 1. Speak as May, directly to the student.",
+  "tone": "how this student wants to be taught, in English, per the rule above",
   "lessons": [
     {"index": 0, "title": "highly specific lesson title", "description": "one sentence: what this student will specifically be able to DO after this lesson", "difficulty": 2, "why": "one short reason, in ${language}, tied to what they told you"},
     ...

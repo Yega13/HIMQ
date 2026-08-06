@@ -110,11 +110,20 @@ Rules that never bend:
 - NEVER silently narrow a broad goal into one specific sub-topic. If the goal could mean several different things, your first job is to ask which one they mean — not to guess.`;
   const openingUserMessage = `The student typed this as what they want to learn: "${trimmedGoal}".
 
+FIRST, silently check: is "${trimmedGoal}" a genuine, teachable topic or skill — even a
+vague or broad one? Gibberish, a random word with no learnable meaning, a greeting, or
+plainly not something one learns (e.g. "yes", "hello", "asdf", "banana") does NOT count.
+- If it is NOT genuinely teachable: respond with EXACTLY "INVALID_GOAL: " followed by one
+  short, warm sentence in ${language} telling the student that didn't look like a specific
+  topic, and asking them to describe what they'd actually like to learn. Nothing else —
+  no Q:/A:/T: lines.
+- Otherwise, continue with the normal flow below.
+
 Write your opening message in ${language}, in two parts:
 1. ONE short, warm sentence: introduce yourself as May and say you'll ask a couple of quick questions to build the right plan.
 2. Then exactly ONE question, formatted per the FORMAT block below.
 
-FIRST decide — silently, do NOT write this reasoning — how clear "${trimmedGoal}" is:
+SECOND, decide — silently, do NOT write this reasoning — how clear "${trimmedGoal}" is:
 
 • AMBIGUOUS — it is a single word, very broad, or a term that honestly maps to several genuinely different learning directions. (Example: "cinematograph" could mean making films, the craft of cinematography, film history, or early film-camera technology — four different paths.)
   → Your question MUST clarify WHICH of those the student means. Make the choices the 2–4 most likely distinct interpretations — each a real, different learning path. Do NOT assume one for them. Do NOT ask what they already know yet; pin down the goal first.
@@ -167,6 +176,17 @@ Question rules:
     );
   } catch {
     openingMessage = `Hi! I'm May, your personal teacher. Quick questions first so I can build the right plan for you.\n\nQ: What's your main goal with ${trimmedGoal}?\nA: Get a job | Build a project | Pass an exam | Just exploring\nT: single`;
+  }
+
+  // May judged the goal isn't a real, teachable topic — reject before creating
+  // a chat around it. The credit charge above still applies (same tradeoff as
+  // every other AI call in this app: charged on attempt, not on a "good"
+  // result), but nothing gets persisted.
+  if (openingMessage.trim().startsWith('INVALID_GOAL:')) {
+    const msg = openingMessage.trim().slice('INVALID_GOAL:'.length).trim();
+    return res.status(400).json({
+      error: msg || `"${trimmedGoal}" doesn't look like a specific topic. Try describing what you'd like to learn.`,
+    });
   }
 
   // Create chat — no lessons yet (discovery phase tracked by total_lessons: 0)
