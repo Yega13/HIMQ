@@ -8,6 +8,12 @@ import { resolveTier, creditStatus } from '@/lib/credits';
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') return res.status(405).end();
 
+  // Per-user, changes every message — must never be cached. Without this the
+  // browser's default heuristic caching can serve a stale snapshot (a stale
+  // 304 revalidation) indefinitely, which reads exactly like the tier/usage
+  // section silently never updating.
+  res.setHeader('Cache-Control', 'no-store');
+
   const user = await requireUser(req, res);
   if (!user) return;
 
