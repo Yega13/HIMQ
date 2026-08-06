@@ -14,6 +14,7 @@ if (typeof window !== 'undefined') {
 }
 
 import type { Resource } from './resources';
+import { matchTrustedChannel } from './trustedChannels';
 
 const WIKI_LANG: Record<string, string> = { en: 'en', ru: 'ru', am: 'hy' };
 const YT_RELEVANCE_LANG: Record<string, string> = { en: 'en', ru: 'ru', am: 'hy' };
@@ -44,19 +45,36 @@ async function fetchWikipedia(query: string, lang: string, idPrefix: string): Pr
   }
 }
 
+async function youtubeSearch(
+  apiKey: string, query: string, relevanceLanguage: string, channelId?: string,
+): Promise<{ videoId: string; title: string } | null> {
+  const channelParam = channelId ? `&channelId=${channelId}` : '';
+  const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=1&safeSearch=strict&relevanceLanguage=${relevanceLanguage}${channelParam}&q=${encodeURIComponent(query)}&key=${apiKey}`;
+  const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
+  if (!res.ok) return null;
+  const data = (await res.json()) as { items?: { id?: { videoId?: string }; snippet?: { title?: string } }[] };
+  const item = data.items?.[0];
+  const videoId = item?.id?.videoId;
+  if (!videoId || !item?.snippet?.title) return null;
+  return { videoId, title: item.snippet.title };
+}
+
 async function fetchYouTube(query: string, lang: string, idPrefix: string): Promise<Resource | null> {
   const apiKey = process.env.YOUTUBE_API_KEY;
   if (!apiKey) return null; // feature simply stays off until a key is configured
   const relevanceLanguage = YT_RELEVANCE_LANG[lang] ?? 'en';
-  const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=1&safeSearch=strict&relevanceLanguage=${relevanceLanguage}&q=${encodeURIComponent(query)}&key=${apiKey}`;
   try {
-    const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
-    if (!res.ok) return null;
-    const data = (await res.json()) as { items?: { id?: { videoId?: string }; snippet?: { title?: string } }[] };
-    const item = data.items?.[0];
-    const videoId = item?.id?.videoId;
-    if (!videoId || !item?.snippet?.title) return null;
-    return { id: `yt-${idPrefix}`, title: item.snippet.title, type: 'video', url: `https://www.youtube.com/watch?v=${videoId}`, keywords: [] };
+    // Prefer a hand-vetted channel when the topic clearly matches one — a
+    // known-good creator beats whatever ranks top in an open search. Falls
+    // back to the open search when nothing trusted fits (or that channel has
+    // nothing on this specific topic).
+    const trusted = matchTrustedChannel(query, lang);
+    const hit = trusted
+      ? (await youtubeSearch(apiKey, query, relevanceLanguage, trusted.channelId))
+        ?? (await youtubeSearch(apiKey, query, relevanceLanguage))
+      : await youtubeSearch(apiKey, query, relevanceLanguage);
+    if (!hit) return null;
+    return { id: `yt-${idPrefix}`, title: hit.title, type: 'video', url: `https://www.youtube.com/watch?v=${hit.videoId}`, keywords: [] };
   } catch {
     return null;
   }
