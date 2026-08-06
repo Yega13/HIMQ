@@ -138,6 +138,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       if (cacheErr) console.error('Lesson resources cache write failed:', cacheErr);
     }
     matched = [...live, ...matched].slice(0, 4);
+
+    // Hard cap, enforced in code rather than left to the prompt: once this
+    // lesson has already shown one resource, stop offering any more — an
+    // instruction to "share sparingly" still lets the model reach for a
+    // capability just because it's sitting there every message. Removing the
+    // option entirely once the cap is hit is the only thing that reliably
+    // holds regardless of model behavior.
+    const RESOURCE_CAP_PER_LESSON = 1;
+    if (matched.length > 0) {
+      const { count: shownCount } = await admin
+        .from('messages')
+        .select('id', { count: 'exact', head: true })
+        .eq('chat_id', chatId)
+        .eq('lesson_index', chat.current_lesson_index)
+        .like('content', '%[[media]]%');
+      if ((shownCount ?? 0) >= RESOURCE_CAP_PER_LESSON) matched = [];
+    }
   }
   const resourceBlock = matched.length === 0 ? '' : `
 
