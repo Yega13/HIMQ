@@ -155,7 +155,11 @@ export default function ChatIndex() {
   };
 
   const submitGoal = async () => {
-    if (!goal.trim() || !user) return;
+    // Guarded here, not just on the button: the goal textarea has no
+    // `disabled` state during building, so Enter could otherwise fire a
+    // second create-chat request while the first is still in flight (the
+    // button's own disabled={building} only protects the click path).
+    if (!goal.trim() || !user || building) return;
     setBuilding(true);
     setError('');
 
