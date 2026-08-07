@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { getAdminClient } from '@/lib/supabase';
 import { requireUser } from '@/lib/apiAuth';
+import { fetchLessonResources } from '@/lib/externalResources';
 
 // Called when the student approves their reviewed plan. Locks the plan
 // (approved: true), marks the teaching phase start, and posts May's welcome
@@ -40,6 +41,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     .single();
 
   const startedAt = (welcomeMsg?.created_at as string | undefined) ?? new Date().toISOString();
+
+  // Prefetch lesson 0's teaching resources now, while the student is on the
+  // "building your plan" screen — a moment that already expects a short
+  // wait — instead of on their first chat message, which used to add the
+  // same latency somewhere it was actually noticeable. Best-effort: chat.ts
+  // still fetches lazily on the first message if this didn't run or failed.
+  const { data: firstLesson } = await admin
+    .from('lessons').select('id, title').eq('chat_id', chatId).eq('lesson_index', 0).single();
+  if (firstLesson) {
+    try {
+      const resources = await fetchLessonResources(firstLesson.title, chat.plan?.lang ?? 'en', firstLesson.id);
+      await admin.from('lessons').update({ resources }).eq('id', firstLesson.id);
+    } catch (e) {
+      console.error('Lesson 0 resource prefetch failed (non-fatal):', e);
+    }
+  }
 
   const { data: updatedChat, error: updateErr } = await admin
     .from('chats')

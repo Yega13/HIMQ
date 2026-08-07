@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { getAdminClient } from '@/lib/supabase';
 import { requireUser } from '@/lib/apiAuth';
+import { fetchLessonResources } from '@/lib/externalResources';
 
 // A warm, localized transition message posted when a lesson is completed and the
 // next one unlocks — so finishing a lesson (even quickly) welcomes the student
@@ -45,16 +46,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   // On a genuine (non-duplicate) completion that unlocked a next lesson, post a
   // localized welcome for that lesson so the thread transitions instead of
-  // sitting silent. Best-effort: never fail the completion over this.
+  // sitting silent, and prefetch its teaching resources now — during the
+  // completion celebration screen (already an expected pause) — instead of on
+  // the student's first message in it. Both best-effort: never fail the
+  // completion over either, and chat.ts still fetches resources lazily on
+  // first message if the prefetch here didn't run or failed.
   let intro = null;
   if (data && !data.alreadyCompleted && !data.isFinal && typeof data.nextIndex === 'number') {
-    try {
-      const { data: chatRow } = await admin
-        .from('chats').select('plan').eq('id', chatId).single();
-      const { data: nextLesson } = await admin
-        .from('lessons').select('title, description').eq('chat_id', chatId).eq('lesson_index', data.nextIndex).single();
-      if (nextLesson) {
-        const lang = (chatRow?.plan?.lang as string) ?? 'en';
+    const { data: chatRow } = await admin
+      .from('chats').select('plan').eq('id', chatId).single();
+    const { data: nextLesson } = await admin
+      .from('lessons').select('id, title, description').eq('chat_id', chatId).eq('lesson_index', data.nextIndex).single();
+    const lang = (chatRow?.plan?.lang as string) ?? 'en';
+
+    if (nextLesson) {
+      try {
         const content = buildLessonIntro(lang, data.nextIndex + 1, nextLesson.title ?? '', nextLesson.description ?? '');
         const { data: msg } = await admin
           .from('messages')
@@ -62,9 +68,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           .select()
           .single();
         intro = msg ?? null;
+      } catch (e) {
+        console.error('Lesson intro insert failed (non-fatal):', e);
       }
-    } catch (e) {
-      console.error('Lesson intro insert failed (non-fatal):', e);
+
+      try {
+        const resources = await fetchLessonResources(nextLesson.title, lang, nextLesson.id);
+        await admin.from('lessons').update({ resources }).eq('id', nextLesson.id);
+      } catch (e) {
+        console.error('Next-lesson resource prefetch failed (non-fatal):', e);
+      }
     }
   }
 

@@ -17,6 +17,7 @@ import { useUser } from '@/lib/useUser';
 import { getBrowserClient, IS_MOCK } from '@/lib/supabase';
 import { cn } from '@/lib/utils';
 import { matchLab } from '@/lib/labs';
+import { parseQuestion } from '@/lib/parseQuestion';
 
 interface Lesson {
   id: string;
@@ -38,14 +39,56 @@ function xpForDifficulty(d?: number): number {
 
 // Rotating accent per lesson for the sticky divider — ties a color to a
 // lesson number consistently (lesson 2 is always this blue, everywhere),
-// which is what makes scrolling past one actually register as a scene change.
+// which is what makes scrolling past one actually register as a scene
+// change. 40 entries (17 hues × 500, the same 17 × 700, plus 6 more at 600
+// to round out to 40) — real paths run up to ~26-32 lessons, so this covers
+// every one without repeating a color. Text/tint/border stay at each hue's
+// standard -600/dark:-400 (text) and -500 (tint/border) regardless of which
+// badge shade that entry uses — full literal class names throughout since
+// Tailwind's JIT scanner can't see dynamically-templated class strings.
 const LESSON_ACCENTS = [
-  { badge: 'bg-blue-500', text: 'text-blue-600 dark:text-blue-400', tint: 'bg-blue-500/[0.08]', border: 'border-blue-500/20' },
-  { badge: 'bg-violet-500', text: 'text-violet-600 dark:text-violet-400', tint: 'bg-violet-500/[0.08]', border: 'border-violet-500/20' },
-  { badge: 'bg-emerald-500', text: 'text-emerald-600 dark:text-emerald-400', tint: 'bg-emerald-500/[0.08]', border: 'border-emerald-500/20' },
+  { badge: 'bg-red-500', text: 'text-red-600 dark:text-red-400', tint: 'bg-red-500/[0.08]', border: 'border-red-500/20' },
+  { badge: 'bg-orange-500', text: 'text-orange-600 dark:text-orange-400', tint: 'bg-orange-500/[0.08]', border: 'border-orange-500/20' },
   { badge: 'bg-amber-500', text: 'text-amber-600 dark:text-amber-400', tint: 'bg-amber-500/[0.08]', border: 'border-amber-500/20' },
-  { badge: 'bg-rose-500', text: 'text-rose-600 dark:text-rose-400', tint: 'bg-rose-500/[0.08]', border: 'border-rose-500/20' },
+  { badge: 'bg-yellow-500', text: 'text-yellow-600 dark:text-yellow-400', tint: 'bg-yellow-500/[0.08]', border: 'border-yellow-500/20' },
+  { badge: 'bg-lime-500', text: 'text-lime-600 dark:text-lime-400', tint: 'bg-lime-500/[0.08]', border: 'border-lime-500/20' },
+  { badge: 'bg-green-500', text: 'text-green-600 dark:text-green-400', tint: 'bg-green-500/[0.08]', border: 'border-green-500/20' },
+  { badge: 'bg-emerald-500', text: 'text-emerald-600 dark:text-emerald-400', tint: 'bg-emerald-500/[0.08]', border: 'border-emerald-500/20' },
+  { badge: 'bg-teal-500', text: 'text-teal-600 dark:text-teal-400', tint: 'bg-teal-500/[0.08]', border: 'border-teal-500/20' },
   { badge: 'bg-cyan-500', text: 'text-cyan-600 dark:text-cyan-400', tint: 'bg-cyan-500/[0.08]', border: 'border-cyan-500/20' },
+  { badge: 'bg-sky-500', text: 'text-sky-600 dark:text-sky-400', tint: 'bg-sky-500/[0.08]', border: 'border-sky-500/20' },
+  { badge: 'bg-blue-500', text: 'text-blue-600 dark:text-blue-400', tint: 'bg-blue-500/[0.08]', border: 'border-blue-500/20' },
+  { badge: 'bg-indigo-500', text: 'text-indigo-600 dark:text-indigo-400', tint: 'bg-indigo-500/[0.08]', border: 'border-indigo-500/20' },
+  { badge: 'bg-violet-500', text: 'text-violet-600 dark:text-violet-400', tint: 'bg-violet-500/[0.08]', border: 'border-violet-500/20' },
+  { badge: 'bg-purple-500', text: 'text-purple-600 dark:text-purple-400', tint: 'bg-purple-500/[0.08]', border: 'border-purple-500/20' },
+  { badge: 'bg-fuchsia-500', text: 'text-fuchsia-600 dark:text-fuchsia-400', tint: 'bg-fuchsia-500/[0.08]', border: 'border-fuchsia-500/20' },
+  { badge: 'bg-pink-500', text: 'text-pink-600 dark:text-pink-400', tint: 'bg-pink-500/[0.08]', border: 'border-pink-500/20' },
+  { badge: 'bg-rose-500', text: 'text-rose-600 dark:text-rose-400', tint: 'bg-rose-500/[0.08]', border: 'border-rose-500/20' },
+
+  { badge: 'bg-red-700', text: 'text-red-600 dark:text-red-400', tint: 'bg-red-500/[0.08]', border: 'border-red-500/20' },
+  { badge: 'bg-orange-700', text: 'text-orange-600 dark:text-orange-400', tint: 'bg-orange-500/[0.08]', border: 'border-orange-500/20' },
+  { badge: 'bg-amber-700', text: 'text-amber-600 dark:text-amber-400', tint: 'bg-amber-500/[0.08]', border: 'border-amber-500/20' },
+  { badge: 'bg-yellow-700', text: 'text-yellow-600 dark:text-yellow-400', tint: 'bg-yellow-500/[0.08]', border: 'border-yellow-500/20' },
+  { badge: 'bg-lime-700', text: 'text-lime-600 dark:text-lime-400', tint: 'bg-lime-500/[0.08]', border: 'border-lime-500/20' },
+  { badge: 'bg-green-700', text: 'text-green-600 dark:text-green-400', tint: 'bg-green-500/[0.08]', border: 'border-green-500/20' },
+  { badge: 'bg-emerald-700', text: 'text-emerald-600 dark:text-emerald-400', tint: 'bg-emerald-500/[0.08]', border: 'border-emerald-500/20' },
+  { badge: 'bg-teal-700', text: 'text-teal-600 dark:text-teal-400', tint: 'bg-teal-500/[0.08]', border: 'border-teal-500/20' },
+  { badge: 'bg-cyan-700', text: 'text-cyan-600 dark:text-cyan-400', tint: 'bg-cyan-500/[0.08]', border: 'border-cyan-500/20' },
+  { badge: 'bg-sky-700', text: 'text-sky-600 dark:text-sky-400', tint: 'bg-sky-500/[0.08]', border: 'border-sky-500/20' },
+  { badge: 'bg-blue-700', text: 'text-blue-600 dark:text-blue-400', tint: 'bg-blue-500/[0.08]', border: 'border-blue-500/20' },
+  { badge: 'bg-indigo-700', text: 'text-indigo-600 dark:text-indigo-400', tint: 'bg-indigo-500/[0.08]', border: 'border-indigo-500/20' },
+  { badge: 'bg-violet-700', text: 'text-violet-600 dark:text-violet-400', tint: 'bg-violet-500/[0.08]', border: 'border-violet-500/20' },
+  { badge: 'bg-purple-700', text: 'text-purple-600 dark:text-purple-400', tint: 'bg-purple-500/[0.08]', border: 'border-purple-500/20' },
+  { badge: 'bg-fuchsia-700', text: 'text-fuchsia-600 dark:text-fuchsia-400', tint: 'bg-fuchsia-500/[0.08]', border: 'border-fuchsia-500/20' },
+  { badge: 'bg-pink-700', text: 'text-pink-600 dark:text-pink-400', tint: 'bg-pink-500/[0.08]', border: 'border-pink-500/20' },
+  { badge: 'bg-rose-700', text: 'text-rose-600 dark:text-rose-400', tint: 'bg-rose-500/[0.08]', border: 'border-rose-500/20' },
+
+  { badge: 'bg-red-600', text: 'text-red-600 dark:text-red-400', tint: 'bg-red-500/[0.08]', border: 'border-red-500/20' },
+  { badge: 'bg-orange-600', text: 'text-orange-600 dark:text-orange-400', tint: 'bg-orange-500/[0.08]', border: 'border-orange-500/20' },
+  { badge: 'bg-amber-600', text: 'text-amber-600 dark:text-amber-400', tint: 'bg-amber-500/[0.08]', border: 'border-amber-500/20' },
+  { badge: 'bg-yellow-600', text: 'text-yellow-600 dark:text-yellow-400', tint: 'bg-yellow-500/[0.08]', border: 'border-yellow-500/20' },
+  { badge: 'bg-lime-600', text: 'text-lime-600 dark:text-lime-400', tint: 'bg-lime-500/[0.08]', border: 'border-lime-500/20' },
+  { badge: 'bg-green-600', text: 'text-green-600 dark:text-green-400', tint: 'bg-green-500/[0.08]', border: 'border-green-500/20' },
 ] as const;
 
 interface Message {
@@ -71,16 +114,6 @@ interface Chat {
   };
 }
 
-// Pure parser (module scope so it's stable across renders / usable in useMemo).
-// Tolerant: the AI sometimes puts Q:/A:/T: inline (no newlines) or omits the
-// T: line — especially in non-English. Accept any whitespace between labels and
-// treat T: as optional (default single). Keeps raw "Q:/A:" markers from ever
-// leaking into the rendered message.
-// Strip stray markdown emphasis (** / *) — the discovery Q&A view is natural
-// language (no code), so removing asterisks is safe and keeps them from showing
-// up literally in questions/choices.
-const stripMd = (s: string) => s.replace(/\*+/g, '').trim();
-
 // Render an assistant message, turning any resolved [[media]]{json}[[/media]]
 // blocks (a video / image / link May surfaced) into real embeds. Plain text is
 // rendered as-is (the bubble is whitespace-pre-wrap).
@@ -98,20 +131,6 @@ function renderMessageContent(content: string) {
     const text = part.replace(/\[\[res:[a-z0-9-]+\]\]/gi, '');
     return text ? <span key={i}>{text}</span> : null;
   });
-}
-
-function parseQuestion(content: string) {
-  const m = content.match(/^([\s\S]*?)Q:\s*([\s\S]+?)\s*A:\s*([\s\S]+?)(?:\s*T:\s*(single|multiple|open))?\s*$/i);
-  if (m) {
-    const tRaw = m[4]?.toLowerCase();
-    return {
-      preamble: stripMd(m[1]),
-      text: stripMd(m[2]),
-      choices: m[3].split('|').map((c) => stripMd(c)).filter(Boolean),
-      type: (tRaw === 'multiple' ? 'multiple' : tRaw === 'open' ? 'open' : 'single') as 'single' | 'multiple' | 'open',
-    };
-  }
-  return { preamble: '', text: stripMd(content.replace(/^Q:\s*/i, '')), choices: undefined, type: 'text' as const };
 }
 
 export default function ChatDetail({ id }: { id: string }) {

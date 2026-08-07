@@ -140,12 +140,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     matched = [...live, ...matched].slice(0, 4);
 
     // Hard cap, enforced in code rather than left to the prompt: once this
-    // lesson has already shown one resource, stop offering any more — an
-    // instruction to "share sparingly" still lets the model reach for a
-    // capability just because it's sitting there every message. Removing the
-    // option entirely once the cap is hit is the only thing that reliably
-    // holds regardless of model behavior.
-    const RESOURCE_CAP_PER_LESSON = 1;
+    // lesson has already shown RESOURCE_CAP_PER_LESSON resources, stop
+    // offering any more — an instruction to "share sparingly" still lets the
+    // model reach for a capability just because it's sitting there every
+    // message. Removing the option entirely once the cap is hit is the only
+    // thing that reliably holds regardless of model behavior. 2, not 1: a
+    // video early in a lesson and a genuinely different diagram later for a
+    // different sub-concept are both legitimately useful in the same lesson —
+    // 1 was too strict once lessons actually cover more than one idea.
+    const RESOURCE_CAP_PER_LESSON = 2;
     if (matched.length > 0) {
       const { count: shownCount } = await admin
         .from('messages')
