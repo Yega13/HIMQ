@@ -152,6 +152,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         .select('id', { count: 'exact', head: true })
         .eq('chat_id', chatId)
         .eq('lesson_index', chat.current_lesson_index)
+        .eq('role', 'assistant') // only May's replies can legitimately contain
+        // [[media]] — without this, a student typing that literal text would
+        // inflate the count and suppress real resources early for the lesson
         .like('content', '%[[media]]%');
       if ((shownCount ?? 0) >= RESOURCE_CAP_PER_LESSON) matched = [];
     }

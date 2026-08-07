@@ -341,7 +341,9 @@ export default function ProfilePage() {
             <div className="absolute bottom-3 right-3">
               <button
                 onClick={() => setBannerMenuOpen((v) => !v)}
-                aria-label={t('profile.change_banner') as string}
+                aria-label={t('profile.banner_menu') as string}
+                aria-haspopup="menu"
+                aria-expanded={bannerMenuOpen}
                 className="flex items-center justify-center w-8 h-8 rounded-lg bg-black/40 text-white backdrop-blur-sm hover:bg-black/60 transition-colors"
               >
                 <Camera size={14} />

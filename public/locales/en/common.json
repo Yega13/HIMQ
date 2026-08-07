@@ -365,6 +365,7 @@
                     "remove_photo": "Remove",
                     "change_banner": "Change banner",
                     "remove_banner": "Remove banner",
+                    "banner_menu": "Banner options",
                     "username_too_long": "Username is too long (max 50 characters).",
                     "settings": "Settings",
                     "preferences": "Preferences",

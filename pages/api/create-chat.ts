@@ -182,8 +182,9 @@ Question rules:
   // a chat around it. The credit charge above still applies (same tradeoff as
   // every other AI call in this app: charged on attempt, not on a "good"
   // result), but nothing gets persisted.
-  if (openingMessage.trim().startsWith('INVALID_GOAL:')) {
-    const msg = openingMessage.trim().slice('INVALID_GOAL:'.length).trim();
+  const trimmedOpening = openingMessage.trim();
+  if (trimmedOpening.toUpperCase().startsWith('INVALID_GOAL:')) {
+    const msg = trimmedOpening.slice('INVALID_GOAL:'.length).trim();
     return res.status(400).json({
       error: msg || `"${trimmedGoal}" doesn't look like a specific topic. Try describing what you'd like to learn.`,
     });
