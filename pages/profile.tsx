@@ -10,7 +10,7 @@ import {
   Zap, Flame, BookOpenCheck, Edit2, Check, X, LogOut, Bookmark, Calendar, ExternalLink, Trash2,
   Camera, Sun, Moon, Mail, Lock, AlertTriangle, Hash, Trophy, Gem, Shield, Medal, Award, Gauge,
 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import Layout from '@/components/Layout';
 import { useUser } from '@/lib/useUser';
 import { getBrowserClient, IS_MOCK } from '@/lib/supabase';
@@ -90,6 +90,7 @@ export default function ProfilePage() {
 
   const fileRef = useRef<HTMLInputElement>(null);
   const bannerRef = useRef<HTMLInputElement>(null);
+  const [bannerMenuOpen, setBannerMenuOpen] = useState(false);
 
   useEffect(() => {
     if (!userLoading && !user) router.replace('/auth');
@@ -337,22 +338,46 @@ export default function ProfilePage() {
                 <div className="absolute bottom-0 left-0 w-40 h-40 rounded-full bg-[var(--color-gold)]/10 blur-2xl" />
               </>
             )}
-            <button
-              onClick={() => bannerRef.current?.click()}
-              className="absolute bottom-3 right-3 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-black/40 text-white text-xs font-medium backdrop-blur-sm hover:bg-black/60 transition-colors"
-            >
-              <Camera size={13} />
-              {t('profile.change_banner')}
-            </button>
-            {profile?.banner_url && (
+            <div className="absolute bottom-3 right-3">
               <button
-                onClick={removeBanner}
-                className="absolute bottom-3 right-[8.5rem] flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-black/40 text-white text-xs font-medium backdrop-blur-sm hover:bg-black/60 transition-colors"
+                onClick={() => setBannerMenuOpen((v) => !v)}
+                aria-label={t('profile.change_banner') as string}
+                className="flex items-center justify-center w-8 h-8 rounded-lg bg-black/40 text-white backdrop-blur-sm hover:bg-black/60 transition-colors"
               >
-                <X size={13} />
-                {t('profile.remove_banner')}
+                <Camera size={14} />
               </button>
-            )}
+              <AnimatePresence>
+                {bannerMenuOpen && (
+                  <>
+                    <div className="fixed inset-0 z-10" onClick={() => setBannerMenuOpen(false)} />
+                    <motion.div
+                      initial={{ opacity: 0, y: -6, scale: 0.96 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -6, scale: 0.96 }}
+                      transition={{ duration: 0.12 }}
+                      className="absolute top-full right-0 mt-1.5 z-20 min-w-[160px] bg-[var(--bg-card)] border border-[var(--border)] rounded-xl shadow-lg overflow-hidden"
+                    >
+                      <button
+                        onClick={() => { setBannerMenuOpen(false); bannerRef.current?.click(); }}
+                        className="w-full flex items-center gap-2.5 px-3 py-2.5 text-left text-sm text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] transition-colors"
+                      >
+                        <Camera size={14} />
+                        {t('profile.change_banner')}
+                      </button>
+                      {profile?.banner_url && (
+                        <button
+                          onClick={() => { setBannerMenuOpen(false); removeBanner(); }}
+                          className="w-full flex items-center gap-2.5 px-3 py-2.5 text-left text-sm text-red-500 hover:bg-[var(--bg-secondary)] transition-colors"
+                        >
+                          <X size={14} />
+                          {t('profile.remove_banner')}
+                        </button>
+                      )}
+                    </motion.div>
+                  </>
+                )}
+              </AnimatePresence>
+            </div>
             <input ref={bannerRef} type="file" accept="image/*" onChange={handleBanner} className="hidden" />
           </div>
 
