@@ -354,41 +354,6 @@ export default function ChatIndex() {
               </Link>
             </motion.div>
 
-            {/* Category selection */}
-            <motion.div
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.05 }}
-              className="mb-6"
-            >
-              <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)] mb-2.5">
-                {t('learn.category_label')}
-              </label>
-              <div className="flex flex-wrap gap-2">
-                {CATEGORIES.map((c) => {
-                  const isActive = activeCategory === c.id;
-                  return (
-                    <button
-                      key={c.id}
-                      type="button"
-                      onClick={() => setActiveCategory(isActive ? null : c.id)}
-                      className={cn(
-                        'inline-flex items-center gap-2 rounded-xl border px-3.5 py-2 text-sm font-semibold transition-all',
-                        isActive
-                          ? 'border-[var(--color-brand)] bg-[var(--color-brand-soft)] text-[var(--color-brand)]'
-                          : 'border-[var(--border)] bg-[var(--bg-card)] text-[var(--text-primary)] hover:border-[var(--color-brand)]'
-                      )}
-                    >
-                      <span className={cn('flex items-center justify-center w-6 h-6 rounded-md', c.bg, c.color)}>
-                        <c.icon size={14} />
-                      </span>
-                      {t(c.key)}
-                    </button>
-                  );
-                })}
-              </div>
-            </motion.div>
-
             <form onSubmit={handleSubmit}>
               {/* Goal input */}
               <motion.div
@@ -400,6 +365,31 @@ export default function ChatIndex() {
                 <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)] mb-3">
                   {t('learn.goal_label')}
                 </label>
+                {/* Not a step — just narrows the suggestion chips below to a
+                    topic area. Small and optional on purpose: most people
+                    should just type their goal and never touch this. */}
+                <div className="flex flex-wrap items-center gap-1.5 mb-3">
+                  <span className="text-[11px] text-[var(--text-muted)] mr-0.5">{t('learn.category_label')}</span>
+                  {CATEGORIES.map((c) => {
+                    const isActive = activeCategory === c.id;
+                    return (
+                      <button
+                        key={c.id}
+                        type="button"
+                        onClick={() => setActiveCategory(isActive ? null : c.id)}
+                        className={cn(
+                          'inline-flex items-center gap-1 rounded-lg border px-2 py-1 text-[11px] font-medium transition-colors',
+                          isActive
+                            ? 'border-[var(--color-brand)] bg-[var(--color-brand-soft)] text-[var(--color-brand)]'
+                            : 'border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--color-brand)]'
+                        )}
+                      >
+                        <c.icon size={11} />
+                        {t(c.key)}
+                      </button>
+                    );
+                  })}
+                </div>
                 <textarea
                   ref={goalRef}
                   value={goal}
