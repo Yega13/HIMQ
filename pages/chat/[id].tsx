@@ -5,7 +5,7 @@ import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, CheckCircle, Circle, Lock, ChevronLeft, BookOpen, Zap, Flame, ChevronDown, Sparkles } from 'lucide-react';
+import { Send, CheckCircle, Circle, Lock, ChevronLeft, BookOpen, Zap, Flame, ChevronDown, Sparkles, Undo2 } from 'lucide-react';
 import { MODELS, DEFAULT_MODEL, type ModelId } from '@/lib/models';
 import Layout from '@/components/Layout';
 import RelatedOpportunities from '@/components/RelatedOpportunities';
@@ -180,6 +180,7 @@ export default function ChatDetail({ id }: { id: string }) {
   }
   const [celebration, setCelebration] = useState<CelebrationData | null>(null);
   const [selectedChoices, setSelectedChoices] = useState<string[]>([]);
+  const [goingBack, setGoingBack] = useState(false);
   const [sendError, setSendError] = useState('');
   // Id of the assistant message currently being streamed in (null when idle).
   const [streamingId, setStreamingId] = useState<string | null>(null);
@@ -409,6 +410,38 @@ export default function ChatDetail({ id }: { id: string }) {
       setStreamingId(null);
       setSending(false);
       inputRef.current?.focus();
+    }
+  };
+
+  // Undo the last discovery answer and re-show the question before it, so a
+  // wrong or regretted answer isn't locked in for the rest of the
+  // conversation. The server deletes the two most recent messages (current
+  // question + last answer); mirrored here locally rather than a full
+  // reload, since `messages` is already ordered oldest-first and those two
+  // are guaranteed to be the last entries.
+  const goBackOneQuestion = async () => {
+    if (goingBack || sending) return;
+    setGoingBack(true);
+    setSendError('');
+    try {
+      const { data: { session } } = await getBrowserClient().auth.getSession();
+      const res = await fetch('/api/discovery-back', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token ?? ''}` },
+        body: JSON.stringify({ chatId: id }),
+      });
+      if (res.ok) {
+        setMessages((prev) => prev.slice(0, -2));
+        setSelectedChoices([]);
+        setInput('');
+      } else {
+        const body = await res.json().catch(() => ({}));
+        setSendError((body as { error?: string })?.error ?? 'Could not go back. Please try again.');
+      }
+    } catch {
+      setSendError('Could not go back. Please try again.');
+    } finally {
+      setGoingBack(false);
     }
   };
 
@@ -837,9 +870,20 @@ export default function ChatDetail({ id }: { id: string }) {
                 </button>
               )}
               {answeredCount > 0 && (
-                <p className="text-center text-[11px] text-[var(--text-muted)] mt-3">
-                  {t('chat.n_answered', { count: answeredCount })}
-                </p>
+                <div className="flex items-center justify-center gap-3 mt-3">
+                  <button
+                    onClick={goBackOneQuestion}
+                    disabled={sending || goingBack || generatingPlan}
+                    className="inline-flex items-center gap-1 text-[11px] font-semibold text-[var(--text-muted)] hover:text-[var(--color-brand)] transition-colors disabled:opacity-50"
+                  >
+                    <Undo2 size={12} />
+                    {t('chat.go_back')}
+                  </button>
+                  <span className="text-[var(--border)]">·</span>
+                  <p className="text-[11px] text-[var(--text-muted)]">
+                    {t('chat.n_answered', { count: answeredCount })}
+                  </p>
+                </div>
               )}
             </div>
           </div>

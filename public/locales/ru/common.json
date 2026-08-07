@@ -270,6 +270,7 @@
                  "getting_to_know":  "Знакомимся с тобой",
                  "continue":  "Продолжить",
                  "n_answered":  "Отвечено: {{count}}",
+                 "go_back":  "Назад",
                  "build_plan_now":  "Построить мой план сейчас",
                  "or_type_own":  "или напиши свой ответ",
                  "type_your_answer":  "Напиши свой ответ…",
