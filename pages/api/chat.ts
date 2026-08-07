@@ -139,27 +139,40 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
     matched = [...live, ...matched].slice(0, 4);
 
-    // Hard cap, enforced in code rather than left to the prompt: once this
-    // lesson has already shown RESOURCE_CAP_PER_LESSON resources, stop
-    // offering any more — an instruction to "share sparingly" still lets the
-    // model reach for a capability just because it's sitting there every
-    // message. Removing the option entirely once the cap is hit is the only
-    // thing that reliably holds regardless of model behavior. 2, not 1: a
-    // video early in a lesson and a genuinely different diagram later for a
-    // different sub-concept are both legitimately useful in the same lesson —
-    // 1 was too strict once lessons actually cover more than one idea.
-    const RESOURCE_CAP_PER_LESSON = 2;
+    // Spacing, not a total ceiling — enforced in code rather than left to the
+    // prompt, since "share sparingly" alone still lets the model reach for a
+    // capability just because it's sitting there every message. A flat
+    // per-lesson cap was the wrong shape though: some lessons (a lot of them
+    // for visual/hands-on topics — piano, sports, design) genuinely benefit
+    // from a resource every few messages for the whole conversation, not
+    // just once or twice total. So instead: find the last message in this
+    // lesson that actually showed one, count how many messages have happened
+    // since, and only re-offer once that's at least a random 3-7 — spaced
+    // out, never back-to-back, but no ceiling on how many a long lesson ends
+    // up with.
     if (matched.length > 0) {
-      const { count: shownCount } = await admin
+      const { data: lastShown } = await admin
         .from('messages')
-        .select('id', { count: 'exact', head: true })
+        .select('created_at')
         .eq('chat_id', chatId)
         .eq('lesson_index', chat.current_lesson_index)
         .eq('role', 'assistant') // only May's replies can legitimately contain
         // [[media]] — without this, a student typing that literal text would
         // inflate the count and suppress real resources early for the lesson
-        .like('content', '%[[media]]%');
-      if ((shownCount ?? 0) >= RESOURCE_CAP_PER_LESSON) matched = [];
+        .like('content', '%[[media]]%')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (lastShown) {
+        const { count: sinceCount } = await admin
+          .from('messages')
+          .select('id', { count: 'exact', head: true })
+          .eq('chat_id', chatId)
+          .eq('lesson_index', chat.current_lesson_index)
+          .gt('created_at', lastShown.created_at as string);
+        const threshold = 3 + Math.floor(Math.random() * 5); // 3–7 inclusive
+        if ((sinceCount ?? 0) < threshold) matched = [];
+      }
     }
   }
   const resourceBlock = matched.length === 0 ? '' : `
