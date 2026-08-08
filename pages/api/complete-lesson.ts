@@ -53,30 +53,38 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   // first message if the prefetch here didn't run or failed.
   let intro = null;
   if (data && !data.alreadyCompleted && !data.isFinal && typeof data.nextIndex === 'number') {
-    const { data: chatRow } = await admin
-      .from('chats').select('plan').eq('id', chatId).single();
-    const { data: nextLesson } = await admin
-      .from('lessons').select('id, title, description').eq('chat_id', chatId).eq('lesson_index', data.nextIndex).single();
+    // Independent of each other — run concurrently instead of as two
+    // sequential round trips.
+    const [{ data: chatRow }, { data: nextLesson }] = await Promise.all([
+      admin.from('chats').select('plan').eq('id', chatId).single(),
+      admin.from('lessons').select('id, title, description').eq('chat_id', chatId).eq('lesson_index', data.nextIndex).single(),
+    ]);
     const lang = (chatRow?.plan?.lang as string) ?? 'en';
 
     if (nextLesson) {
-      try {
-        const content = buildLessonIntro(lang, data.nextIndex + 1, nextLesson.title ?? '', nextLesson.description ?? '');
-        const { data: msg } = await admin
-          .from('messages')
-          .insert({ chat_id: chatId, role: 'assistant', content, lesson_index: data.nextIndex })
-          .select()
-          .single();
-        intro = msg ?? null;
-      } catch (e) {
-        console.error('Lesson intro insert failed (non-fatal):', e);
-      }
-
-      try {
-        const resources = await fetchLessonResources(nextLesson.title, lang, nextLesson.id);
-        await admin.from('lessons').update({ resources }).eq('id', nextLesson.id);
-      } catch (e) {
-        console.error('Next-lesson resource prefetch failed (non-fatal):', e);
+      // Also independent — the intro message doesn't need resources and the
+      // resource fetch (external API calls, the slow part) doesn't need the
+      // intro. allSettled (not all) so a failure in one doesn't skip the
+      // other; both are best-effort exactly as before, just concurrent now.
+      const [introResult, resourceResult] = await Promise.allSettled([
+        (async () => {
+          const content = buildLessonIntro(lang, data.nextIndex + 1, nextLesson.title ?? '', nextLesson.description ?? '');
+          const { data: msg } = await admin
+            .from('messages')
+            .insert({ chat_id: chatId, role: 'assistant', content, lesson_index: data.nextIndex })
+            .select()
+            .single();
+          return msg ?? null;
+        })(),
+        (async () => {
+          const resources = await fetchLessonResources(nextLesson.title, lang, nextLesson.id);
+          await admin.from('lessons').update({ resources }).eq('id', nextLesson.id);
+        })(),
+      ]);
+      if (introResult.status === 'fulfilled') intro = introResult.value;
+      else console.error('Lesson intro insert failed (non-fatal):', introResult.reason);
+      if (resourceResult.status === 'rejected') {
+        console.error('Next-lesson resource prefetch failed (non-fatal):', resourceResult.reason);
       }
     }
   }

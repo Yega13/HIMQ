@@ -98,7 +98,14 @@ export function resolveResourceTokens(text: string, extra: Resource[] = []): str
   return text.replace(RES_TOKEN_RE, (_, id: string) => {
     const r = [...RESOURCES, ...extra].find((x) => x.id === id.toLowerCase());
     if (!r) return '';
-    const payload = JSON.stringify({ type: r.type, url: r.url, title: r.title });
+    // Strip any literal [[ / ]] from the title before it enters the wire
+    // payload. Titles come from Wikipedia/YouTube — not student-typed, but
+    // not fully within our control either — and the client parses embeds
+    // with a regex keyed on exactly those markers; a title that happened to
+    // contain "[[/media]]" could prematurely close the block and corrupt a
+    // later, real embed in the same reply.
+    const safeTitle = r.title.replace(/\[\[|\]\]/g, '');
+    const payload = JSON.stringify({ type: r.type, url: r.url, title: safeTitle });
     return `\n[[media]]${payload}[[/media]]\n`;
   });
 }

@@ -44,12 +44,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const admin = getAdminClient();
 
-  const { data: chat, error: chatErr } = await admin
-    .from('chats')
-    .select('*')
-    .eq('id', chatId)
-    .eq('user_id', user.id)
-    .single();
+  // Independent of each other (tier resolution is a pure read, no mutation,
+  // so there's nothing lost by fetching it even on the rare rejection path
+  // below) — run concurrently instead of as two sequential round trips.
+  const [{ data: chat, error: chatErr }, tier] = await Promise.all([
+    admin.from('chats').select('*').eq('id', chatId).eq('user_id', user.id).single(),
+    resolveTier(admin, user.id),
+  ]);
 
   if (chatErr || !chat) return res.status(404).json({ error: 'Chat not found' });
   // Once the student has started learning, the plan is locked. Before that, this
@@ -58,8 +59,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (chat.plan?.approved || chat.plan?.teaching_started_at) {
     return res.status(400).json({ error: 'Plan already started' });
   }
-
-  const tier = await resolveTier(admin, user.id);
 
   // Rate-limit plan REGENERATIONS to 5/day. The first plan (total_lessons still
   // 0) is free; any subsequent call — with or without feedback — means a plan

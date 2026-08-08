@@ -32,38 +32,36 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   // welcome's own DB created_at. This keeps the teaching-view cutoff
   // (created_at >= teaching_started_at) on a single Postgres clock, so the
   // welcome (and later messages) are never filtered out by app/DB clock skew.
+  // Independent of the lesson-0 lookup below it, so they run concurrently.
   const welcomeText = (chat.plan?.welcome as string | undefined)?.trim()
     || `Your personalized plan is ready — ${chat.total_lessons} lessons built around your goal. Open lesson 1 whenever you're ready and let's begin!`;
-  const { data: welcomeMsg } = await admin
-    .from('messages')
-    .insert({ chat_id: chatId, role: 'assistant', content: welcomeText, lesson_index: 0 })
-    .select()
-    .single();
+  const [{ data: welcomeMsg }, { data: firstLesson }] = await Promise.all([
+    admin.from('messages')
+      .insert({ chat_id: chatId, role: 'assistant', content: welcomeText, lesson_index: 0 })
+      .select()
+      .single(),
+    admin.from('lessons').select('id, title').eq('chat_id', chatId).eq('lesson_index', 0).single(),
+  ]);
 
   const startedAt = (welcomeMsg?.created_at as string | undefined) ?? new Date().toISOString();
 
-  // Prefetch lesson 0's teaching resources now, while the student is on the
-  // "building your plan" screen — a moment that already expects a short
-  // wait — instead of on their first chat message, which used to add the
-  // same latency somewhere it was actually noticeable. Best-effort: chat.ts
-  // still fetches lazily on the first message if this didn't run or failed.
-  const { data: firstLesson } = await admin
-    .from('lessons').select('id, title').eq('chat_id', chatId).eq('lesson_index', 0).single();
-  if (firstLesson) {
-    try {
-      const resources = await fetchLessonResources(firstLesson.title, chat.plan?.lang ?? 'en', firstLesson.id);
-      await admin.from('lessons').update({ resources }).eq('id', firstLesson.id);
-    } catch (e) {
-      console.error('Lesson 0 resource prefetch failed (non-fatal):', e);
-    }
-  }
-
-  const { data: updatedChat, error: updateErr } = await admin
-    .from('chats')
-    .update({ plan: { ...chat.plan, approved: true, teaching_started_at: startedAt } })
-    .eq('id', chatId)
-    .select()
-    .single();
+  // The chat-approval update below doesn't depend on the resource prefetch
+  // (only on `startedAt`, already known), so they also run concurrently
+  // instead of making the response wait on an external API call. Prefetch is
+  // best-effort either way — chat.ts still fetches lazily on the first
+  // message if this didn't run or failed.
+  const [{ data: updatedChat, error: updateErr }] = await Promise.all([
+    admin.from('chats')
+      .update({ plan: { ...chat.plan, approved: true, teaching_started_at: startedAt } })
+      .eq('id', chatId)
+      .select()
+      .single(),
+    firstLesson
+      ? fetchLessonResources(firstLesson.title, chat.plan?.lang ?? 'en', firstLesson.id)
+        .then((resources) => admin.from('lessons').update({ resources }).eq('id', firstLesson.id))
+        .catch((e) => console.error('Lesson 0 resource prefetch failed (non-fatal):', e))
+      : Promise.resolve(),
+  ]);
   if (updateErr) {
     console.error('start-plan update failed:', updateErr);
     return res.status(500).json({ error: 'Failed to start plan' });

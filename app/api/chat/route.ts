@@ -43,11 +43,27 @@ export async function POST(request: Request) {
 
   const admin = getAdminClient();
 
-  // Atomic rate limit: a single row-locked DB function does the check-and-
-  // increment, so concurrent requests can't both read the same count and blow
-  // past the limit. Fails closed (503) if the limiter can't run.
-  const { data: usage, error: usageErr } = await admin
-    .rpc('consume_daily_message', { p_user_id: user.id, p_limit: DAILY_LIMIT });
+  // These three are independent of each other (none needs another's result),
+  // so they run concurrently instead of as three sequential round trips.
+  // consume_daily_message increments unconditionally either way — it already
+  // did in the old sequential version too, since it ran before the chat
+  // ownership check ever had a chance to reject; running it alongside that
+  // check instead of strictly before it doesn't change that behavior.
+  const [
+    { data: usage, error: usageErr },
+    { data: chat, error: chatErr },
+    tier,
+  ] = await Promise.all([
+    // Atomic rate limit: a single row-locked DB function does the check-and-
+    // increment, so concurrent requests can't both read the same count and
+    // blow past the limit.
+    admin.rpc('consume_daily_message', { p_user_id: user.id, p_limit: DAILY_LIMIT }),
+    // Verify chat ownership
+    admin.from('chats').select('*, lessons(*)').eq('id', chatId).eq('user_id', user.id).single(),
+    resolveTier(admin, user.id),
+  ]);
+
+  // Fails closed (503) if the limiter can't run.
   if (usageErr) {
     console.error('Rate-limit RPC failed:', usageErr);
     return Response.json({ error: 'Service temporarily unavailable. Please try again.' }, { status: 503 });
@@ -59,14 +75,6 @@ export async function POST(request: Request) {
     );
   }
 
-  // Verify chat ownership
-  const { data: chat, error: chatErr } = await admin
-    .from('chats')
-    .select('*, lessons(*)')
-    .eq('id', chatId)
-    .eq('user_id', user.id)
-    .single();
-
   if (chatErr || !chat) return Response.json({ error: 'Chat not found' }, { status: 404 });
 
   const isDiscovering = (chat.total_lessons ?? 0) === 0;
@@ -76,7 +84,6 @@ export async function POST(request: Request) {
   // they ALWAYS use the smart model regardless of tier. Only ongoing teaching
   // respects a free tier's Gemini-only rule. Credit cost follows the model that
   // actually runs. Deduct BEFORE the paid AI call.
-  const tier = await resolveTier(admin, user.id);
   const effModel = isDiscovering ? 'may1' : effectiveModel(tier, modelId);
 
   // Daily pace cap on premium messages, checked before the monthly credit
@@ -342,13 +349,22 @@ When the student has GENUINELY mastered everything in THIS lesson, tell them war
       // invent one).
       const reply = resolveResourceTokens(interpreted.reply, matched);
 
-      await admin.from('messages').insert({
+      // Supabase calls resolve {data, error} rather than throwing (this
+      // codebase never uses throwOnError), so a failed insert here would
+      // otherwise fail completely silently — the student still sees the
+      // reply via the streamed deltas and the done event below, but it
+      // would vanish from history on their next reload with no server-side
+      // trace of why. Logged, not surfaced to the client: the reply itself
+      // genuinely succeeded, so still complete the turn normally.
+      const { error: insertErr } = await admin.from('messages').insert({
         chat_id: chatId,
         role: 'assistant',
         content: reply,
         lesson_index: chat.current_lesson_index,
       });
-      await admin.from('chats').update({ updated_at: new Date().toISOString() }).eq('id', chatId);
+      if (insertErr) console.error('Assistant reply insert failed:', insertErr);
+      const { error: updateErr } = await admin.from('chats').update({ updated_at: new Date().toISOString() }).eq('id', chatId);
+      if (updateErr) console.error('Chat updated_at bump failed (non-fatal):', updateErr);
 
       // Final event carries the canonical (trimmed, token-free) reply so the
       // client can reconcile the streamed text exactly with what was persisted.

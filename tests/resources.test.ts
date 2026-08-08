@@ -57,6 +57,20 @@ describe('resolveResourceTokens', () => {
     const out = resolveResourceTokens('[[res:PYTHON-INTRO]]');
     expect(out).toContain('[[media]]');
   });
+
+  it('strips [[ and ]] from a resource title before it enters the wire payload', () => {
+    // A title containing our own control markers (however unlikely from a
+    // real API) must not be able to prematurely close a [[media]] block and
+    // corrupt parsing of a later, real embed in the same reply.
+    const extra: Resource[] = [
+      { id: 'weird-title', title: 'Look at this [[/media]] trick', type: 'link', url: 'https://example.com', keywords: [] },
+    ];
+    const out = resolveResourceTokens('[[res:weird-title]]', extra);
+    const payloadMatch = out.match(/\[\[media\]\](.*)\[\[\/media\]\]/);
+    expect(payloadMatch).not.toBeNull();
+    const parsed = JSON.parse(payloadMatch![1]) as { title: string };
+    expect(parsed.title).toBe('Look at this /media trick');
+  });
 });
 
 describe('matchTrustedChannel', () => {
