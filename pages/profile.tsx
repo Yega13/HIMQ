@@ -352,9 +352,9 @@ export default function ProfilePage() {
               aria-label={t('profile.banner_menu') as string}
               aria-haspopup="menu"
               aria-expanded={bannerMenuOpen}
-              className="flex items-center justify-center w-8 h-8 rounded-lg bg-black/40 text-white backdrop-blur-sm hover:bg-black/60 transition-colors"
+              className="flex items-center justify-center w-10 h-10 rounded-full bg-white text-[var(--color-brand)] shadow-lg ring-2 ring-black/10 hover:scale-105 hover:shadow-xl transition-all"
             >
-              <Camera size={14} />
+              <Camera size={16} />
             </button>
             <AnimatePresence>
               {bannerMenuOpen && (

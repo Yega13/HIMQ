@@ -137,43 +137,54 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       // (2026-08-05_lesson_resources.sql not applied).
       if (cacheErr) console.error('Lesson resources cache write failed:', cacheErr);
     }
-    matched = [...live, ...matched].slice(0, 4);
+    matched = [...live, ...matched];
 
-    // Spacing, not a total ceiling — enforced in code rather than left to the
-    // prompt, since "share sparingly" alone still lets the model reach for a
-    // capability just because it's sitting there every message. A flat
-    // per-lesson cap was the wrong shape though: some lessons (a lot of them
-    // for visual/hands-on topics — piano, sports, design) genuinely benefit
-    // from a resource every few messages for the whole conversation, not
-    // just once or twice total. So instead: find the last message in this
-    // lesson that actually showed one, count how many messages have happened
-    // since, and only re-offer once that's at least a random 3-7 — spaced
-    // out, never back-to-back, but no ceiling on how many a long lesson ends
-    // up with.
     if (matched.length > 0) {
-      const { data: lastShown } = await admin
+      // One query, reused for two checks below: every assistant message in
+      // this lesson that actually showed a resource, newest first. (Scoped
+      // to role='assistant' — only May's replies can legitimately contain
+      // [[media]]; a student typing that literal text shouldn't count.)
+      const { data: shownMsgs } = await admin
         .from('messages')
-        .select('created_at')
+        .select('content, created_at')
         .eq('chat_id', chatId)
         .eq('lesson_index', chat.current_lesson_index)
-        .eq('role', 'assistant') // only May's replies can legitimately contain
-        // [[media]] — without this, a student typing that literal text would
-        // inflate the count and suppress real resources early for the lesson
+        .eq('role', 'assistant')
         .like('content', '%[[media]]%')
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      if (lastShown) {
+        .order('created_at', { ascending: false });
+
+      if (shownMsgs && shownMsgs.length > 0) {
+        // Never re-offer a resource the student has already seen in this
+        // lesson — the pool now holds several candidates specifically so
+        // there's always something new to fall back on instead of repeating.
+        const shownUrls = new Set<string>();
+        for (const m of shownMsgs) {
+          const blocks = Array.from((m.content as string).matchAll(/\[\[media\]\]([\s\S]*?)\[\[\/media\]\]/g));
+          for (const mm of blocks) {
+            try {
+              const d = JSON.parse(mm[1]) as { url?: string };
+              if (d.url) shownUrls.add(d.url);
+            } catch { /* malformed block, ignore */ }
+          }
+        }
+        matched = matched.filter((r) => !shownUrls.has(r.url));
+
+        // Spacing, not a total ceiling: find how many messages have passed
+        // since the last one shown, and only re-offer once that's at least
+        // a random 3-7 — spaced out, never back-to-back, but no ceiling on
+        // how many a long lesson ends up with (a flat per-lesson cap was the
+        // wrong shape for visual/hands-on topics that lean on this a lot).
         const { count: sinceCount } = await admin
           .from('messages')
           .select('id', { count: 'exact', head: true })
           .eq('chat_id', chatId)
           .eq('lesson_index', chat.current_lesson_index)
-          .gt('created_at', lastShown.created_at as string);
+          .gt('created_at', shownMsgs[0].created_at as string);
         const threshold = 3 + Math.floor(Math.random() * 5); // 3–7 inclusive
         if ((sinceCount ?? 0) < threshold) matched = [];
       }
     }
+    matched = matched.slice(0, 4);
   }
   const resourceBlock = matched.length === 0 ? '' : `
 
