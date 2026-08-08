@@ -27,6 +27,29 @@ export async function requireUser(
   return user;
 }
 
+// App Router variant: route handlers get a Web-standard `Request` and, unlike
+// Pages Router, have no mutable `res` to write an error onto — they must
+// RETURN a Response instead. Same underlying check as requireUser above,
+// just packaged for that calling convention.
+//
+// Usage:
+//   const auth = await requireUserFromRequest(request);
+//   if (auth.error) return auth.error;
+//   const user = auth.user;
+export async function requireUserFromRequest(
+  request: Request,
+): Promise<{ user: User; error?: undefined } | { user?: undefined; error: Response }> {
+  const token = request.headers.get('authorization')?.replace('Bearer ', '');
+  if (!token) {
+    return { error: Response.json({ error: 'Missing token' }, { status: 401 }) };
+  }
+  const { data: { user }, error } = await supabase.auth.getUser(token);
+  if (error || !user) {
+    return { error: Response.json({ error: 'Unauthorized' }, { status: 401 }) };
+  }
+  return { user };
+}
+
 // Cap a free-text field before it is stored or sent to a paid AI model.
 // Returns the trimmed string, or null if it is empty or over `max` chars —
 // callers turn null into a 400. Prevents unbounded-token cost abuse.

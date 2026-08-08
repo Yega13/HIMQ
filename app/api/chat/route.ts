@@ -1,6 +1,5 @@
-import type { NextApiRequest, NextApiResponse } from 'next';
 import { getAdminClient } from '@/lib/supabase';
-import { requireUser, boundedText } from '@/lib/apiAuth';
+import { requireUserFromRequest, boundedText } from '@/lib/apiAuth';
 import { streamAIResponse } from '@/lib/ai';
 import { visibleSoFar, interpretReply } from '@/lib/controlTokens';
 import { type ModelId, DEFAULT_MODEL } from '@/lib/models';
@@ -9,21 +8,36 @@ import { matchResources, resolveResourceTokens, type Resource } from '@/lib/reso
 import { fetchLessonResources } from '@/lib/externalResources';
 import { languageName } from '@/lib/utils';
 
-export const config = { maxDuration: 60 };
+// App Router route handler, not Pages Router — moved here specifically
+// because Vercel buffers the ENTIRE response of a Pages Router API route
+// server-side regardless of res.write() calls, so streamed tokens never
+// reached the browser incrementally no matter what the server did. App
+// Router route handlers returning a Response(ReadableStream) genuinely
+// stream on Vercel. Kept on the Node.js runtime on purpose (the default —
+// stated explicitly here since that's the point of this file existing) so
+// the Anthropic SDK, Gemini SDK, and Supabase admin client keep working
+// exactly as they did before; nothing here needed to become Edge-compatible.
+export const runtime = 'nodejs';
+export const maxDuration = 60;
 
 const DAILY_LIMIT = 50;
 const MAX_MESSAGE = 8000;
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'POST') return res.status(405).end();
+export async function POST(request: Request) {
+  const auth = await requireUserFromRequest(request);
+  if (auth.error) return auth.error;
+  const user = auth.user;
 
-  const user = await requireUser(req, res);
-  if (!user) return;
-
-  const { chatId, message, model } = req.body as { chatId?: string; message?: string; model?: ModelId };
+  let body: { chatId?: string; message?: string; model?: ModelId };
+  try {
+    body = await request.json();
+  } catch {
+    return Response.json({ error: 'Invalid request body' }, { status: 400 });
+  }
+  const { chatId, message, model } = body;
   const trimmedMessage = boundedText(message, MAX_MESSAGE);
   if (!chatId || !trimmedMessage) {
-    return res.status(400).json({ error: 'chatId and a message under 8000 characters are required' });
+    return Response.json({ error: 'chatId and a message under 8000 characters are required' }, { status: 400 });
   }
   const modelId: ModelId = model ?? DEFAULT_MODEL;
 
@@ -36,12 +50,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     .rpc('consume_daily_message', { p_user_id: user.id, p_limit: DAILY_LIMIT });
   if (usageErr) {
     console.error('Rate-limit RPC failed:', usageErr);
-    return res.status(503).json({ error: 'Service temporarily unavailable. Please try again.' });
+    return Response.json({ error: 'Service temporarily unavailable. Please try again.' }, { status: 503 });
   }
   if (!usage?.allowed) {
-    return res.status(429).json({
-      error: `You've reached today's limit of ${DAILY_LIMIT} messages. Come back tomorrow!`,
-    });
+    return Response.json(
+      { error: `You've reached today's limit of ${DAILY_LIMIT} messages. Come back tomorrow!` },
+      { status: 429 },
+    );
   }
 
   // Verify chat ownership
@@ -52,7 +67,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     .eq('user_id', user.id)
     .single();
 
-  if (chatErr || !chat) return res.status(404).json({ error: 'Chat not found' });
+  if (chatErr || !chat) return Response.json({ error: 'Chat not found' }, { status: 404 });
 
   const isDiscovering = (chat.total_lessons ?? 0) === 0;
 
@@ -73,21 +88,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (effModel === 'may1' && !isDiscovering) {
     const premiumGate = await consumePremiumMessage(admin, user.id, tier);
     if (premiumGate.enabled && !premiumGate.allowed) {
-      return res.status(429).json({
+      return Response.json({
         error: premiumGate.error
           ? 'Service temporarily unavailable. Please try again.'
           : "You've used today's premium messages. More tomorrow, or upgrade for a higher daily limit.",
-      });
+      }, { status: 429 });
     }
   }
 
   const gate = await consumeCredits(admin, user.id, tier, MSG_COST[effModel]);
   if (gate.enabled && !gate.allowed) {
-    return res.status(429).json({
+    return Response.json({
       error: gate.error
         ? 'Service temporarily unavailable. Please try again.'
         : "You've used all your credits this month. Upgrade your plan or come back next month.",
-    });
+    }, { status: 429 });
   }
 
   // Load the LAST 12 messages (newest first, then restore chronological order)
@@ -286,61 +301,67 @@ When the student has GENUINELY mastered everything in THIS lesson, tell them war
   // All the fail-able checks (auth, rate limit, ownership) are already done
   // above and returned normal JSON errors. From here we commit to a 200 SSE
   // stream: `data: {"delta":"…"}` events as text arrives, then a final
-  // `data: {"done":true, reply, planReady, lessonMastered}` event.
-  res.writeHead(200, {
-    'Content-Type': 'text/event-stream; charset=utf-8',
-    'Cache-Control': 'no-cache, no-transform',
-    Connection: 'keep-alive',
-    'X-Accel-Buffering': 'no',
-  });
-  const send = (obj: unknown) => {
-    res.write(`data: ${JSON.stringify(obj)}\n\n`);
-    // Force the chunk out past any buffering layer so tokens appear live
-    // instead of all at once at the end.
-    (res as unknown as { flush?: () => void }).flush?.();
-  };
-
-  // The model emits control tokens (<<<PLAN_READY>>> / <<<LESSON_MASTERED>>>) on
-  // its final line. `visibleSoFar` returns the safe-to-show prefix — complete
-  // tokens removed and any in-progress prefix held back — so they never leak.
-  let raw = '';
-  let sentLen = 0;
-  const onDelta = (text: string) => {
-    raw += text;
-    const vis = visibleSoFar(raw);
-    if (vis.length > sentLen) {
-      send({ delta: vis.slice(sentLen) });
-      sentLen = vis.length;
-    }
-  };
-
-  // All teaching now runs on Sonnet 5 (see lib/ai.ts), so this role no longer
-  // changes the model — 'opening' and 'chat' both resolve to Sonnet. It's kept
-  // so discovery/exam turns stay tagged distinctly if we ever re-split routing.
+  // `data: {"done":true, reply, planReady, lessonMastered}` event. Unlike the
+  // Pages Router version this replaced, a ReadableStream Response genuinely
+  // flushes each enqueue to the client instead of buffering until the whole
+  // handler finishes.
   const aiRole = (isDiscovering || chat.plan?.exam) ? 'opening' : 'chat';
+  const encoder = new TextEncoder();
 
-  try {
-    raw = await streamAIResponse(aiMessages, aiRole, systemPrompt, onDelta, effModel, chat.plan?.lang);
-  } catch (err) {
-    console.error('Chat stream failed:', err);
-  }
+  const stream = new ReadableStream({
+    async start(controller) {
+      const send = (obj: unknown) => {
+        controller.enqueue(encoder.encode(`data: ${JSON.stringify(obj)}\n\n`));
+      };
 
-  const interpreted = interpretReply(raw, isDiscovering);
-  const { planReady, lessonMastered } = interpreted;
-  // Resolve any [[res:ID]] tag May emitted into an inline [[media]] block the
-  // client renders as an embed (unknown ids are dropped — she can't invent one).
-  const reply = resolveResourceTokens(interpreted.reply, matched);
+      // The model emits control tokens (<<<PLAN_READY>>> / <<<LESSON_MASTERED>>>)
+      // on its final line. `visibleSoFar` returns the safe-to-show prefix —
+      // complete tokens removed and any in-progress prefix held back — so
+      // they never leak.
+      let raw = '';
+      let sentLen = 0;
+      const onDelta = (text: string) => {
+        raw += text;
+        const vis = visibleSoFar(raw);
+        if (vis.length > sentLen) {
+          send({ delta: vis.slice(sentLen) });
+          sentLen = vis.length;
+        }
+      };
 
-  await admin.from('messages').insert({
-    chat_id: chatId,
-    role: 'assistant',
-    content: reply,
-    lesson_index: chat.current_lesson_index,
+      try {
+        raw = await streamAIResponse(aiMessages, aiRole, systemPrompt, onDelta, effModel, chat.plan?.lang);
+      } catch (err) {
+        console.error('Chat stream failed:', err);
+      }
+
+      const interpreted = interpretReply(raw, isDiscovering);
+      const { planReady, lessonMastered } = interpreted;
+      // Resolve any [[res:ID]] tag May emitted into an inline [[media]] block
+      // the client renders as an embed (unknown ids are dropped — she can't
+      // invent one).
+      const reply = resolveResourceTokens(interpreted.reply, matched);
+
+      await admin.from('messages').insert({
+        chat_id: chatId,
+        role: 'assistant',
+        content: reply,
+        lesson_index: chat.current_lesson_index,
+      });
+      await admin.from('chats').update({ updated_at: new Date().toISOString() }).eq('id', chatId);
+
+      // Final event carries the canonical (trimmed, token-free) reply so the
+      // client can reconcile the streamed text exactly with what was persisted.
+      send({ done: true, reply, planReady, lessonMastered });
+      controller.close();
+    },
   });
-  await admin.from('chats').update({ updated_at: new Date().toISOString() }).eq('id', chatId);
 
-  // Final event carries the canonical (trimmed, token-free) reply so the client
-  // can reconcile the streamed text exactly with what was persisted.
-  send({ done: true, reply, planReady, lessonMastered });
-  res.end();
+  return new Response(stream, {
+    headers: {
+      'Content-Type': 'text/event-stream; charset=utf-8',
+      'Cache-Control': 'no-cache, no-transform',
+      Connection: 'keep-alive',
+    },
+  });
 }
